@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skcomponents"
+version = "0.0.1"
+authors = [
+  { name="Yago Mendoza", email="yagomendoza.dev@gmail.com" },
+]
+description = "Components for Suskind Knowledge Graph"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy"
+]

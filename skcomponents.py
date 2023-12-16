@@ -1,9 +1,11 @@
+import os
 import random
-from collections import deque
 
 class NodeSet(list):
+
     def __init__(self, nodes=None, alias=False):
         self._alias = alias
+        
         # Flatten the input if it's a NodeSet or Graph, otherwise use it as is
         flattened_nodes = self._flatten_input(nodes)
 
@@ -13,17 +15,45 @@ class NodeSet(list):
 
         super().__init__(flattened_nodes)
 
+        self.edge_permissions = {
+            'antonyms': False,
+            'hyperonyms': False,
+            'hyponyms': False,
+            'synset0': False,
+            'synset1': True,
+            'synset2': False,
+            'semset0': False,
+            'semset1': True,
+            'semset2': False
+            }
+
+    def disable(self, *edge_types):
+        if not edge_types:
+            for edge in self.edge_permissions:
+                self.edge_permissions[edge] = False
+        else:
+            for edge in edge_types:
+                self.edge_permissions[edge] = False
+
+    def enable(self, *edge_types):
+        if not edge_types:
+            for edge in self.edge_permissions:
+                self.edge_permissions[edge] = True
+        else:
+            for edge in edge_types:
+                self.edge_permissions[edge] = True
+
     def _flatten_input(self, input_nodes):
         # If the input is a NodeSet, Graph, list, or set, convert it to a list
         if isinstance(input_nodes, Node):
             input_nodes = [input_nodes]
         if isinstance(input_nodes, (NodeSet, Graph, list, set)):
-            return [node if self._alias else node._copy() for node in input_nodes]
+            return list(set([node if self._alias else node._copy() for node in input_nodes]))
         return input_nodes or []
 
     def _clean_edges(self):
         # Create a set of node identifiers for faster membership checks
-        node_identifiers = {node._get_identifier(string=True) for node in self}
+        node_identifiers = {node.identify(format=True) for node in self}
 
         # Remove connections to nodes not present in the NodeSet
         for node in self:
@@ -34,15 +64,21 @@ class NodeSet(list):
                     raise AttributeError(f"Node does not have attribute '{attr}'")
 
                 # Use set intersection for efficient filtering
-                setattr(node, attr, [n for n in valid_nodes if n._get_identifier(string=True) in node_identifiers])
+                setattr(node, attr, [n for n in valid_nodes if n.identify(format=True) in node_identifiers])
+    
+    def __getitem__(self, index):
+        # Comprobar que funcione
+        result = super().__getitem__(index)
+        if isinstance(result, list):
+            return NodeSet(result)
+        return result
 
     def append(self, node):
         # Ensure only Node instances can be added to the Graph
         if not isinstance(node, Node):
             raise ValueError("Only Node instances can be added to the Graph.")
-
         # Check if the node is unique based on its identifier
-        if any(existing_node._get_identifier() == node._get_identifier() for existing_node in self):
+        if any(existing_node.identify() == node.identify() for existing_node in self):
             raise ValueError("A node with the same identifier already exists in the Graph.")
 
         super().append(node)  # Use super() to avoid recursion
@@ -55,7 +91,7 @@ class NodeSet(list):
 
         # Unpack arguments based on their number and type
         if len(args) == 1 and isinstance(args[0], Node):
-            lang, type_, name, lemma = args[0]._get_identifier()
+            lang, type_, name, lemma = args[0].identify()
         elif len(args) in [3, 4]:
             lang, type_, name, *lemma = args
             lemma = lemma[0] if lemma else None
@@ -219,38 +255,6 @@ class NodeSet(list):
     def filter_semset2(self, operator, value):
         return self._filter_by_attribute('semset2', operator, value)
     
-    def reduce(self, map_graph, max_diameter=2, **enabled_edges):
-        
-        if type(self) is not NodeSet:
-            raise Exception("This method is restricted to the NodeSet class")
-
-        # Create a set of all nodes in the current NodeSet object.
-        all_nodes = set(self)  # The set() function converts NodeSet into a standard Python set.
-        central_nodes = set()  # Initialize an empty set to store nodes considered central.
-
-        # Main loop that runs while there are nodes left in all_nodes.
-        while all_nodes:
-            best_node = None  # Variable to store the best node in each iteration of the loop.
-            max_covered = 0    # Variable to keep track of the maximum number of covered nodes.
-
-            # Iterate over each node in all_nodes to find the most influential node.
-            for node in all_nodes:
-                # Use depth-first search to find nodes reachable from 'node'.
-                covered_nodes = map_graph.DeepSpreadSearch(starting_nodes=node, hops=max_diameter, **enabled_edges).keys()
-                # Compare the number of nodes covered by 'node' with the previously recorded maximum.
-                if len(covered_nodes) > max_covered:
-                    best_node = node  # Update the best node if 'node' covers more nodes.
-                    max_covered = len(covered_nodes)  # Update the count of covered nodes.
-
-            # After finding the best node, take actions to update the sets.
-            if best_node is not None:
-                central_nodes.add(best_node)  # Add the best node found to central_nodes.
-                # Remove from the all_nodes set the nodes already covered by best_node.
-                all_nodes -= map_graph.DeepSpreadSearch(starting_nodes=best_node, hops=max_diameter, **enabled_edges).keys()
-
-        # Return a new NodeSet formed only by the central nodes found.
-        return NodeSet(nodes=central_nodes, alias=False)
-    
     def __repr__(self):
         return f'NodeSet(size={len(self)})'
     
@@ -286,7 +290,7 @@ class Node:
 
     def __init__(self, lang: str, type_: str, name: str,
                  lemma: str,
-                 metaphor: bool,
+                 metaphor: bool = False,
                  antonyms: list = None,
                  hyperonyms: list = None, hyponyms: list = None,
                  synset0: list = None, synset1: list = None, synset2: list = None,
@@ -302,6 +306,14 @@ class Node:
         self.synset0, self.synset1, self.synset2 = [synset if synset is not None else [] for synset in [synset0, synset1, synset2]]
         self.semset0, self.semset1, self.semset2 = [semset if semset is not None else [] for semset in [semset0, semset1, semset2]]
         self.examples = examples if examples is not None else []
+    
+    def __eq__(self, other):
+        if isinstance(other, Node):
+            return self.lang == other.lang and self.type == other.type and self.name == other.name and self.lemma == other.lemma
+        return False
+    
+    def __hash__(self):
+        return hash((self.lang, self.type, self.name, self.lemma))
 
     def edit_property(self, **attr_edits):
         # Iterate through the keyword arguments provided in 'changes'
@@ -323,8 +335,8 @@ class Node:
 
             pass
 
-    def _get_identifier(self, string=False):
-        if not string:
+    def identify(self, format=False):
+        if not format:
             return (self.lang, self.type, self.name, self.lemma)
         return f'{self.lang}-{self.type}:{self.name}({self.lemma})'
     
@@ -490,36 +502,42 @@ class Node:
 
 class Graph(NodeSet):
 
-    def __init__(self, source=None):
-        self.filename = None
+    def __init__(self, parent=None):
     
-        self._build_nodes(source)
+        self.parent = parent
+
+        self._build_nodes(parent)
+
+        self._set_graph_reference()
         self._clean_edges()
 
-    def _build_nodes(self, source):
-        # Handle source based on its type
-        if isinstance(source, str):
-            self._handle_file_source(source)
-        elif isinstance(source, (list, set, Graph, NodeSet)):
-            super().__init__(source)
-            self._set_graph_reference()
+    def _build_nodes(self, parent):
+        if isinstance(parent, str):
+            self._handle_file_source(parent)
+        elif isinstance(parent, (list, set, NodeSet)):
+            self._handle_data_structure_source(parent)
+        elif isinstance(parent, (Graph)):
+            raise ValueError("To fork a Graph, use the specific 'fork' method.")
         else:
-            raise ValueError("Source must be a filename, a list of nodes, a set of nodes, a Graph object, or a NodeSet.")
+            raise ValueError("Source must be a filename, a list of nodes, a set of nodes, or a NodeSet.")
 
-    def _handle_file_source(self, filename):
-        if filename.endswith('.txt'):
-            self.filename = filename
-            nodes = self._load_data() # works just fine
+    def _handle_file_source(self, parent):
+        if parent.endswith('.txt'):
+            nodes = self._load_data(parent) # works just fine
             super().__init__(nodes)
-            self._set_graph_reference()
         else:
             raise ValueError("Filename must end with '.txt'")
+    
+    def _handle_data_structure_source(self, parent):
+        super().__init__(parent)
 
     def _set_graph_reference(self):
         for node in self:
             node.graph = self
     
-    def _load_data(self):
+    def _load_data(self, parent):
+
+        parent = os.path.basename(parent)
 
         def parse_line_to_node(line):
             parts = line.strip().split('|')
@@ -533,7 +551,7 @@ class Graph(NodeSet):
             Update each node's attributes to reference other nodes in the graph.
             Removes connections to nodes not present in the graph (remember, only when from TXT)
             """
-            temp_nodes = {node._get_identifier(string=True): node for node in nodes}
+            temp_nodes = {node.identify(format=True): node for node in nodes}
             for node in nodes:
                 for attr in ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                     current_relations = getattr(node, attr)
@@ -545,30 +563,68 @@ class Graph(NodeSet):
 
         nodes_loaded_from_txt = []
         try:
-            with open(self.filename, 'r') as file:
+            with open(parent, 'r') as file:
                 for line in file:
                     node = parse_line_to_node(line.strip())
                     nodes_loaded_from_txt.append(node)
             nodes_loaded_from_txt = update_node_relationships(nodes_loaded_from_txt)
             return nodes_loaded_from_txt
         except FileNotFoundError:
-            print(f"The file {self.filename} has not been found.")
+            print(f"The file {parent} has not been found.")
         except IOError:
-            print(f"An error occurred while reading the file {self.filename}.")
+            print(f"An error occurred while reading the file {parent}.")
     
-    def fork(self, subset=[], alias=False):
-        if not subset:
-            subset = self
-        subset = [node if alias else node._copy() for node in subset]
+    def fork(self):
+        subset = [node._copy() for node in self]
         return Graph(subset)
+    
+    def merge(self, other_graph, politics='trim'):
+        if not isinstance(other_graph, Graph):
+            raise TypeError("The 'other_graph' must be an instance of Graph.")
 
-    def save_changes(self, custom_filename=None):
-        filename = custom_filename if custom_filename else self.filename
+        for node in other_graph:
+            if politics == 'blossom':
+                self._merge_and_blossom_connections(node)
+            elif politics == 'trim':
+                self._merge_and_trim_connections(node)
+
+    def _merge_and_blossom_connections(self, node):
+        if not self.find_node(*node.identify()):
+            new_node = node._copy()
+            self._add_node(new_node)
+        for attr in self._relationship_attributes():
+            for connected_node in getattr(node, attr):
+                if not self.find_node(*connected_node.identify()):
+                    missing_node = connected_node._copy()
+                    self._add_node(missing_node)
+
+    def _merge_and_trim_connections(self, node):
+        new_node = node._copy()
+        for attr in self._relationship_attributes():
+            connections = getattr(new_node, attr)
+            trimmed_connections = [c for c in connections if self.find_node(*c.identify())]
+            setattr(new_node, attr, trimmed_connections)
+        self._add_node(new_node)
+
+    def _add_node(self, node):
+        if not isinstance(node, Node):
+            raise TypeError("Only Node instances can be added to the graph.")
+        if not self.find_node(node.lang, node.type, node.name, node.lemma):
+            super().append(node)
+
+    @staticmethod
+    def _relationship_attributes():
+        return ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
+
+    def save_changes(self, custom_filename):
+
+        custom_filename = os.path.basename(custom_filename)
+
         # Open the file specified in 'filename' for writing
         string_ids = {}
         for node in self:
-            string_ids[node] = node._get_identifier(string=True)
-        with open(filename, 'w') as file:
+            string_ids[node] = node.identify(format=True)
+        with open(custom_filename, 'w') as file:
             # Iterate over each node in the graph
             for node in self:
                 # Convert each node's attributes to a string format suitable for file storage
@@ -583,11 +639,11 @@ class Graph(NodeSet):
     # Editing Methods
     # ---------------------
 
-    def create_node(self, lang, type_, name, lemma, metaphor):
+    def create_node(self, lang, type_, name, lemma):
         # Check if a node with the given attributes already exists
         if not self.find_node(lang, type_, name, lemma):
             # If not, create a new Node instance with the provided attributes
-            node = Node(lang, type_, name, lemma, metaphor)
+            node = Node(lang, type_, name, lemma)
             # Append the new node to the graph
             self.append(node)
 
@@ -631,146 +687,7 @@ class Graph(NodeSet):
             append_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
             perform_action(target_node, target_edge_type, action, append_edge_type)
             perform_action(append_node, append_edge_type, action, target_edge_type)
-
-    # ---------------------
-    # Filter Methods
-    # ---------------------
-
-    def single_node_depth_search(self, node, max_depth, enabled_synset):
-    # Initialize a dictionary to hold nodes at each depth level.
-        depth_dict = {}
-
-        # Define a nested recursive function for depth-first search.
-        def _search(current_node, current_depth):
-            # Base case: stop if the maximum depth is exceeded or the current node is None.
-            if current_depth > max_depth or current_node is None:
-                return
-            
-            # Add the current node to the list of nodes at the current depth.
-            depth_dict.setdefault(current_depth, []).append(current_node)
-
-            # If synset is enabled and depth limit not reached, expand search to connected nodes.
-            if enabled_synset and current_depth < max_depth:
-                for next_node in current_node.get_synset():
-                    _search(next_node, current_depth + 1)
-
-        # Start the search from the initial node at depth 0.
-        _search(node, 0)
-
-        # Return the dictionary mapping depth levels to nodes.
-        return depth_dict
     
-    def DeepSpreadSearch(self, origin, hops, enabled_synset):
-
-    # Internal class to handle results in a dictionary-like format.
-        class _DictWrapper(dict):
-            # Method to convert results to a NodeSet.
-            def as_nodeset(self, depth=None):
-                # If a specific level is provided, return nodes from that level.
-                if depth is not None:
-                    return NodeSet(self.get(depth, []))
-                # Otherwise, combine nodes from all levels.
-                all_nodes = set()
-                for nodes in self.values():
-                    all_nodes.update(nodes)
-                return NodeSet(all_nodes)
-
-            # Method to count the presence of a node at each depth level.
-            def presence(self, node=None):
-                if node is not None:
-                    # Devuelve la presencia del nodo específico en cada nivel.
-                    return {node: [self.get(level, []).count(node) for level in range(max(self.keys()) + 1)]}
-
-                # Devuelve un diccionario con la presencia de todos los nodos.
-                all_nodes_presence = {}
-                for level in self.keys():
-                    for node in self.get(level, []):
-                        all_nodes_presence[node] = all_nodes_presence.get(node, 0) + 1
-
-                return all_nodes_presence
-
-            # Method to retrieve nodes at a specific depth level.
-            def get(self, depth=None):
-                # Si no se proporciona un nivel específico, devuelve una lista de todos los nodos en todos los niveles.
-                if depth is None:
-                    all_nodes = []
-                    for level_nodes in self.values():
-                        all_nodes.extend(level_nodes)
-                    return all_nodes
-                return self[depth]
-
-            # Method to calculate scores for each node based on depth and rate.
-            def scores(self, rate=0.5, depth=1, normalize=True):
-                scores = {}
-                for level, nodes in self.items():
-                    if depth is not None and level != depth:
-                        continue
-                    for node in nodes:
-                        scores[node] = scores.get(node, 0) + (rate ** level)
-
-                if normalize:
-                    max_score = max(scores.values())
-                    for node in scores:
-                        scores[node] /= max_score
-
-                return _ScoreDict(scores)
-
-        # Internal class for handling scoring dictionary.
-        class _ScoreDict(dict):
-
-            def reverse(self):
-                reversed_dict = {}
-                for node, score in self.items():
-                    reversed_dict.setdefault(score, []).append(node)
-
-                for score in reversed_dict:
-                    reversed_dict[score].sort(key=lambda x: str(x))
-
-                return reversed_dict
-
-        # Internal class for handling multiple search results.
-        class _ListWrapper(list):
-            # General method for applying a method across multiple _DictWrapper objects.
-            def _apply_method(self, method_name, *args, **kwargs):
-                origin = kwargs.pop('origin', None)
-                if origin is not None:
-                    return getattr(self[origin], method_name)(*args, **kwargs)
-                result = _DictWrapper()
-                for wrapper in self:
-                    for level, nodes in getattr(wrapper, method_name)(*args, **kwargs).items():
-                        result.setdefault(level, []).extend(nodes)
-                return result
-
-            # Methods that extend _DictWrapper methods to a list of results.
-            def as_nodeset(self, *args, **kwargs):
-                return self._apply_method('as_nodeset', *args, **kwargs)
-
-            def presence(self, *args, **kwargs):
-                return self._apply_method('presence', *args, **kwargs)
-
-            def get(self, *args, **kwargs):
-                return self._apply_method('get', *args, **kwargs)
-
-            def scores(self, *args, **kwargs):
-                return self._apply_method('scores', *args, **kwargs)
-
-            # Method to combine all individual results into a single dictionary.
-            def compact(self):
-                return self._apply_method('as_nodeset')
-
-        # Normalize the input to always be a list of nodes.
-        if not isinstance(origin, list):
-            origin = [origin]
-
-        # Perform a depth search for each node and store results.
-        results = _ListWrapper()
-        for node in origin:
-            depth_dict = self.single_node_depth_search(node, hops, enabled_synset)
-            results.append(_DictWrapper(depth_dict))
-
-        # Return a list of results if multiple starting nodes were provided, else a single result.
-        return results if len(results) > 1 else results[0]
-
     def __repr__(self):
         return f'Graph(size={len(self)})'
     

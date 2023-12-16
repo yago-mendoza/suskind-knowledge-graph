@@ -2,6 +2,7 @@ import cmd
 import datetime
 
 from rich import print
+
 print("Hello, [bold magenta]World[/bold magenta]!", ":vampire:", locals())
 
 class Placeholder:
