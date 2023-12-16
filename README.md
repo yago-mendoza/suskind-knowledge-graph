@@ -4,8 +4,7 @@ A brief description of what this project does and who it's for.
 
 
 ## Documentation
-
-[Documentation](https://yago-mendoza.gitbook.io/suskind_knowledge_graph)
+[Documentation](https://yago-mendoza.gitbook.io/suskind_knowledge_graph/)
 
 
 ## Roadmap
