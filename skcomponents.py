@@ -26,6 +26,12 @@ class NodeSet(list):
             'semset1': True,
             'semset2': False
             }
+        
+        self.group_mappings = {
+            'synset': ['synset0', 'synset1', 'synset2'],
+            'semset': ['semset0', 'semset1', 'semset2'],
+            'meronyms': ['antonyms', 'hyperonyms', 'hyponyms']
+        }
 
     def disable(self, *edge_types):
         if not edge_types:
@@ -33,7 +39,11 @@ class NodeSet(list):
                 self.edge_permissions[edge] = False
         else:
             for edge in edge_types:
-                self.edge_permissions[edge] = False
+                if edge in self.group_mappings:
+                    for group_edge in self.group_mappings[edge]:
+                        self.edge_permissions[group_edge] = False
+                elif edge in self.edge_permissions:
+                    self.edge_permissions[edge] = False
 
     def enable(self, *edge_types):
         if not edge_types:
@@ -41,7 +51,11 @@ class NodeSet(list):
                 self.edge_permissions[edge] = True
         else:
             for edge in edge_types:
-                self.edge_permissions[edge] = True
+                if edge in self.group_mappings:
+                    for group_edge in self.group_mappings[edge]:
+                        self.edge_permissions[group_edge] = True
+                elif edge in self.edge_permissions:
+                    self.edge_permissions[edge] = True
 
     def _flatten_input(self, input_nodes):
         # If the input is a NodeSet, Graph, list, or set, convert it to a list
@@ -86,8 +100,7 @@ class NodeSet(list):
         # Set the graph reference in the Node instance
         node.graph = self
 
-    def find_node(self, *args):
-        # Returns a list, always
+    def find(self, *args):
 
         # Unpack arguments based on their number and type
         if len(args) == 1 and isinstance(args[0], Node):
@@ -110,13 +123,13 @@ class NodeSet(list):
         return NodeSet(results)
 
     def random(self, k=None, alias=True):
-        if not k and self: return random.choice(self)
+        if not k and self: return random.choice(self, alias=alias)
         if not self or k < 1: return None
         if k == 1: return NodeSet(nodes=random.choice(self), alias=alias)
         if k <= len(self): return NodeSet(nodes=random.sample(self, k), alias=alias)
         raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(self)} nodes.")
     
-    def edit_property(self, **attr_edits):
+    def edit(self, **attr_edits):
         # Iterate through the keyword arguments provided in 'changes'
         for node in self:
             node.edit(**attr_edits)
@@ -126,12 +139,12 @@ class NodeSet(list):
     
     def view_nodes(self):
         return [node for node in self]
-    
-    def filter_lang(self, lang, complement=False):
-        return self._filter_nodes(lambda node: getattr(node, 'lang') == lang, complement)
 
-    def filter_type(self, type, complement=False):
-        return self._filter_nodes(lambda node: getattr(node, 'type') == type, complement)
+    def filter_lang(self, *langs, complement=False):
+        return self._filter_nodes(lambda node: getattr(node, 'lang') in langs, complement)
+    
+    def filter_types(self, *types, complement=False):
+        return self._filter_nodes(lambda node: getattr(node, 'type') in types, complement)
 
     def filter_lemma(self, lemma=True):
         return self._filter_nodes(lambda node: bool(node.lemma) == lemma)
@@ -286,7 +299,7 @@ class Node:
     # Initially enable all flags
     _repr_flags = 0b000000000011111
 
-    labels = True
+    labels = 1
 
     def __init__(self, lang: str, type_: str, name: str,
                  lemma: str,
@@ -315,7 +328,7 @@ class Node:
     def __hash__(self):
         return hash((self.lang, self.type, self.name, self.lemma))
 
-    def edit_property(self, **attr_edits):
+    def edit(self, **attr_edits):
         # Iterate through the keyword arguments provided in 'changes'
         for key, value in attr_edits.items():
             if hasattr(self, key):
@@ -353,17 +366,6 @@ class Node:
         )
 
     def get_neighbors(self, edge_type=None):
-        neighbors = {
-            'antonyms': self.antonyms,
-            'hyperonyms': self.hyperonyms,
-            'hyponyms': self.hyponyms,
-            'synset0': self.synset0,
-            'synset1': self.synset1,
-            'synset2': self.synset2,
-            'semset0': self.semset0,
-            'semset1': self.semset1,
-            'semset2': self.semset2,
-        }
 
         # Special handling for 'synset' and 'semset'
         if edge_type == 'synset':
@@ -372,13 +374,25 @@ class Node:
         elif edge_type == 'semset':
             all_semsets = self.semset0 + self.semset1 + self.semset2
             return NodeSet(all_semsets)
+        
+        neighbors = {
+            'antonyms': NodeSet(self.antonyms),
+            'hyperonyms': NodeSet(self.hyperonyms),
+            'hyponyms': NodeSet(self.hyponyms),
+            'synset0': NodeSet(self.synset0),
+            'synset1': NodeSet(self.synset1),
+            'synset2': NodeSet(self.synset2),
+            'semset0': NodeSet(self.semset0),
+            'semset1': NodeSet(self.semset1),
+            'semset2': NodeSet(self.semset2),
+        }
 
         # Handling for specific edge types
         if edge_type in neighbors:
-            return NodeSet(neighbors[edge_type])
+            return neighbors[edge_type]
 
         # Return all neighbors if no specific type is provided
-        return {k: NodeSet(v) for k, v in neighbors.items()}
+        return neighbors
 
     def get_antonyms(self):
         return NodeSet(self.antonyms)
@@ -404,6 +418,12 @@ class Node:
             return NodeSet(getattr(self, f'semset{set_level}', []))
         else:
             raise ValueError(f"Invalid semset level: {set_level}")
+
+    @classmethod
+    def toggle_labels(cls, flag=None):
+        if flag in {1,2}:
+            cls.labels = flag
+        cls.labels ^= 1
 
     @classmethod
     def compress(cls, *edge_type):
@@ -520,7 +540,7 @@ class Graph(NodeSet):
             raise ValueError("To fork a Graph, use the specific 'fork' method.")
         else:
             raise ValueError("Source must be a filename, a list of nodes, a set of nodes, or a NodeSet.")
-
+    
     def _handle_file_source(self, parent):
         if parent.endswith('.txt'):
             nodes = self._load_data(parent) # works just fine
@@ -539,14 +559,15 @@ class Graph(NodeSet):
 
         parent = os.path.basename(parent)
 
-        def parse_line_to_node(line):
+        def _parse_line_to_node(line):
             parts = line.strip().split('|')
             lang, type_ = parts[0].split(':')[0].split('-')[0], parts[0].split(':')[0].split('-')[1]
             name, lemma = parts[0][:-1].split(':')[1].split('(')
             metaphor = True if parts[1] == 'T' else False
-            return Node(lang, type_, name, lemma, metaphor, *[part.split('/') for part in parts[2:]])
+            sections = [part.split('/') for part in parts[2:]]
+            return Node(lang, type_, name, lemma, metaphor, *sections)
         
-        def update_node_relationships(nodes):
+        def _update_node_relationships(nodes):
             """
             Update each node's attributes to reference other nodes in the graph.
             Removes connections to nodes not present in the graph (remember, only when from TXT)
@@ -565,9 +586,9 @@ class Graph(NodeSet):
         try:
             with open(parent, 'r') as file:
                 for line in file:
-                    node = parse_line_to_node(line.strip())
+                    node = _parse_line_to_node(line.strip())
                     nodes_loaded_from_txt.append(node)
-            nodes_loaded_from_txt = update_node_relationships(nodes_loaded_from_txt)
+            nodes_loaded_from_txt = _update_node_relationships(nodes_loaded_from_txt)
             return nodes_loaded_from_txt
         except FileNotFoundError:
             print(f"The file {parent} has not been found.")
@@ -589,12 +610,12 @@ class Graph(NodeSet):
                 self._merge_and_trim_connections(node)
 
     def _merge_and_blossom_connections(self, node):
-        if not self.find_node(*node.identify()):
+        if not self.find(*node.identify()):
             new_node = node._copy()
             self._add_node(new_node)
         for attr in self._relationship_attributes():
             for connected_node in getattr(node, attr):
-                if not self.find_node(*connected_node.identify()):
+                if not self.find(*connected_node.identify()):
                     missing_node = connected_node._copy()
                     self._add_node(missing_node)
 
@@ -602,21 +623,21 @@ class Graph(NodeSet):
         new_node = node._copy()
         for attr in self._relationship_attributes():
             connections = getattr(new_node, attr)
-            trimmed_connections = [c for c in connections if self.find_node(*c.identify())]
+            trimmed_connections = [c for c in connections if self.find(*c.identify())]
             setattr(new_node, attr, trimmed_connections)
         self._add_node(new_node)
 
     def _add_node(self, node):
         if not isinstance(node, Node):
             raise TypeError("Only Node instances can be added to the graph.")
-        if not self.find_node(node.lang, node.type, node.name, node.lemma):
+        if not self.find(node.lang, node.type, node.name, node.lemma):
             super().append(node)
 
     @staticmethod
     def _relationship_attributes():
         return ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
 
-    def save_changes(self, custom_filename):
+    def save(self, custom_filename):
 
         custom_filename = os.path.basename(custom_filename)
 
@@ -641,7 +662,7 @@ class Graph(NodeSet):
 
     def create_node(self, lang, type_, name, lemma):
         # Check if a node with the given attributes already exists
-        if not self.find_node(lang, type_, name, lemma):
+        if not self.find(lang, type_, name, lemma):
             # If not, create a new Node instance with the provided attributes
             node = Node(lang, type_, name, lemma)
             # Append the new node to the graph
@@ -658,12 +679,18 @@ class Graph(NodeSet):
                     getattr(node, attr).remove(target_node)
     
     def bind(self, target_node, edge_type, append_node):
-        # The method delegates the action of appending the relationship to '_update_relationship' method
-        self._update_relationship('append', target_node, edge_type, append_node)
+        if isinstance(append_node, Node):
+            self._update_relationship('append', target_node, edge_type, append_node)
+        elif isinstance(append_node, (list, set, NodeSet)):
+            for node in append_node:
+                self._update_relationship('append', target_node, edge_type, node)
 
     def unbind(self, target_node, edge_type, append_node):
-        # The method delegates the action of removing the relationship to '_update_relationship' method
-        self._update_relationship('remove', target_node, edge_type, append_node)
+        if isinstance(append_node, Node):
+            self._update_relationship('remove', target_node, edge_type, append_node)
+        elif isinstance(append_node, (list, set, NodeSet)):
+            for node in append_node:
+                self._update_relationship('remove', target_node, edge_type, node)
     
     def _update_relationship(self, action, target_node, edge_type, append_node):
 
