@@ -123,7 +123,7 @@ class NodeSet(list):
         return NodeSet(results)
 
     def random(self, k=None, alias=True):
-        if not k and self: return random.choice(self, alias=alias)
+        if not k and self: return random.choice(self)
         if not self or k < 1: return None
         if k == 1: return NodeSet(nodes=random.choice(self), alias=alias)
         if k <= len(self): return NodeSet(nodes=random.sample(self, k), alias=alias)
@@ -424,6 +424,7 @@ class Node:
         if flag in {1,2}:
             cls.labels = flag
         cls.labels ^= 1
+        return cls
 
     @classmethod
     def compress(cls, *edge_type):
@@ -433,6 +434,7 @@ class Node:
             cls.toggle(*cls._edge_flags, 0)
         else:
             cls.toggle(*edge_type, 0)
+        return cls
 
     @classmethod
     def expand(cls, *edge_type):
@@ -442,6 +444,7 @@ class Node:
             cls.toggle(*cls._edge_flags, 1)
         else:
             cls.toggle(*edge_type, 1)
+        return cls
 
     @classmethod
     def toggle(cls, *edge_type):
@@ -479,6 +482,7 @@ class Node:
                     cls._repr_flags ^= flag  # Toggle the flag
             else:
                 raise ValueError(f"Unknown attribute: {arg}")
+        return cls
 
     def __repr__(self) -> str:
 
@@ -717,12 +721,4 @@ class Graph(NodeSet):
     
     def __repr__(self):
         return f'Graph(size={len(self)})'
-    
-G = Graph('data.txt')
-
-
-
-
-
-
 
