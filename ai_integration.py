@@ -4,8 +4,8 @@ from skcomponents import *
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 
-os.environ['OPENAI_API_KEY'] = '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'
-openai.api_key = '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'
+# os.environ['OPENAI_API_KEY'] =
+# openai.api_key = 
 # G = Graph('data.txt')
 
 model_of_choice = 1

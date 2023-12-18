@@ -16,9 +16,6 @@ class NodeSet(list):
         super().__init__(flattened_nodes)
 
         self.edge_permissions = {
-            'antonyms': False,
-            'hyperonyms': False,
-            'hyponyms': False,
             'synset0': False,
             'synset1': True,
             'synset2': False,
@@ -29,9 +26,11 @@ class NodeSet(list):
         
         self.group_mappings = {
             'synset': ['synset0', 'synset1', 'synset2'],
-            'semset': ['semset0', 'semset1', 'semset2'],
-            'meronyms': ['antonyms', 'hyperonyms', 'hyponyms']
+            'semset': ['semset0', 'semset1', 'semset2']
         }
+    
+    def list_langs(self): return list(set([n.lang for n in self]))
+    def list_types(self): return list(set([n.type for n in self]))
 
     def disable(self, *edge_types):
         if not edge_types:
@@ -71,7 +70,7 @@ class NodeSet(list):
 
         # Remove connections to nodes not present in the NodeSet
         for node in self:
-            for attr in ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+            for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                 try:
                     valid_nodes = getattr(node, attr, [])
                 except AttributeError:
@@ -149,11 +148,11 @@ class NodeSet(list):
     def filter_lemma(self, lemma=True):
         return self._filter_nodes(lambda node: bool(node.lemma) == lemma)
 
-    def filter_metaphor(self, metaphor=True):
-        return self._filter_nodes(lambda node: bool(node.metaphor) == metaphor)
+    def filter_favorite(self, favorite=True):
+        return self._filter_nodes(lambda node: bool(node.favorite) == favorite)
 
-    def filter_char_length(self, *args, on_lemma=False):
-        return self._filter_by_length('char_length', *args, on_lemma=on_lemma)
+    def filter_char_count(self, *args, on_lemma=False):
+        return self._filter_by_length('char_count', *args, on_lemma=on_lemma)
 
     def filter_word_count(self, *args, on_lemma=False):
         return self._filter_by_length('word_count', *args, on_lemma=on_lemma)
@@ -173,7 +172,7 @@ class NodeSet(list):
     def _filter_by_length(self, length_type, *args, on_lemma=False):
         def condition_func(node):
             target = getattr(node, 'lemma' if on_lemma else 'name', "").lower()
-            length_func = len if length_type == 'char_length' else lambda t: len(t.split())
+            length_func = len if length_type == 'char_count' else lambda t: len(t.split())
             target_length = length_func(target)
             return self._compare_length(target_length, *args)
 
@@ -241,15 +240,6 @@ class NodeSet(list):
 
         return NodeSet(nodes=filtered_nodes, alias=False)
 
-    def filter_antonyms(self, operator, value):
-        return self._filter_by_attribute('antonyms', operator, value)
-
-    def filter_hyperonyms(self, operator, value):
-        return self._filter_by_attribute('hyperonyms', operator, value)
-
-    def filter_hyponyms(self, operator, value):
-        return self._filter_by_attribute('hyponyms', operator, value)
-
     def filter_synset0(self, operator, value):
         return self._filter_by_attribute('synset0', operator, value)
 
@@ -275,37 +265,32 @@ class Node:
 
     # Define FLAGS as a class variable
     _FLAGS = {
-        'lang':       0b000000000000001,
-        'type':       0b000000000000010,
-        'name':       0b000000000000100,
-        'lemma':      0b000000000001000,
-        'metaphor':   0b000000000010000,
-        'antonyms':   0b000000000100000,
-        'hyperonyms': 0b000000001000000,
-        'hyponyms':   0b000000010000000,
-        'synset0':    0b000000100000000,
-        'synset1':    0b000001000000000,
-        'synset2':    0b000010000000000,
-        'semset0':    0b000100000000000,
-        'semset1':    0b001000000000000,
-        'semset2':    0b010000000000000,
-        'examples':   0b100000000000000
+        'lang':       0b000000000001,
+        'type':       0b000000000010,
+        'name':       0b000000000100,
+        'lemma':      0b000000001000,
+        'favorite':   0b000000010000,
+        'synset0':    0b000000100000,
+        'synset1':    0b000001000000,
+        'synset2':    0b000010000000,
+        'semset0':    0b000100000000,
+        'semset1':    0b001000000000,
+        'semset2':    0b010000000000,
+        'examples':   0b100000000000
     }
 
     _identifier_flags = {'lang', 'type', 'name', 'lemma'}
-    _descriptive_flags = {'metaphor'}
+    _descriptive_flags = {'favorite'}
     _edge_flags = set(_FLAGS.keys()) - _identifier_flags - _descriptive_flags
 
     # Initially enable all flags
-    _repr_flags = 0b000000000011111
+    _repr_flags = 0b000000011111
 
     labels = 1
 
     def __init__(self, lang: str, type_: str, name: str,
                  lemma: str,
-                 metaphor: bool = False,
-                 antonyms: list = None,
-                 hyperonyms: list = None, hyponyms: list = None,
+                 favorite: bool = False,
                  synset0: list = None, synset1: list = None, synset2: list = None,
                  semset0: list = None, semset1: list = None, semset2: list = None,
                  examples: list = None) -> None:
@@ -314,8 +299,7 @@ class Node:
 
         self.lang, self.type, self.name = lang, type_, name
         self.lemma = lemma if lemma is not None else ''
-        self.metaphor = metaphor == True
-        self.antonyms, self.hyperonyms, self.hyponyms = [_ if _ is not None else [] for _ in [antonyms, hyperonyms, hyponyms]]
+        self.favorite = favorite == True
         self.synset0, self.synset1, self.synset2 = [synset if synset is not None else [] for synset in [synset0, synset1, synset2]]
         self.semset0, self.semset1, self.semset2 = [semset if semset is not None else [] for semset in [semset0, semset1, semset2]]
         self.examples = examples if examples is not None else []
@@ -357,9 +341,7 @@ class Node:
         # Creating a deep copy of the node to avoid aliasing issues when new Graph instances are created
         # This ensures that changes to the copied node in one Graph instance do not affect the node in another
         return Node(
-            self.lang, self.type, self.name, self.lemma, self.metaphor,
-            self.antonyms[:],
-            self.hyperonyms[:], self.hyponyms[:],
+            self.lang, self.type, self.name, self.lemma, self.favorite,
             self.synset0[:], self.synset1[:], self.synset2[:],
             self.semset0[:], self.semset1[:], self.semset2[:],
             self.examples[:]
@@ -376,9 +358,6 @@ class Node:
             return NodeSet(all_semsets)
         
         neighbors = {
-            'antonyms': NodeSet(self.antonyms),
-            'hyperonyms': NodeSet(self.hyperonyms),
-            'hyponyms': NodeSet(self.hyponyms),
             'synset0': NodeSet(self.synset0),
             'synset1': NodeSet(self.synset1),
             'synset2': NodeSet(self.synset2),
@@ -393,15 +372,6 @@ class Node:
 
         # Return all neighbors if no specific type is provided
         return neighbors
-
-    def get_antonyms(self):
-        return NodeSet(self.antonyms)
-    
-    def get_hyperonyms(self):
-        return NodeSet(self.hyperonyms)
-    
-    def get_hyponyms(self):
-        return NodeSet(self.hyponyms)
     
     def get_synset(self, set_level=None):
         if set_level is None:
@@ -460,10 +430,6 @@ class Node:
             while genre in edge_type:
                 edge_type.remove(genre)
                 edge_type.extend([genre + str(i) for i in range(3)])
-        
-        if 'meronyms' in edge_type:
-            edge_type.remove('meronyms')
-            edge_type.extend(['antonyms', 'hyperonyms', 'hyponyms'])
 
         # Process each flag
         for arg in edge_type:
@@ -493,18 +459,11 @@ class Node:
         else_name = ':'.join([lang_type, self.name]) if lang_type else self.name
 
         lemma = f"({self.lemma})" if (Node._repr_flags & Node._FLAGS['lemma']) else ''
-        metaphor = '/m' if (Node._repr_flags & Node._FLAGS['metaphor']) and self.metaphor else ''
+        favorite = '/m' if (Node._repr_flags & Node._FLAGS['favorite']) and self.favorite else ''
 
-        header = else_name + lemma + metaphor
+        header = else_name + lemma + favorite
 
         parts = []
-
-        if Node._repr_flags & Node._FLAGS['antonyms']:
-            parts.append(f"{'antonyms=' if Node.labels else ''}{len(self.antonyms)}")
-        if Node._repr_flags & Node._FLAGS['hyperonyms']:
-            parts.append(f"{'hyperonyms=' if Node.labels else ''}{len(self.hyperonyms)}")
-        if Node._repr_flags & Node._FLAGS['hyponyms']:
-            parts.append(f"{'hyponyms=' if Node.labels else ''}{len(self.hyponyms)}")
 
         # Synsets and semsets
         for level in range(0, 3):
@@ -567,9 +526,9 @@ class Graph(NodeSet):
             parts = line.strip().split('|')
             lang, type_ = parts[0].split(':')[0].split('-')[0], parts[0].split(':')[0].split('-')[1]
             name, lemma = parts[0][:-1].split(':')[1].split('(')
-            metaphor = True if parts[1] == 'T' else False
+            favorite = True if parts[1] == 'T' else False
             sections = [part.split('/') for part in parts[2:]]
-            return Node(lang, type_, name, lemma, metaphor, *sections)
+            return Node(lang, type_, name, lemma, favorite, *sections)
         
         def _update_node_relationships(nodes):
             """
@@ -578,7 +537,7 @@ class Graph(NodeSet):
             """
             temp_nodes = {node.identify(format=True): node for node in nodes}
             for node in nodes:
-                for attr in ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+                for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                     current_relations = getattr(node, attr)
                     updated_relations = [temp_nodes.get(rel) for rel in current_relations if temp_nodes.get(rel)]
                     setattr(node, attr, updated_relations)
@@ -639,7 +598,7 @@ class Graph(NodeSet):
 
     @staticmethod
     def _relationship_attributes():
-        return ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
+        return ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
 
     def save(self, custom_filename):
 
@@ -653,8 +612,8 @@ class Graph(NodeSet):
             # Iterate over each node in the graph
             for node in self:
                 # Convert each node's attributes to a string format suitable for file storage
-                line = f"{node.lang}-{node.type}:{node.name}({node.lemma})|{'F' if not node.metaphor else 'T'}"
-                for attr in ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+                line = f"{node.lang}-{node.type}:{node.name}({node.lemma})|{'F' if not node.favorite else 'T'}"
+                for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                     line += '|' + '/'.join([string_ids[node] for node in getattr(node, attr)])
                 # Write each formatted node string to the file
                 line += '|' + '/'.join(node.examples)
@@ -678,7 +637,7 @@ class Graph(NodeSet):
         # Iterate over all nodes in the graph
         for node in self:
             # For each node, remove any references to the deleted node in their relational attributes
-            for attr in ['antonyms', 'hyperonyms', 'hyponyms', 'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+            for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                 if target_node in getattr(node, attr):
                     getattr(node, attr).remove(target_node)
     
@@ -704,16 +663,8 @@ class Graph(NodeSet):
             else:
                 getattr(node, edge).__getattribute__(action_method)()
 
-        # Handle hyperonym and antonym relationships
-        if edge_type == 'antonyms':
-            perform_action(target_node, edge_type, action, append_node)
-            perform_action(append_node, edge_type, action, target_node)
-        elif edge_type in ['hyperonyms', 'hyponyms']:
-            opposite_edge_type = {'hyponyms': 'hyperonyms', 'hyperonyms': 'hyponyms'}.get(edge_type)
-            perform_action(target_node, edge_type, action, append_node)
-            perform_action(append_node, opposite_edge_type, action, target_node)
         # Handle synset and semset relationships, which require a level
-        elif edge_type.startswith('synset') or edge_type.startswith('semset'):
+        if edge_type.startswith('synset') or edge_type.startswith('semset'):
             target_edge_type = edge_type 
             append_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
             perform_action(target_node, target_edge_type, action, append_edge_type)
