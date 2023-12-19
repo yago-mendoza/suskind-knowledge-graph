@@ -4,33 +4,33 @@ import random
 class NodeSet(list):
 
     def __init__(self, nodes=None, alias=False):
-        self._alias = alias
-        
-        # Flatten the input if it's a NodeSet or Graph, otherwise use it as is
-        flattened_nodes = self._flatten_input(nodes)
 
-        # Validate that all elements are instances of Node
-        if not all(isinstance(node, Node) for node in flattened_nodes):
+        self._alias = alias  # private attribute (only used in the following line)        
+        nodes_as_list = self._convert_to_list(nodes)  # converts the data structure to a list
+        if not all(isinstance(node, Node) for node in nodes_as_list):
+            # Validate that all elements are instances of Node
             raise ValueError("All elements must be instances of Node")
+        
+        super().__init__(nodes_as_list)  # initialize the parent list class
 
-        super().__init__(flattened_nodes)
+    def define_permissions(self):
+
+        synset0, synset1, synset2 = False, True, False
+        semset0, semset1, semset2 = False, True, False
 
         self.edge_permissions = {
-            'synset0': False,
-            'synset1': True,
-            'synset2': False,
-            'semset0': False,
-            'semset1': True,
-            'semset2': False
+            'synset0': synset0,
+            'synset1': synset1,
+            'synset2': synset2,
+            'semset0': semset0,
+            'semset1': semset1,
+            'semset2': semset2
             }
         
         self.group_mappings = {
             'synset': ['synset0', 'synset1', 'synset2'],
             'semset': ['semset0', 'semset1', 'semset2']
         }
-    
-    def list_langs(self): return list(set([n.lang for n in self]))
-    def list_types(self): return list(set([n.type for n in self]))
 
     def disable(self, *edge_types):
         if not edge_types:
@@ -56,7 +56,16 @@ class NodeSet(list):
                 elif edge in self.edge_permissions:
                     self.edge_permissions[edge] = True
 
-    def _flatten_input(self, input_nodes):
+    def view_nodes(self): return [node for node in self]
+    def view_langs(self): return [node.lang for node in self]
+    def view_types(self): return [node.type for node in self]
+    def view_names(self): return [node.name for node in self]
+    def view_lemmas(self): return [node.lemma for node in self]
+
+    def set_langs(self): return list(set([n.lang for n in self]))
+    def set_types(self): return list(set([n.type for n in self]))
+
+    def _convert_to_list(self, input_nodes):
         # If the input is a NodeSet, Graph, list, or set, convert it to a list
         if isinstance(input_nodes, Node):
             input_nodes = [input_nodes]
@@ -80,7 +89,7 @@ class NodeSet(list):
                 setattr(node, attr, [n for n in valid_nodes if n.identify(format=True) in node_identifiers])
     
     def __getitem__(self, index):
-        # Comprobar que funcione
+        # Redefine magic method so that it returns NodeSets
         result = super().__getitem__(index)
         if isinstance(result, list):
             return NodeSet(result)
@@ -91,7 +100,7 @@ class NodeSet(list):
         if not isinstance(node, Node):
             raise ValueError("Only Node instances can be added to the Graph.")
         # Check if the node is unique based on its identifier
-        if any(existing_node.identify() == node.identify() for existing_node in self):
+        if any(existing_node == node for existing_node in self):
             raise ValueError("A node with the same identifier already exists in the Graph.")
 
         super().append(node)  # Use super() to avoid recursion
@@ -121,7 +130,7 @@ class NodeSet(list):
 
         return NodeSet(results)
 
-    def random(self, k=None, alias=True):
+    def random(self, k=None, alias=False):
         if not k and self: return random.choice(self)
         if not self or k < 1: return None
         if k == 1: return NodeSet(nodes=random.choice(self), alias=alias)
@@ -132,12 +141,6 @@ class NodeSet(list):
         # Iterate through the keyword arguments provided in 'changes'
         for node in self:
             node.edit(**attr_edits)
-    
-    def view_names(self):
-        return [node.name for node in self]
-    
-    def view_nodes(self):
-        return [node for node in self]
 
     def filter_lang(self, *langs, complement=False):
         return self._filter_nodes(lambda node: getattr(node, 'lang') in langs, complement)
@@ -356,23 +359,20 @@ class Node:
         elif edge_type == 'semset':
             all_semsets = self.semset0 + self.semset1 + self.semset2
             return NodeSet(all_semsets)
-        
-        neighbors = {
-            'synset0': NodeSet(self.synset0),
-            'synset1': NodeSet(self.synset1),
-            'synset2': NodeSet(self.synset2),
-            'semset0': NodeSet(self.semset0),
-            'semset1': NodeSet(self.semset1),
-            'semset2': NodeSet(self.semset2),
-        }
 
-        # Handling for specific edge types
-        if edge_type in neighbors:
-            return neighbors[edge_type]
+        if hasattr(self, edge_type):
+            return NodeSet(getattr(self, edge_type))
 
-        # Return all neighbors if no specific type is provided
-        return neighbors
-    
+        if edge_type==None:
+            return {
+                'synset0': NodeSet(self.synset0),
+                'synset1': NodeSet(self.synset1),
+                'synset2': NodeSet(self.synset2),
+                'semset0': NodeSet(self.semset0),
+                'semset1': NodeSet(self.semset1),
+                'semset2': NodeSet(self.semset2),
+            }
+
     def get_synset(self, set_level=None):
         if set_level is None:
             return NodeSet(self.synset0 + self.synset1 + self.synset2)
@@ -486,11 +486,8 @@ class Node:
 class Graph(NodeSet):
 
     def __init__(self, parent=None):
-    
         self.parent = parent
-
         self._build_nodes(parent)
-
         self._set_graph_reference()
         self._clean_edges()
 
@@ -672,4 +669,3 @@ class Graph(NodeSet):
     
     def __repr__(self):
         return f'Graph(size={len(self)})'
-

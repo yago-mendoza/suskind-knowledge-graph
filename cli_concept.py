@@ -3,14 +3,16 @@ import datetime
 from skcomponents import *
 from rich import print
 
+'''
+USEFUL CMD LIBRARY RESSOURCES
+
 # self.prompt
 # self.intro
 # complete_xxx
 # do_help para documentar cada comando
 # prompt_suffix
 
-'''
-ABOUT FILTERS
+TERMINAL CONCEPT
 
 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
 | Entered editor mode on filters:
@@ -105,28 +107,34 @@ ABOUT FILTERS
 >> ''
 14:32:18 ~ [en][j][Normal]@[('')]/[y1]: set y
 14:32:18 ~ [en][j][Normal]@[('')]/[y0/y1/y2]: cd QWERTY
-14:32:18 ~ [en][j][~QWERTY]@[('')]/[[y0/y1/y2]: ls
+14:32:18 ~ [en][j][~QWERTY]@[('')]/[y0/y1/y2]: ls
 | Warning. Editing commands disabled due to multiple fielding.
 | Warning. No connections were yet added.
 >> add Gato
 | Error. In order to modify attributes, select a single field.
 >> ''
-14:32:18 ~ [en][j][~QWERTY]@[('')]/[[y0/y1/y2]: r
-14:32:18 ~ [es][v][Andar]@[('')]/[[y0/y1/y2]: ls
+14:32:18 ~ [en][j][~QWERTY]@[('')]/[y0/y1/y2]: set es n     # preparing the entry
+14:32:18 ~ [es][n][~QWERTY]@[('')]/[y0/y1/y2]: set y1
+14:32:18 ~ [en][j][~QWERTY]@[('')]/[y1]: ls
+| Warning. No connections were yet added.
+>> add Perro
+>> ''
+14:32:18 ~ [en][j][QWERTY]@[('')]/[y0/y1/y2]: r
+14:32:18 ~ [es][v][Andar]@[('')]/[y0/y1/y2]: ls
 | Showing 7/77 results:
 | 1. Caminador            | 5. Golfo
 | 2. Persona              | 6. Cercenar
 | 3. Atrapar antes po...  | 7. Piedras blancas
 | 4. Electrocutar
 >> cd 6
-14:32:18 ~ <..2>[es][v][Cercenar]@[('')]/[[y0/y1/y2]: ls
+14:32:18 ~ <2>[es][v][Cercenar]@[('')]/[y0/y1/y2]: ls
 | Showing 7/77 results:
 | 1. Blanco               | 5. Melón
 | 2. Error                | 6. Cantarín
 | 3. Atrapar antes po...  | 7. Elegía
 | 4. Pifiarla
->> cd 7
-14:32:18 ~ <..3>[es][n][Elegía]@[('')]/[[y0/y1/y2]: ls
+>> r
+14:32:18 ~ <3>[es][n][Elegía]@[('')]/[y0/y1/y2]: ls
 | Showing 7/35 results:
 | 1. Caminador            | 5. Golfo
 | 2. Persona              | 6. Cercenar
@@ -134,163 +142,119 @@ ABOUT FILTERS
 | 4. Electrocutar
 >> ''
 ...
-14:32:18 ~ <..55>[es][n][Esperanza]@[('')]/[[y0/y1/y2]: goto 33
-14:32:18 ~ <33..>[es][n][Canción]@[('')]/[[y0/y1/y2]: goto -1
-14:32:18 ~ <55..>[es][n][Esperanza]@[('')]/[[y0/y1/y2]: goto 14
-14:32:18 ~ <14..>[es][n][Párbulos]@[('')]/[[y0/y1/y2]: nhist
+14:32:18 ~ <55>[es][n][Esperanza]@[('')]/[y0/y1/y2]: goto 54
+14:32:18 ~ <54..>[es][n][Canción]@[('')]/[y0/y1/y2]: cd ..                            # retornaria al node previ al de consulta nested
+| Warning: this action will delete the nested search history. Are you sure? [Y/N]
+>> N
+14:32:18 ~ <54..>[es][n][Canción]@[('')]/[y0/y1/y2]: goto -1
+14:32:18 ~ <55>[es][n][Esperanza]@[('')]/[y0/y1/y2]: goto 14
+14:32:18 ~ <14..>[es][n][Párbulos]@[('')]/[y0/y1/y2]: nhist -c / nhist
 | Showing nesting history:
 | <0> [es][v][Andar]@[('')] -> [es][v][Cercenar]@[('')]
 | <1> [es][v][Cercenar]@[('')] -> [es][n][Elegía]@[('')]
 ...
 | <55> [es][n][Humo]@[('')] -> [es][n][Cigarrillo electrónico]@[('')]
-14:32:18 ~ <14..>[es][n][Párbulos]@[('')]/[[y0/y1/y2]: cd Perro
+14:32:18 ~ <14..>[es][n][Párbulos]@[('')]/[y0/y1/y2]: ls
+| Showing 7/35 results:
+| 1. Caminador            | 5. Golfo
+| 2. Persona              | 6. Cercenar
+| 3. Atrapar antes po...  | 7. Vulgar
+| 4. Electrocutar
+>> cd 4
+14:32:18 ~ <14.1>[es][n][Electrocutar]@[('')]/[y0/y1/y2]: nhist -c
+| Warning. No depth was acquired yet.
+14:32:18 ~ <14.1>[es][n][Electrocutar]@[('')]/[y0/y1/y2]: nhist   # 'cd ..' would return me to 14 after a warning
+| Showing nested history:                                          # & 'ret' wwould return me to first node of all after a warning
+| 1. <14..>[es][n][Párbulos]@[('')]
+14:32:18 ~ <14.1>[es][n][Electrocutar]@[('')]/[y0/y1/y2]: cd 1
 | Warning: this action will delete the nested search history. Are you sure? [Y/N]
 >> Y
-
-
->> Are you sure you want to go back to [es][v][Cercenar]@[('')]?
-The nesting history will be lost and you will work tree clean [Y/N]
-
-14:32:18 ~ [es][n][Humo]@[('')]/[[y0/y1/y2]: ls
-<103> Showing 7/84 results:
-||||| 1. Caminador            ||||| 5. Golfo
-||||| 2. Persona              ||||| 6. Cercenar
-||||| 3. Atrapar antes po...  ||||| 7. Vulgar
-||||| 4. Electrocutar
->> cd ..
-14:32:18 ~ [es][n][Cigarrillo electrónico]@[('')]/[[y0/y1/y2]: ''
-14:32:18 ~ [es][n][Cigarrillo electrónico]@[('')]/[[y0/y1/y2]: ls
-<102> Showing 7/84 results:
-||||| 1. Caminador            ||||| 5. Golfo
-||||| 2. Persona              ||||| 6. Cercenar
-||||| 3. Atrapar antes po...  ||||| 7. Vulgar
-||||| 4. Electrocutar
->> hist
-| Showing nesting history:
-| <0> [es][v][Andar]@[('')] -> [es][v][Cercenar]@[('')]
-| <1> [es][v][Cercenar]@[('')] -> [es][n][Elegía]@[('')]
-...
-| <102> [es][n][Humo]@[('')] -> [es][n][Cigarrillo electrónico]@[('')]
->> goto 28
-14:32:18 ~ [es][v][Carraspear]@[('')]/[[y0/y1/y2]: ls
-<27> Showing 7/77 results:
-|||| 1. Blanco               |||| 5. Melón
-|||| 2. Error                |||| 6. Cantarín
-|||| 3. Atrapar antes po...  |||| 7. Elegía
-|||| 4. Pifiarla
->> ''
-
-
-
+14:32:18 ~ <14..>[es][n][Párbulos]@[('')]/[y0/y1/y2]: sr
+| Warning: this action will delete the nested search history. Are you sure? [Y/N]
 >> Y
+14:32:18 ~ [es][n][Párbulos]@[('')]/[y0/y1/y2]: cd ..
+14:32:18 ~ [es][v][Andar]@[('')]/[y0/y1/y2]: nhist
+| Warning. Working tree clean.
+14:32:18 ~ [es][v][Andar]@[('')]/[y0/y1/y2]: hist
+| Error. Needs argument 'lim'.
+14:32:18 ~ [es][v][Andar]@[('')]/[y0/y1/y2]: hist 40 80
+| Showing last visited nodes:
+| ...
+| /40 14:32:18 ~ [en][j][Normal]@[('')]/[y0/y1/y2]
+| /41 14:33:16 ~ [es][v][Vejar]@[('')]/[e0]
+...
+| /80 14:33:16 ~ [es][v][Vejar]@[('')]/[e0]
+14:32:18 ~ [es][v][Andar]@[('')]/[y0/y1/y2]: cd -40
+| Warning: this action will delete the search history. Are you sure? [Y/N]
+>> Y
+14:32:18 ~ [en][j][Normal]@[('')]/[y0/y1/y2]: name -e
+>> Banco
+| Warning. There's already 2 entries called 'Banco'. Select one to merge.
+|  1. [es][n][Banco]@[('institución')]
+|  2. [es][n][Banco]@[('mobiliario')]
+|  3. <new_lemma>
+>> 3                                             # could've also directly writen the new lemma
+| SYS. Enter the lemma for the new entry.
+>> grupo
+14:32:18 ~ [en][j][Banco]@[('grupo')]/[y0/y1/y2]: lemma -e
+| Other lemmas for this entry are ...
+|  1. Institución
+|  2. Mobiliario
+|  3. <new_lemma>
+>> Grupo
+14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: lemma -e
+14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: rm
+| Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
+>> Y
+14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: ?                # returns to the last node
+| The actions allowed at this status are ...
+| : cd, set/unset, lemma, name, rm, undo.
+| For further information, input '<action> --help'.
+14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: ls
+| Showing 7/35 results:
+| 1. Caminador            | 5. Golfo
+| 2. Persona              | 6. Cercenar
+| 3. Atrapar antes po...  | 7. Vulgar
+| 4. Electrocutar
+>> tf 4 6 1 7 > y0
 
+# HELP DOCSTRINGS ##################################
 
+cd --help
 
-add-node
+class function
+ | SIGNATURE : cd [entry] [/e]
+ | Acccesses a node and sets is as current.
+ |   /e
 
-delete-node
-add-relation
-edit-relation
-delete-relation
+ls --help
 
-hist : prints out a history of relevant changes during session
-status : prints relevant parameters and their current configuration
-? : prints what can be done at this current screen
-help _ : prints out the explanation for the given command
+class ls [un]
+ | SIGNATURE : cd [entry] [/e]
+ | Acccesses a node and sets is as current.
+ |   /e
 
-cd : if only 1 lemma, enter directly. If more than 1 lemma, print out list with numbers.
-cd : also to add a new Node
-remove : removes the node from the system
+# ADDITIONAL IMPLEMENTATIONS ###########################
+- undo
+- status (already set, to do)
+- ? # info of what can be done in the screen
+- help ___
+- suggestions
+- and changing words from category (transfer)
+- traduccion con filter, no con funcion explicita (same for merging synset1's, just a way to merge nodes and them also)
 
-set-ncol _ : sets the number of columns
-ls : see e_/y_ for the current node
-del _ _ _ : deletes this connections
-send 19 semset2 / send 19 e2 / 19 e2 / 19 2
+Useful symbols
 
+<, >
+clear, copy, paste
+extract / export, min
+commit, push, autosave 
 
-
-
-# ver varios a la vez
-
-
-
-# batching
-# fast editing
-
-
-e / y
-
-del
-<
->
-ls
-clear
-r = random node
-.ncol
-
-update-attr
-transfer-attr
-copy
-paste
-
-ADVANCED COMMANDS
-extract / export
-min
-
-MKDIR COMMANDS
-commit
-push
-autosave 
+# OBSERVATIONS AND VERY FUTURE STEPS
+- min_path
+- reduce a set
+- search method
+- decide where to use 'rich' colors
+- I dont need a hist of every single action done. So hist will be just for visited nodes.
 
 '''
-
-
-
-class Placeholder:
-    def __init__(self, primary_interface):
-        self.primary_interface = primary_interface
-    def update(self):
-        time_str = datetime.datetime.now().strftime("%H:%M:%S")
-        field = self.primary_interface.current_field
-        name = self.primary_interface.current_node
-        # 10:46:32 ~ (F/es/-w)[concept]@[(lemma)]/:
-        return f"{time_str} ~ (F/w)[{field}]@[{name or ''}(lemma)]/: "
-
-class PrimaryInterface (cmd.Cmd):
-    def __init__(self, database):
-        super().__init__()
-        self.database = database
-        self.current_node = None
-        self.current_field = 'concept'
-        self.placeholder = Placeholder(self)
-        self.update_prompt()
-        self.lang = ['es']
-        self.type = ['n']
-    
-    def update_prompt(self):
-        # Default method & attribute for cmd.Cmd
-        self.prompt = self.placeholder.update()
-
-    def do_set(self, property):
-        if property in self.database.list_langs():
-            self.lang.append(property)
-        elif property in self.database.list_types():
-            self.lang.append(property)
-
-    def do_cd(self, concept_name):
-        concept = self.database.find(self.lang, self.type, concept_name, '')
-        if concept:
-            self.current_node = concept_name
-            self.current_field = 'concept'
-            self.update_prompt()
-        else:
-            print(f"No se encontró el concepto: {concept_name}")
-
-    def do_exit(self, arg):
-        print("Saliendo...")
-        return True
-
-if __name__ == "__main__":
-    G = Graph('data.txt')
-    cli = PrimaryInterface(G)
-    cli.cmdloop()

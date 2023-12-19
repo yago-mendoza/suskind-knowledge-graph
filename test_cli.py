@@ -1,56 +1,50 @@
 import cmd
 
-class GraphCmd(cmd.Cmd):
-    def __init__(self):
+class Placeholder:
+    def __init__(self, primary_interface):
+        self.primary_interface = primary_interface
+    def update(self):
+        time_str = datetime.datetime.now().strftime("%H:%M:%S")
+        field = self.primary_interface.current_field
+        name = self.primary_interface.current_node
+        # 10:46:32 ~ (F/es/-w)[concept]@[(lemma)]/:
+        return f"{time_str} ~ (F/w)[{field}]@[{name or ''}(lemma)]/: "
+
+class PrimaryInterface (cmd.Cmd):
+    def __init__(self, database):
         super().__init__()
-        self.prompt = "14:32:04 ~ [es][n][concept]@[(lemma)]/: "
-        self.filters = []
+        self.database = database
+        self.current_node = None
+        self.current_field = 'concept'
+        self.placeholder = Placeholder(self)
+        self.update_prompt()
+        self.lang = ['es']
+        self.type = ['n']
+    
+    def update_prompt(self):
+        # Default method & attribute for cmd.Cmd
+        self.prompt = self.placeholder.update()
 
-    def do_filter(self, args):
-        """Gestiona el comando 'filter' y sus subcomandos."""
-        if args == "-e":
-            self.prompt = "14:32:09 ~ [es][n][concept]@[(lemma)]/: filter\n"
-        elif args == "-rm":
-            self.prompt = "14:32:18 ~ [en][v][Resonate]@[('')]/: filter\n"
+    def do_set(self, property):
+        if property in self.database.list_langs():
+            self.lang.append(property)
+        elif property in self.database.list_types():
+            self.lang.append(property)
+
+    def do_cd(self, concept_name):
+        concept = self.database.find(self.lang, self.type, concept_name, '')
+        if concept:
+            self.current_node = concept_name
+            self.current_field = 'concept'
+            self.update_prompt()
         else:
-            self.prompt = "14:32:18 ~ [en][v][Resonate]@[('')]/: filter\n"
+            print(f"No se encontró el concepto: {concept_name}")
 
-    def do_r(self, args):
-        """Gestiona el comando 'r' y sus subcomandos."""
-        if args == "-favorite":
-            self.prompt = "14:32:11 ~ [es][n][concept]@[(lemma)]/: r -favorite\n"
-        elif args == "-f2":
-            self.prompt = "14:32:11 ~ [en][n][Dinero]@[('')]/: r -f2\n"
-        else:
-            self.prompt = "14:32:18 ~ [en][v][Resonate]@[('')]/: r\n"
-
-    def do_ls(self, args):
-        """Gestiona el comando 'ls' y sus subcomandos."""
-        if args == "-f1":
-            self.prompt = "14:32:15 ~ [en][v][Resonate]@[('')]/: ls -f1\n"
-        else:
-            self.prompt = "14:32:18 ~ [en][v][Resonate]@[('')]/: ls\n"
-
-    def do_cd(self, args):
-        """Gestiona el comando 'cd' y sus subcomandos."""
-        self.prompt = "14:32:18 ~ [es][n][Alabastro]@[('')]/: cd " + args + "\n"
-
-    def do_summary(self, args):
-        """Gestiona el comando 'summary'."""
-        self.prompt = "14:32:18 ~ [en][j][Normal]@[('')]/: summary\n"
-
-    def do_set(self, args):
-        """Gestiona el comando 'set'."""
-        self.prompt = "14:32:18 ~ [en][j][Normal]@[('')]/: set " + args + "\n"
-
-    def do_unset(self, args):
-        """Gestiona el comando 'unset'."""
-        self.prompt = "14:32:18 ~ [en][j][Normal]@[('')]/: unset " + args + "\n"
-
-    def do_exit(self, args):
-        """Sale del programa."""
-        print("Exiting...")
+    def do_exit(self, arg):
+        print("Saliendo...")
         return True
 
-if __name__ == '__main__':
-    GraphCmd().cmdloop()
+if __name__ == "__main__":
+    G = Graph('data.txt')
+    cli = PrimaryInterface(G)
+    cli.cmdloop()
