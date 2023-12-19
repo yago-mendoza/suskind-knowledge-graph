@@ -4,6 +4,40 @@ from skcomponents import *
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 
+
+
+class PromptTemplate:
+    def __init__(self, template):
+        self.template = template
+
+    def ask(self, *args):
+        return self.template.format(*args)
+
+class LLMBuilder:
+    def __init__(self, max_tokens, temperature):
+        self.model_name = 'gpt-3.5-turbo-16k'  # Default model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.prompt_template = None
+
+    def set_model_name(self, model_name):
+        self.model_name = model_name
+        return self
+
+    def build(self, prompt_template):
+        self.prompt_template = prompt_template.replace("_", "{}")
+        return Suskind_LLM_Implementation(self)
+
+
+class Suskind_LLM_Implementation:
+    def __init__(self, builder):
+        self.llm = OpenAI(model_name=builder.model_name, temperature=builder.temperature, max_tokens=builder.max_tokens)
+        self.prompt = PromptTemplate(builder.prompt_template)
+
+    def send(self, *args):
+        return self.llm(self.prompt.ask(*args)).strip()
+
+
 MODELS = {
     1 : 'gpt-3.5-turbo-16k',
     2 : 'gpt-3.5-turbo-1106',
@@ -11,31 +45,13 @@ MODELS = {
     4 : 'davinci-002'
 }
 
-model_of_choice = 5
-max_tokens = 3
-    
-class Suskind_LLM_Implementation:
+# Ejemplo de uso:
+builder = LLMBuilder(max_tokens=3, temperature=0.5)
+builder.set_model_name(MODELS[1])
+LLM = builder.build('Rate _ between "_" and "_". 1-10.')
 
-    def __init__ (self):
-        self.llm = OpenAI(model_name=MODELS[model_of_choice], temperature=0, max_tokens=max_tokens)
-        self.prompt = PromptTemplate(
-            input_variables=['w1','w2','property'],
-            template = 'Rate {property} between "{w1}" and "{w2}". 1-10.',
-        )
-
-    def rate (self, w1, w2, property):
-        return self.llm(self.prompt.format(w1=w1, w2=w2, property=property))
-
-
-LLM = Suskind_LLM_Implementation()
-
-for mssg in mssgs:
-    print(LLM.llm(mssg[0]).strip(), mssg[1])
-
-for s1, s2 in synonyms:
-    rate = LLM.rate(s1, s2, 'synonimicity')
-    print(s1, s2, rate.strip())
-
+response = LLM.send('w1', 'w2', 'property')
+print(response)
 
 
 
