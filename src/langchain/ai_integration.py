@@ -4,6 +4,9 @@ from ..skcomponents.skcomponents import *
 from langchain.prompts import PromptTemplate
 from typing import Dict
 
+# SYN (hyperonomy)
+# SEM (nn=composition; sv=transitivity; others=causality)
+
 openai.api_key = ""
 
 class PromptTemplate:
