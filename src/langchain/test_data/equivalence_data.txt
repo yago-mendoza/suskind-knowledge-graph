@@ -1,0 +1,5 @@
+abominable hombre de las nieves, monstruo, 1
+sidra caliente, bebida, 1
+corvette, coche, 1
+viandante, persona, 1
+hablante, persona, 1

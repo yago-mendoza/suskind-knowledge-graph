@@ -1,0 +1,44 @@
+Conducir,Vehículo,1
+Comer,Bocadillo,1
+Beber,Agua,1
+Lanzar,Boomerang,1
+Poner en bandeja,Finiquitar,1
+Apuñalar,Herida,1
+Envenenamiento,Intoxicación,1
+Atropellar,Lesión,1
+Muerte,Luto,1
+Ladrar,Ruido,1
+Guitarra,Melodía,1
+Meteorito,Impacto,1
+Ciencia,Innovación,1
+Catapulta,Destrucción,1
+Corte,Sangre,1
+Narrar,Anonadar,1
+Dar alcance,Eliminar,1
+Estar de camino,Llegar,1
+Leer,Conocimiento,1
+Correr,Agotamiento,1
+Viajar,Exploración,1
+Sembrar,Recoger,1
+Innovar,Cambio,1
+Llover,Humedad,1
+Romper,Fragmentos,1
+Sol,Broncear,1
+Gritar,Advertir,1
+Sufrir,Gritar,1
+Perdonar,Reconciliar,1
+Indagar,Descubrir,1
+Entender,Enseñar,1
+Capacitar,Ser de utilidad,1
+Ver,Alertar,1
+Ponerse azul,Morir de asfixia,1
+Ocurrir,Sentar precedente,1
+Aumentar,Culminar,1
+Colisión,Daño,1
+Trabajar duro,Éxito,1
+Comer en exceso,Obesidad,1
+Ignorancia,Error,1
+Neglicencia,Accidente,1
+Mentir,Desconfianza,1
+Descuidar,Deterioro,1
+
