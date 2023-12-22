@@ -1,6 +1,5 @@
 import os
 import openai
-from ..skcomponents.main import *
 from langchain.prompts import PromptTemplate
 from typing import Dict
 

@@ -22,7 +22,7 @@ class Graph(NodeSet):
     def _handle_file_source(self, parent):
         if parent.endswith('.txt'):
             nodes = self._load_data(parent) # works just fine
-            super().__init__(nodes, alias=True)
+            super().__init__(nodes)
             for node in self:
                 node.graph = self
         else:
@@ -69,7 +69,7 @@ class Graph(NodeSet):
         nodes_loaded_from_txt = []
         try:
             global updated_nodes_from_txt # delete
-            with open(parent, 'r') as file:
+            with open(parent, 'r', encoding='latin1') as file:
                 for line in file:
                     node = _parse_line_to_node(line.strip())
                     nodes_loaded_from_txt.append(node)
@@ -196,13 +196,3 @@ class Graph(NodeSet):
     
     def __repr__(self):
         return f'Graph(size={len(self)})'
-    
-
-G = Graph('data2.txt')
-
-n1 = G.find('es','b','n1','l1')[0]
-n2 = G.find('es','b','n2','l2')[0]
-nn1 = n2.synset1[0]
-nn2 = n1.synset1[0]
-
-assert n1 is nn1, 'Waa-waa; n1 is not nn1 yet'

@@ -2,9 +2,8 @@ import random
 
 class NodeSet(list):
 
-    def __init__(self, nodes=None, alias=False):
+    def __init__(self, nodes=None):
 
-        self._alias = alias  # private attribute (only used in the following line)        
         nodes_as_list = self._convert_to_list(nodes)  # converts the data structure to a list        
         super().__init__(nodes_as_list)  # initialize the parent list class
 
@@ -65,7 +64,7 @@ class NodeSet(list):
     def _convert_to_list(self, input_nodes):
         # If the input is a NodeSet, Graph, list, or set, convert it to a list
         if isinstance(input_nodes, (NodeSet, list, set)):
-            return list(set([node if self._alias else node._copy() for node in input_nodes]))
+            return list(set(input_nodes))
         return input_nodes or []
 
     def _clean_edges(self):
@@ -123,11 +122,11 @@ class NodeSet(list):
 
         return NodeSet(results)
 
-    def random(self, k=None, alias=False):
+    def random(self, k=None):
         if not k and self: return random.choice(self)
         if not self or k < 1: return None
-        if k == 1: return NodeSet(nodes=random.choice(self), alias=alias)
-        if k <= len(self): return NodeSet(nodes=random.sample(self, k), alias=alias)
+        if k == 1: return NodeSet(nodes=random.choice(self))
+        if k <= len(self): return NodeSet(nodes=random.sample(self, k))
         raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(self)} nodes.")
     
     def edit(self, **attr_edits):
@@ -234,7 +233,7 @@ class NodeSet(list):
             elif operator == '>=' and node_value >= value:
                 filtered_nodes.append(node)
 
-        return NodeSet(nodes=filtered_nodes, alias=False)
+        return NodeSet(nodes=filtered_nodes)
 
     def filter_synset0(self, operator, value):
         return self._filter_by_attribute('synset0', operator, value)
