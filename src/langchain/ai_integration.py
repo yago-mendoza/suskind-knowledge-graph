@@ -9,6 +9,8 @@ from typing import Dict
 
 openai.api_key = ""
 
+l = [list(map(int, strwordlist)) for strwordlist in [wordlist.split(' ') for wordlist in ' '.join(map(str, rxframe)).split(' ' + separator[0] + ' ')]]
+
 class PromptTemplate:
 
     def __init__(self, prompt_template):
