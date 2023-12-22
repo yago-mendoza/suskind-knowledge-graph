@@ -1,13 +1,13 @@
 import os
 import openai
-from ..skcomponents.skcomponents import *
+from ..skcomponents.main import *
 from langchain.prompts import PromptTemplate
 from typing import Dict
 
 # SYN (hyperonomy)
 # SEM (nn=composition; sv=transitivity; others=causality)
 
-openai.api_key = "sk-"
+openai.api_key = ""
 
 class PromptTemplate:
 

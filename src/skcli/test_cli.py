@@ -1,6 +1,6 @@
 import cmd
 import datetime
-from ..skcomponents.skcomponents import *
+from ..skcomponents.main import *
 from rich import print
 
 class Placeholder:
