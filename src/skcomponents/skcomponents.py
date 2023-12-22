@@ -13,10 +13,12 @@ class NodeSet(list):
         
         super().__init__(nodes_as_list)  # initialize the parent list class
 
+        self.define_permissions()        
+
     def define_permissions(self):
 
-        synset0, synset1, synset2 = False, True, False
-        semset0, semset1, semset2 = False, True, False
+        synset0, synset1, synset2 = True, True, True
+        semset0, semset1, semset2 = True, True, True
 
         self.edge_permissions = {
             'synset0': synset0,
@@ -351,27 +353,33 @@ class Node:
         )
 
     def get_neighbors(self, edge_type=None):
+        # Helper function to merge lists based on permissions
+        def merge_allowed(edge_types):
+            return [edge for type in edge_types if self.edge_permissions[type] for edge in getattr(self, type)]
 
-        # Special handling for 'synset' and 'semset'
-        if edge_type == 'synset':
-            all_synsets = self.synset0 + self.synset1 + self.synset2
-            return NodeSet(all_synsets)
-        elif edge_type == 'semset':
-            all_semsets = self.semset0 + self.semset1 + self.semset2
-            return NodeSet(all_semsets)
+        # Handling for 'synset' and 'semset' types
+        if edge_type in ['synset', 'semset']:
+            edge_types = [f'{edge_type}{i}' for i in range(3)]  # generates ['synset0', 'synset1', 'synset2'] or the 'semset' equivalent
+            return NodeSet(merge_allowed(edge_types))
 
+        # Return all edge types if no specific type is provided
+        if edge_type is None and self:
+            # Separately build the dictionaries for 'synset' and 'semset' edges
+            synset_edges = {f'synset{i}': getattr(self, f'synset{i}') for i in range(3)}
+            semset_edges = {f'semset{i}': getattr(self, f'semset{i}') for i in range(3)}
+            
+            # Merge the two dictionaries
+            all_edges = {**synset_edges, **semset_edges}
+
+            # Return a dictionary with NodeSets for allowed edges
+            return {edge_key: NodeSet(edges) for edge_key, edges in all_edges.items() if self.graph.edge_permissions.get(edge_key, False)}
+
+        # Handling for specific edge types
         if hasattr(self, edge_type):
             return NodeSet(getattr(self, edge_type))
 
-        if edge_type==None:
-            return {
-                'synset0': NodeSet(self.synset0),
-                'synset1': NodeSet(self.synset1),
-                'synset2': NodeSet(self.synset2),
-                'semset0': NodeSet(self.semset0),
-                'semset1': NodeSet(self.semset1),
-                'semset2': NodeSet(self.semset2),
-            }
+        # Return an empty NodeSet for unrecognized or unpermitted edge types
+        return NodeSet()
 
     def get_synset(self, set_level=None):
         if set_level is None:
@@ -488,7 +496,6 @@ class Graph(NodeSet):
     def __init__(self, parent=None):
         self.parent = parent
         self._build_nodes(parent)
-        self._set_graph_reference()
         self._clean_edges()
 
     def _build_nodes(self, parent):
@@ -505,15 +512,13 @@ class Graph(NodeSet):
         if parent.endswith('.txt'):
             nodes = self._load_data(parent) # works just fine
             super().__init__(nodes)
+            for n in nodes:
+                n.graph = self
         else:
             raise ValueError("Filename must end with '.txt'")
     
     def _handle_data_structure_source(self, parent):
         super().__init__(parent)
-
-    def _set_graph_reference(self):
-        for node in self:
-            node.graph = self
     
     def _load_data(self, parent):
 
@@ -548,7 +553,12 @@ class Graph(NodeSet):
                 for line in file:
                     node = _parse_line_to_node(line.strip())
                     nodes_loaded_from_txt.append(node)
+
+            for n in nodes_loaded_from_txt:
+                n.graph = self
+
             nodes_loaded_from_txt = _update_node_relationships(nodes_loaded_from_txt)
+            
             return nodes_loaded_from_txt
         except FileNotFoundError:
             print(f"The file {parent} has not been found.")
@@ -626,7 +636,7 @@ class Graph(NodeSet):
             # If not, create a new Node instance with the provided attributes
             node = Node(lang, type_, name, lemma)
             # Append the new node to the graph
-            self.append(node)
+            self.append(node) # sets node.graph=graph
 
     def delete_node(self, target_node):
         # Remove the target node from the graph
