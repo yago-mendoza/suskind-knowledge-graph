@@ -1,6 +1,5 @@
 import os
 import random
-
 class NodeSet(list):
 
     def __init__(self, nodes=None, alias=False):
@@ -536,26 +535,32 @@ class Graph(NodeSet):
             Update each node's attributes to reference other nodes in the graph.
             Removes connections to nodes not present in the graph (remember, only when from TXT)
             """
+            global temp_nodes # delete
             temp_nodes = {node.identify(format=True): node for node in nodes}
             for node in nodes:
                 for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
-                    current_relations = getattr(node, attr)
-                    updated_relations = [temp_nodes.get(rel) for rel in current_relations if temp_nodes.get(rel)]
+                    updated_relations = [] #poised to be the Node list
+                    current_relations = getattr(node, attr) # lst of string format nodes
+                    for related_node in current_relations:
+                        try:
+                            if temp_nodes.get(related_node):
+                                target_node = temp_nodes.get(related_node)
+                                updated_relations.append(target_node)
+                        except Exception as e:
+                            print(f'The {related_node} node at {node} has no pressence in the Graph besides this occurrence.')]
                     setattr(node, attr, updated_relations)
-                    current_relations.clear()
-                    current_relations.extend(updated_relations)
             return nodes
 
         nodes_loaded_from_txt = []
         try:
+            global updated_nodes_from_txt # delete
             with open(parent, 'r') as file:
                 for line in file:
                     node = _parse_line_to_node(line.strip())
                     nodes_loaded_from_txt.append(node)
-
-            nodes_loaded_from_txt = _update_node_relationships(nodes_loaded_from_txt)
+            updated_nodes_from_txt = _update_node_relationships(nodes_loaded_from_txt)
             
-            return nodes_loaded_from_txt
+            return updated_nodes_from_txt
         except FileNotFoundError:
             print(f"The file {parent} has not been found.")
         except IOError:
@@ -675,3 +680,32 @@ class Graph(NodeSet):
     
     def __repr__(self):
         return f'Graph(size={len(self)})'
+
+
+
+G = Graph('data2.txt')
+
+n1 = G.find('es','b','Node1','lemma1')[0]
+n2 = G.find('es','b','Node2','lemma2')[0]
+n3 = G.find('es','b','Node3','lemma3')[0]
+n4 = G.find('es','b','Node4','lemma4')[0]
+
+nn1 = n4.synset1[0]
+
+tmp = temp_nodes
+upd = updated_nodes_from_txt
+
+tmp['es-b:Node1(lemma1)'] is n1
+
+test_node_a = G.find('es','b','Node4','lemma4')[0].synset1[0]
+test_node_b = G.find('es','b','Node1','lemma1')[0]
+print(test_node_a, test_node_b)
+if test_node_a is test_node_b:
+    print('First layer NODE and nested NODES are indeed the same object.')
+else:
+    print('First layer NODE and nested ones arent the same')
+
+if G.random().synset1[0].graph:
+    print('Congratz! Nested now have graph attribute!')
+else:
+    print('Keep trying...')
