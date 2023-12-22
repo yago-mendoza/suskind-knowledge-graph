@@ -1,0 +1,4 @@
+es-b:Node1(lemma1)|F||es-b:Node4(lemma4)/es-b:Node2(lemma2)|||es-b:Node1(lemma3)||
+es-b:Node2(lemma2)|F||es-b:Node4(lemma4)/es-b:Node1(lemma1)|||es-b:Node4(lemma4)||
+es-b:Node3(lemma3)|F||es-b:Node4(lemma4)|||es-b:Node1(lemma1)||
+es-b:Node4(lemma4)|F||es-b:Node1(lemma1)/es-b:Node2(lemma2)/es-b:Node3(lemma3)|||es-b:Node2(lemma2)||

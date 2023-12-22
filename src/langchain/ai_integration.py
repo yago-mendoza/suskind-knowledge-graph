@@ -7,16 +7,13 @@ from typing import Dict
 # SYN (hyperonomy)
 # SEM (nn=composition; sv=transitivity; others=causality)
 
-openai.api_key = ""
-
-l = [list(map(int, strwordlist)) for strwordlist in [wordlist.split(' ') for wordlist in ' '.join(map(str, rxframe)).split(' ' + separator[0] + ' ')]]
+openai.api_key = "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"
 
 class PromptTemplate:
 
     def __init__(self, prompt_template):
         self.prompt_template = prompt_template.replace("_", "{}")
         
-
     def format(self, *args):
         return self.prompt_template.format(*args)
 
