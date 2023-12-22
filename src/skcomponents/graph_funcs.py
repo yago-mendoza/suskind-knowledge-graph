@@ -1,7 +1,4 @@
-from skcomponents import Graph
-from skcomponents import Node
-from collections import deque
-
+from skgraph import Graph
 from collections import deque
 
 def find_shortest_path(graph, start, end):
@@ -11,7 +8,6 @@ def find_shortest_path(graph, start, end):
     
     while queue:
         current_node, path = queue.popleft()
-        print(current_node, current_node.graph)
         if current_node == end:
             return path + [(current_node, None)]
         
@@ -28,7 +24,3 @@ def find_shortest_path(graph, start, end):
                 visited.add(neighbor)
     
     return None
-
-
-G = Graph('data.txt')
-print(find_shortest_path(G, G.random(), G.random()))

@@ -6,7 +6,7 @@ from typing import Dict
 # SYN (hyperonomy)
 # SEM (nn=composition; sv=transitivity; others=causality)
 
-openai.api_key = "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"
+openai.api_key = "sk-"
 
 class PromptTemplate:
 
