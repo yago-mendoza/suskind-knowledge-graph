@@ -334,7 +334,6 @@ class Node:
         try:
             self.__getattribute__(type_).remove(node)
         except ValueError:
-
             pass
 
     def identify(self, format=False):
@@ -512,8 +511,8 @@ class Graph(NodeSet):
         if parent.endswith('.txt'):
             nodes = self._load_data(parent) # works just fine
             super().__init__(nodes)
-            for n in nodes:
-                n.graph = self
+            for node in self:
+                node.graph = self
         else:
             raise ValueError("Filename must end with '.txt'")
     
@@ -553,9 +552,6 @@ class Graph(NodeSet):
                 for line in file:
                     node = _parse_line_to_node(line.strip())
                     nodes_loaded_from_txt.append(node)
-
-            for n in nodes_loaded_from_txt:
-                n.graph = self
 
             nodes_loaded_from_txt = _update_node_relationships(nodes_loaded_from_txt)
             
