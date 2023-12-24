@@ -48,7 +48,6 @@ class Graph(NodeSet):
             Update each node's attributes to reference other nodes in the graph.
             Removes connections to nodes not present in the graph (remember, only when from TXT)
             """
-            global temp_nodes # delete
             temp_nodes = {node.identify(format=True): node for node in nodes}
             for node in nodes:
                 for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
@@ -64,11 +63,8 @@ class Graph(NodeSet):
                     setattr(node, attr, updated_relations)
             return nodes
 
-        global nodes_loaded_from_txt
-        global updated_nodes_from_txt
         nodes_loaded_from_txt = []
         try:
-            global updated_nodes_from_txt # delete
             with open(parent, 'r', encoding='latin1') as file:
                 for line in file:
                     node = _parse_line_to_node(line.strip())

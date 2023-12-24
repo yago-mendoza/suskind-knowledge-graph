@@ -52,11 +52,11 @@ class NodeSet(list):
                 elif edge in self.edge_permissions:
                     self.edge_permissions[edge] = True
 
-    def view_nodes(self): return [node for node in self]
-    def view_langs(self): return [node.lang for node in self]
-    def view_types(self): return [node.type for node in self]
-    def view_names(self): return [node.name for node in self]
-    def view_lemmas(self): return [node.lemma for node in self]
+    def list_nodes(self): return [node for node in self]
+    def list_langs(self): return [node.lang for node in self]
+    def list_types(self): return [node.type for node in self]
+    def list_names(self): return [node.name for node in self]
+    def list_lemmas(self): return [node.lemma for node in self]
 
     def set_langs(self): return list(set([n.lang for n in self]))
     def set_types(self): return list(set([n.type for n in self]))
@@ -101,26 +101,45 @@ class NodeSet(list):
         node.graph = self
 
     def find(self, *args):
-
-        # Unpack arguments based on their number and type
-        if len(args) == 1 :
-            lang, type_, name, lemma = args[0].identify()
-        elif len(args) in [3, 4]:
-            lang, type_, name, *lemma = args
-            lemma = lemma[0] if lemma else None
-        else:
-            raise ValueError("Invalid number of arguments for find_node")
-
+        # Initialize results list
         results = []
-        for node in self:
-            if lemma is None:
-                if node.lang == lang and node.type == type_ and node.name == name:
-                    results.append(node)
-            else:
-                if node.lang == lang and node.type == type_ and node.name == name and node.lemma == lemma:
+
+        # Handle the case when a single object is entered (assumed to be a node-like object)
+        if len(args) == 1 and not isinstance(args[0], str):
+            node_like = args[0]
+            # Search for an object in the graph that matches the node-like object
+            for node in self:
+                if node == node_like:
                     results.append(node)
 
-        return NodeSet(results)
+        # Handle the case when a single name string is entered
+        elif len(args) == 1 and isinstance(args[0], str):
+            name = args[0]
+            # Search for objects by name
+            for node in self:
+                if node.name == name:
+                    results.append(node)
+
+        # Handle the case when 3 or 4 elements are entered
+        elif len(args) in [3, 4]:
+            # Unpack arguments
+            lang, type_, name = args[:3]
+            lemma = args[3] if len(args) == 4 else None
+            # Search for objects based on provided attributes
+            for node in self:
+                if (node.lang == lang and node.type == type_ and node.name == name and 
+                    (lemma is None or node.lemma == lemma)):
+                    results.append(node)
+
+        else:
+            # If the arguments don't match any of the above patterns, raise an error
+            raise ValueError("Invalid number of arguments or argument types for find")
+
+        # Return the appropriate result based on the number of matches found
+        if len(results) == 1:
+            return results[0]  # Return the single result directly
+        else:
+            return NodeSet(results)  # Wrap multiple results in a NodeSet object
 
     def random(self, k=None):
         if not k and self: return random.choice(self)
@@ -134,36 +153,36 @@ class NodeSet(list):
         for node in self:
             node.edit(**attr_edits)
 
-    def filter_lang(self, *langs, complement=False):
+    def is_lang(self, *langs, complement=False):
         return self._filter_nodes(lambda node: getattr(node, 'lang') in langs, complement)
     
-    def filter_types(self, *types, complement=False):
+    def is_type(self, *types, complement=False):
         return self._filter_nodes(lambda node: getattr(node, 'type') in types, complement)
 
-    def filter_lemma(self, lemma=True):
+    def has_lemma(self, lemma=True):
         return self._filter_nodes(lambda node: bool(node.lemma) == lemma)
 
-    def filter_favorite(self, favorite=True):
+    def is_favorite(self, favorite=True):
         return self._filter_nodes(lambda node: bool(node.favorite) == favorite)
 
-    def filter_char_count(self, *args, on_lemma=False):
+    def char_count(self, *args, on_lemma=False):
         return self._filter_by_length('char_count', *args, on_lemma=on_lemma)
 
-    def filter_word_count(self, *args, on_lemma=False):
+    def word_count(self, *args, on_lemma=False):
         return self._filter_by_length('word_count', *args, on_lemma=on_lemma)
 
-    def filter_contains_word(self, *args, on_lemma=False):
+    def contains_word(self, *args, on_lemma=False):
         return self._filter_by_string_occurrence('contains_word', *args, on_lemma=on_lemma)
 
-    def filter_contains(self, *args, on_lemma=False):
+    def contains(self, *args, on_lemma=False):
         return self._filter_by_string_occurrence('contains', *args, on_lemma=on_lemma)
 
-    def filter_starts_with(self, chain, on_lemma=False):
+    def starts_with(self, chain, on_lemma=False):
         return self._filter_nodes(lambda node: getattr(node, 'lemma' if on_lemma else 'name', "").lower().startswith(chain.lower()))
 
-    def filter_ends_with(self, chain, on_lemma=False):
+    def ends_with(self, chain, on_lemma=False):
         return self._filter_nodes(lambda node: getattr(node, 'lemma' if on_lemma else 'name', "").lower().endswith(chain.lower()))
-
+    
     def _filter_by_length(self, length_type, *args, on_lemma=False):
         def condition_func(node):
             target = getattr(node, 'lemma' if on_lemma else 'name', "").lower()
@@ -183,6 +202,25 @@ class NodeSet(list):
                 return any(self._compare_string_occurrence(word, *args) for word in words)
 
         return self._filter_nodes(condition_func)
+    
+    def _filter_nodes(self, condition, complement=False):
+        # Initialize an empty list to hold nodes that pass the filter.
+        filtered_nodes = []
+
+        # Iterate over all nodes in the current set.
+        for node in self:
+            # Check if the node meets the condition.
+            if condition(node):
+                # If complement is False, add nodes that meet the condition.
+                if not complement:
+                    filtered_nodes.append(node)
+            else:
+                # If complement is True, add nodes that do not meet the condition.
+                if complement:
+                    filtered_nodes.append(node)
+
+        # Return a new instance of NodeSet containing the filtered nodes.
+        return NodeSet(nodes=filtered_nodes)
 
     def _compare_length(self, target_length, *args):
         if len(args) == 1:
@@ -213,6 +251,14 @@ class NodeSet(list):
             '=': target_value == value
         }
         return operations.get(operator, False)
+    
+    def filter_synset(self, operator, value, level=None):
+        level = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
+        return [node for i in level for node in self._filter_by_attribute(f'synset{i}', operator, value)]
+    
+    def filter_semset(self, operator, value, level=None):
+        level = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
+        return [node for i in level for node in self._filter_by_attribute(f'semset{i}', operator, value)]
 
     def _filter_by_attribute(self, attribute, operator, value):
         filtered_nodes = []
@@ -234,24 +280,43 @@ class NodeSet(list):
                 filtered_nodes.append(node)
 
         return NodeSet(nodes=filtered_nodes)
-
-    def filter_synset0(self, operator, value):
-        return self._filter_by_attribute('synset0', operator, value)
-
-    def filter_synset1(self, operator, value):
-        return self._filter_by_attribute('synset1', operator, value)
-
-    def filter_synset2(self, operator, value):
-        return self._filter_by_attribute('synset2', operator, value)
-
-    def filter_semset0(self, operator, value):
-        return self._filter_by_attribute('semset0', operator, value)
-
-    def filter_semset1(self, operator, value):
-        return self._filter_by_attribute('semset1', operator, value)
-
-    def filter_semset2(self, operator, value):
-        return self._filter_by_attribute('semset2', operator, value)
     
+    def has_synset(self, target_nodes, sections=(0, 1, 2), tolerance=1.0, complement=False):
+        return self._filter_by_relationship_type('synset', target_nodes, sections, tolerance)
+    
+    def has_semset(self, target_nodes, sections=(0, 1, 2), tolerance=1.0, complement=False):
+        return self._filter_by_relationship_type('semset', target_nodes, sections, tolerance)
+    
+    def _filter_by_relationship_type(self, relationship_base, target_nodes, sections, tolerance, complement):
+        # Ensure target_nodes is a set for efficient lookup.
+        if not isinstance(target_nodes, (list, tuple)): target_nodes = (target_nodes,)
+        target_nodes_set = set(target_nodes)
+        # Initialize an empty NodeSet to hold nodes that pass the filter.
+        filtered_nodes = NodeSet()
+        # Calculate the minimum number of connections needed based on tolerance.
+        min_connections = max(1, round(tolerance * len(target_nodes_set)))
+
+        # Iterate over all nodes in the current set.
+        for node in self:
+            connections_met = 0  # Track the number of connections met.
+
+            # Check each specified section.
+            for section in sections:
+                related_nodes = getattr(node, f'{relationship_base}{section}', [])
+
+                # Increment connections_met for each target node that's connected.
+                connections_met += len(target_nodes_set.intersection(related_nodes))
+
+                # If the connections met the required number, add the node to filtered_nodes.
+                if connections_met >= min_connections:
+                    if not complement:
+                        filtered_nodes.append(node)
+                    break  # No need to check further sections for this node.
+                else:
+                    if complement:
+                        filtered_nodes.append(node)
+
+        return filtered_nodes
+       
     def __repr__(self):
         return f'NodeSet(size={len(self)})'

@@ -213,6 +213,17 @@ TERMINAL CONCEPT
 | 3. Atrapar antes po...  | 7. Vulgar
 | 4. Electrocutar
 >> tf 4 6 1 7 > y0
+>>
+14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: term
+Python. Granted a pathway to SKComponents objects and methods.
+Type "Node" or "Graph" to inspect objects and "exit" to leave.
+>>> Node.compress.expand('synset').compress('synset2')
+>>> G.view_names()
+>>> n = G.random()
+>>> G.disable('semset')    # implementar que podamos ahorrarnos comillas
+>>> ndst = G.filter_
+Exiting terminal...
+14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
 
 
 
