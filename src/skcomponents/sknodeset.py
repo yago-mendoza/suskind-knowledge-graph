@@ -102,7 +102,7 @@ class NodeSet(list):
         return self
 
     def find(self, *args):
-        # Initialize results list
+        # Initialize results list.
         results = []
 
         # Handle the case when a single object is entered (assumed to be a node-like object)
