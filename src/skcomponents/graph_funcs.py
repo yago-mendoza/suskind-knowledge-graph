@@ -1,5 +1,6 @@
 from sknodeset import NodeSet
 from collections import deque
+from itertools import combinations
 
 class Path:
     def __init__(self, nodes, edges):
@@ -37,14 +38,38 @@ def shortest_path (start, end):
     # Return an empty path if no path is found
     return Path(NodeSet(), ())
 
-
-def common(*nodes):
-    # Proximamente, personalizar tipo de conexiones para cada nodo.
-    output = intersect(*nodes)
+def centrality(*nodes, scaled=False):
+    if not nodes:
+        return {}
+    
+    # Paso 1: Identificar Intersecciones
+    intersection_weights = {}  # Guarda el peso de cada intersección
+    for r in range(2, len(nodes) + 1):  # Desde intersecciones de 2 hasta todas
+        for combo in combinations(nodes, r):
+            intersection = set.intersection(*(node.get_neighbors().set() for node in combo))
+            if intersection:
+                for element in intersection:
+                    intersection_weights[element] = intersection_weights.get(element, 0) + r  # Ponderar por el número de nodos
+    
+    # Paso 2 y 3: Calcular Contribuciones de Nodos
+    node_contributions = {node: 0 for node in nodes}
     for node in nodes:
         neighbors = node.get_neighbors().set()
-        #sigue programando la idea es hacer islitas lo de los antiguso suskind vamos!
+        for element in neighbors:
+            if element in intersection_weights:
+                node_contributions[node] += intersection_weights[element]
 
+    total_contribution = sum(node_contributions.values())
+    
+    if not scaled:
+        if total_contribution > 0: normalized_contributions = {node: contrib / total_contribution for node, contrib in node_contributions.items()}
+        else: normalized_contributions = {node: 0 for node in nodes}
+        return normalized_contributions
+    else:
+        ideal_contribution = total_contribution / len(nodes) if nodes else 0
+        scaled_contributions = {node: (contrib / ideal_contribution) if ideal_contribution else 0 for node, contrib in node_contributions.items()}
+        return scaled_contributions
+    
 def intersect(*nodes):
     # is used as *NodeSet or directly, (node1, node2,)
     if not nodes:

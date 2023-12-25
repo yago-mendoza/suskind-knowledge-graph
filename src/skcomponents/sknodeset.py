@@ -4,7 +4,6 @@ class NodeSet(list):
 
     def __init__(self, nodes=None):
 
-        if len(nodes) == 1: nodes = [nodes]
         nodes_as_list = self._convert_to_list(nodes)  # converts the data structure to a list        
         super().__init__(nodes_as_list)  # initialize the parent list class
 
@@ -64,7 +63,7 @@ class NodeSet(list):
 
     def _convert_to_list(self, input_nodes):
         # If the input is a NodeSet, Graph, list, or set, convert it to a list
-        if isinstance(input_nodes, (NodeSet, list, set)):
+        if isinstance(input_nodes, (NodeSet, list, set, tuple)):
             return list(set(input_nodes))
         return input_nodes or []
 

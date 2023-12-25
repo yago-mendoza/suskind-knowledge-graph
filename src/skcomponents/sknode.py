@@ -85,44 +85,23 @@ class Node:
             self.examples[:]
         )
     
-    def get_neighbors(self, skip_permissions=False):
+    def get_neighbors(self, permission_string=''):
 
-        class WrapperDict(dict):
-            def nodeset(self):
-                """Converts all the NodeSet values in the dictionary to a single set."""
-                all_nodes = NodeSet()
-                for nodeset in self.values():
-                    all_nodes.extend(nodeset)
-                return all_nodes
+        results = _WrapperDict()
 
-            def set(self):
-                all_nodes = set()
-                for nodeset in self.values():
-                    all_nodes.update(nodeset)
-                return all_nodes
-            
-            def count(self):
-                """Returns a dictionary where the keys are the counts and the values are NodeSets of nodes that appear that many times."""
-                node_count = {}
-                for nodeset in self.values():
-                    for node in nodeset:
-                        node_count[node] = node_count.get(node, 0) + 1
-
-                count_dict = {}
-                for node, count in node_count.items():
-                    if count not in count_dict:
-                        count_dict[count] = NodeSet([])
-                    count_dict[count].append(node)
-
-                return count_dict
-            
-        results = WrapperDict()
+        def _parse_permission(s):
+            bits = [bool(int(b)) for b in s.zfill(6)]
+            return {f'{type}{i}': bits[i + (3 if type == 'semset' else 0)]
+                    for i in range(3) for type in ['synset', 'semset']}
+        
+        permission_dict = _parse_permission(permission_string)
 
         # Collect neighbors based on permissions and edge types
         for i in range(3):
             for edge_type in ['synset', 'semset']:
+                permission_dict = self.graph.edge_permissions if not permission_string else permission_dict
                 edge_key = f'{edge_type}{i}'
-                if skip_permissions or self.graph.edge_permissions.get(edge_key, False):
+                if permission_dict.get(edge_key):
                     neighbors = getattr(self, f'get_{edge_type}')(i)
                     results[edge_key] = NodeSet(neighbors)
 
@@ -232,3 +211,32 @@ class Node:
         parts = '['+', '.join(parts)+']' if parts else ''
 
         return f"Node({header}){parts}"
+    
+class _WrapperDict(dict):
+    def nodeset(self):
+        """Converts all the NodeSet values in the dictionary to a single set."""
+        all_nodes = NodeSet()
+        for nodeset in self.values():
+            all_nodes.extend(nodeset)
+        return all_nodes
+
+    def set(self):
+        all_nodes = set()
+        for nodeset in self.values():
+            all_nodes.update(nodeset)
+        return all_nodes
+    
+    def count(self):
+        """Returns a dictionary where the keys are the counts and the values are NodeSets of nodes that appear that many times."""
+        node_count = {}
+        for nodeset in self.values():
+            for node in nodeset:
+                node_count[node] = node_count.get(node, 0) + 1
+
+        count_dict = {}
+        for node, count in node_count.items():
+            if count not in count_dict:
+                count_dict[count] = NodeSet([])
+            count_dict[count].append(node)
+
+        return count_dict
