@@ -85,72 +85,59 @@ class Node:
             self.examples[:]
         )
     
+    def get_neighbors(self, skip_permissions=False):
 
+        class WrapperDict(dict):
+            def nodeset(self):
+                """Converts all the NodeSet values in the dictionary to a single set."""
+                all_nodes = NodeSet()
+                for nodeset in self.values():
+                    all_nodes.extend(nodeset)
+                return all_nodes
 
-    # Tienes que testear y documentar get_neighbors, is_connected, get_synset y get_semset
-    # Luego tienes que implementarlo en graph_funcs para el caso de la similarity
-    # Para esto, tenias el chat GPT abierto
+            def set(self):
+                all_nodes = set()
+                for nodeset in self.values():
+                    all_nodes.update(nodeset)
+                return all_nodes
+            
+            def count(self):
+                """Returns a dictionary where the keys are the counts and the values are NodeSets of nodes that appear that many times."""
+                node_count = {}
+                for nodeset in self.values():
+                    for node in nodeset:
+                        node_count[node] = node_count.get(node, 0) + 1
 
-    def get_neighbors(self, edge_type=None, dict=False, set=False, count=False):
+                count_dict = {}
+                for node, count in node_count.items():
+                    if count not in count_dict:
+                        count_dict[count] = NodeSet([])
+                    count_dict[count].append(node)
 
-        # Helper function to merge lists based on permissions
-        def merge_allowed(edge_types):
-            return [edge for type in edge_types if self.edge_permissions[type] for edge in getattr(self, type)]
+                return count_dict
+            
+        results = WrapperDict()
 
-        def build_edge_dict():
-            # Handling for 'synset' and 'semset' types
-            if edge_type in ['synset', 'semset']:
-                edge_types = [f'{edge_type}{i}' for i in range(3)]  # generates ['synset0', 'synset1', 'synset2'] or the 'semset' equivalent
-                return merge_allowed(edge_types)
+        # Collect neighbors based on permissions and edge types
+        for i in range(3):
+            for edge_type in ['synset', 'semset']:
+                edge_key = f'{edge_type}{i}'
+                if skip_permissions or self.graph.edge_permissions.get(edge_key, False):
+                    neighbors = getattr(self, f'get_{edge_type}')(i)
+                    results[edge_key] = NodeSet(neighbors)
 
-            # Return all edge types if no specific type is provided
-            if edge_type is None and self:
-                synset_edges = {f'synset{i}': getattr(self, f'synset{i}') for i in range(3)}
-                semset_edges = {f'semset{i}': getattr(self, f'semset{i}') for i in range(3)}
+        return results
 
-                # Merge the two dictionaries and filter by permissions
-                all_edges = {**synset_edges, **semset_edges}
-                return [edge for edge_list in all_edges.values() for edge in edge_list if self.graph.edge_permissions.get(edge, False)]
-
-            # Handling for specific edge types
-            if hasattr(self, edge_type):
-                return getattr(self, edge_type)
-
-            # Return empty list for unrecognized or unpermitted edge types
-            return []
-
-        # Build the edge dictionary based on the edge types and permissions
-        edge_dict = build_edge_dict()
-
-        # Return a dictionary if dict is True
-        if dict:
-            return {edge_key: NodeSet(edges) for edge_key, edges in edge_dict.items() if self.graph.edge_permissions.get(edge_key, False)}
-
-        # Return a set if set is True
-        if set:
-            return set(edge_dict)
-
-        # Return a dictionary with {node name: count} if count is True
-        if count:
-            return {node: edge_dict.count(node) for node in edge_dict}
-
-        # Fallback to returning an empty NodeSet
-        return NodeSet()
-    
-    # REVISAR Y DOCUMENTAR
-    
     def is_connected(self, node):
         return node in self.get_neighbors()
 
-    def get_synset(self, level=None):
-        level = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
-        return NodeSet([node for i in level for node in getattr(self, f'synset{level}', [])])
+    def get_synset(self, *levels):
+        levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
+        return NodeSet([node for i in levels for node in getattr(self, f'synset{i}', [])])
     
-    def get_semset(self, level=None):
-        level = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
-        return NodeSet([node for i in level for node in getattr(self, f'synset{level}', [])])
-
-
+    def get_semset(self, *levels):
+        levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
+        return NodeSet([node for i in levels for node in getattr(self, f'semset{i}', [])])
 
     @classmethod
     def toggle_labels(cls, flag=None):

@@ -4,6 +4,7 @@ class NodeSet(list):
 
     def __init__(self, nodes=None):
 
+        if len(nodes) == 1: nodes = [nodes]
         nodes_as_list = self._convert_to_list(nodes)  # converts the data structure to a list        
         super().__init__(nodes_as_list)  # initialize the parent list class
 
@@ -92,13 +93,14 @@ class NodeSet(list):
     def append(self, node):
         # Ensure only Node instances can be added to the Graph
         # Check if the node is unique based on its identifier
-        if any(existing_node == node for existing_node in self):
-            raise ValueError("A node with the same identifier already exists in the Graph.")
-
-        super().append(node)  # Use super() to avoid recursion
-
-        # Set the graph reference in the Node instance
-        node.graph = self
+        if all(existing_node != node for existing_node in self):
+            super().append(node)  # Use super() to avoid recursion
+            node.graph = self
+    
+    def extend(self, nodeset):
+        for node in nodeset:
+            self.append(node)
+        return self
 
     def find(self, *args):
         # Initialize results list
