@@ -25,7 +25,7 @@ class MyShell(cmd.Cmd):
             if args.force:
                 print("Operación forzada.")
         except SystemExit:
-            # Evitar que cierre el shell cuando el comando falla.
+            # Evitar que cierre el shell cuando el comando falla
             pass
 
 if __name__ == '__main__':
