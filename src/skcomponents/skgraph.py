@@ -34,8 +34,6 @@ class Graph(NodeSet):
     
     def _load_data(self, parent):
 
-        parent = os.path.basename(parent)
-
         def _parse_line_to_node(line):
             parts = line.strip().split('|')
             lang, type_ = parts[0].split(':')[0].split('-')[0], parts[0].split(':')[0].split('-')[1]

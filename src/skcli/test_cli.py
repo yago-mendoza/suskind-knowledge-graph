@@ -5,17 +5,20 @@ import cmd
 import datetime
 from rich import print
 
-class Placeholder:
+class Placeholder(str):
 
-    def __init__(self, primary_interface):
-        self.primary_interface = primary_interface
-
-    def update(self):
+    def __init__(self, node=None, fields=None):
+        self.lang = 'lang' or node.lang
+        self.type = 'type' or node.type
+        self.name = 'name' or node.name
+        self.lemma = 'lemma' or node.lemma
+        self.fields = fields or []
+    
+    def get_string(self):
         time_str = datetime.datetime.now().strftime("%H:%M:%S")
-        field = self.primary_interface.current_field
-        name = self.primary_interface.current_node
-        return f"{time_str} ~ (F/w)[{field}]@[{name or ''}(lemma)]/: " # 10:46:32 ~ (F/es/-w)[concept]@[(lemma)]/:
-
+        fields = '[' + '/'.join(self.fields) + ']'
+        return f"{time_str} ~ [{self.lang}][{self.type}]@[{self.name}({self.lemma or ''})]/{fields or ''}: "
+        
 class PrimaryInterface (cmd.Cmd):
     def __init__(self, database):
         super().__init__()
@@ -24,12 +27,20 @@ class PrimaryInterface (cmd.Cmd):
         self.current_field = 'concept'
         self.placeholder = Placeholder(self)
         self.update_prompt()
-        self.lang = ['es']
-        self.type = ['n']
     
     def update_prompt(self):
         # Default method & attribute for cmd.Cmd
-        self.prompt = self.placeholder.update()
+        self.prompt = self.placeholder.get_string()
+
+    def do_set(self, element):
+        if element in self.graph.list_langs():
+            self.placeholder.lang = element
+
+        elif element in self.graph.list_types():
+            self.placeholder.type = type
+
+        elif element in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']:
+            self.placeholder.fields.append(element)
 
     def do_set(self, property):
         if property in self.database.list_langs():
@@ -49,8 +60,3 @@ class PrimaryInterface (cmd.Cmd):
     def do_exit(self, arg):
         print("Saliendo...")
         return True
-
-if __name__ == "__main__":
-    G = Graph('data.txt')
-    cli = PrimaryInterface(G)
-    cli.cmdloop()

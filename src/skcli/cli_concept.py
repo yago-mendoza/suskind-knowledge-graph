@@ -1,13 +1,5 @@
 
 '''
-USEFUL CMD LIBRARY RESSOURCES
-
-# self.prompt
-# self.intro
-# complete_xxx
-# do_help para documentar cada comando
-# prompt_suffix
-
 TERMINAL CONCEPT
 
 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
@@ -123,24 +115,24 @@ TERMINAL CONCEPT
 | 3. Atrapar antes po...  | 7. Piedras blancas
 | 4. Electrocutar
 >> cd 6
-14:32:18 ~ <2>[es][v][Cercenar]@[('')]/[y0/y1/y2]: ls
+14:32:18 ~ [es][v][Cercenar]@[('')]/[y0/y1/y2]: ls
 | Showing 7/77 results:
 | 1. Blanco               | 5. Melón
 | 2. Error                | 6. Cantarín
 | 3. Atrapar antes po...  | 7. Elegía
 | 4. Pifiarla
 >> r
-14:32:18 ~ <3>[es][n][Elegía]@[('')]/[y0/y1/y2]: ls
+14:32:18 ~ [es][n][Elegía]@[('')]/[y0/y1/y2]: ls
 | Showing 7/35 results:
 | 1. Caminador            | 5. Golfo
 | 2. Persona              | 6. Cercenar
 | 3. Atrapar antes po...  | 7. Vulgar
-| 4. Electrocutar
->> ''
-...
-14:32:18 ~ <55>[es][n][Esperanza]@[('')]/[y0/y1/y2]: goto 54
+| 4. Electrocutar         | 8. Rata
+| ...                     | ...
+>> r
+
 14:32:18 ~ <54..>[es][n][Canción]@[('')]/[y0/y1/y2]: cd ..                            # retornaria al node previ al de consulta nested
-| Warning: this action will delete the nested search history. Are you sure? [Y/N]
+
 >> N
 14:32:18 ~ <54..>[es][n][Canción]@[('')]/[y0/y1/y2]: goto -1
 14:32:18 ~ <55>[es][n][Esperanza]@[('')]/[y0/y1/y2]: goto 14
@@ -225,6 +217,18 @@ Type "Node" or "Graph" to inspect objects and "exit" to leave.
 Exiting terminal...
 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
 
+
+
+FUTUROS #############################################################################
+
+| Showing nested history:
+| root: [0] Andar(/7)
+|       └── [1] Cercenar (<6th> of 7)
+|            ├── [2] Elegía (<7th> of 7)
+|            └── [3] Esperanza (<42th> of 102)
+
+cd ..
+| Warning: this action will delete the nested search history. Are you sure? [Y/N]
 
 
 # ADDITIONAL IMPLEMENTATIONS ###########################
