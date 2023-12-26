@@ -10,7 +10,7 @@ class MyShell(cmd.Cmd):
         print("¡Hola Mundo!")
 
     def do_set(self, arg):
-        # ademas habilita set --help (triggered automaitcally if just 'set')
+        # ademas habilita set --help (triggered automaitcally if just 'set').
         parser = argparse.ArgumentParser(prog='set', description='Establece una variable a un valor.')
         parser.add_argument('variable', help='La variable a establecer.')
         parser.add_argument('valor', help='El valor a establecer.')
