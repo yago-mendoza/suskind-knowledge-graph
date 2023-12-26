@@ -1,4 +1,4 @@
-from sknodeset import NodeSet
+from src.skcomponents.sknodeset import NodeSet
 
 class Node:
 

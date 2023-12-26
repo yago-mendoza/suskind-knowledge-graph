@@ -1,6 +1,7 @@
+from src.skcomponents.sknode import Node
+from src.skcomponents.sknodeset import NodeSet
+
 import os
-from sknode import Node
-from sknodeset import NodeSet
 
 class Graph(NodeSet):
 

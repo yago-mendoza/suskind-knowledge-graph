@@ -1,4 +1,5 @@
-from sknodeset import NodeSet
+from src.skcomponents.sknodeset import NodeSet
+
 from collections import deque
 from itertools import combinations
 

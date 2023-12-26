@@ -1,11 +1,15 @@
+
+from src.skcomponents.skgraph import Graph
+
 import cmd
 import datetime
-from ..skcomponents.main import *
 from rich import print
 
 class Placeholder:
+
     def __init__(self, primary_interface):
         self.primary_interface = primary_interface
+
     def update(self):
         time_str = datetime.datetime.now().strftime("%H:%M:%S")
         field = self.primary_interface.current_field
