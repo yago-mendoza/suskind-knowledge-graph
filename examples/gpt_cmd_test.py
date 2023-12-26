@@ -5,7 +5,7 @@ class MyShell(cmd.Cmd):
     intro = 'Bienvenido a mi CLI. Escribe help o ? para listar los comandos.\n'
     prompt = '(miCLI) '
 
-    # Comando simple sin argumentos
+    # Comando simple sin argumentos.
     def do_saludar(self, arg):
         print("¡Hola Mundo!")
 
