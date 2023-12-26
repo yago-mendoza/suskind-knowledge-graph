@@ -5,6 +5,9 @@ import cmd
 import datetime
 from rich import print
 
+# los argumentos -> library argparse, action, help 
+
+
 class Placeholder(str):
 
     def __init__(self, node=None, fields=None):
