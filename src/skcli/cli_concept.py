@@ -6,16 +6,23 @@ TERMINAL CONCEPT
 | Entered editor mode on filters:
 | f1/type('w').lang('es')
 | f2/starts('clar')
->> rm f1
->> contains('esonate').lang('en') > f1   # (> f1 is optional)
+
+>> rm f1                                            # rm all
+>> Y                                                Warning: do you want ro remove f1 filter? [Y/N]
+>> contains('esonate').lang('en') > f1              # (> f1 is optional)
 >> ''
 14:32:09 ~ [es][n][concept]@[(lemma)]/: filter
 | Showing defined filters:
 | f1/starts('clar')
 | f2/contains('esonate').lang('en')
-14:32:11 ~ [es][n][concept]@[(lemma)]/: r -favorite
-14:32:11 ~ [en][n][Dinero]@[('')]/: r -f2     # random but applying the filter
-14:32:15 ~ [en][v][Resonate]@[('')]/: ls -f1    # watches but applying the filter
+14:32:11 ~ [es][n][concept]@[(lemma)]/: r -favorite  # busqueda random por filtro favorito
+14:32:11 ~ [en][n][Dinero]@[('')]/: r -f2            # random but applying the filter
+14:32:15 ~ [en][v][Resonate]@[('')]/: ls -f1         # watches but applying the filter
+14:32:15 ~ [en][v][Resonate]@[('')]/: set f1
+14:32:04 ~ [es][n][Resonate]@[('')]/: filter
+| Entered editor mode on filters:
+| [>] f1/type('w').lang('es')                        # ahora está puesto este por defecto, y si no se aplica un arg, se usará
+| f2/starts('clar')
 14:32:18 ~ [en][v][Resonate]@[('')]/:
 14:32:18 ~ [en][v][Resonate]@[('')]/: filter -rm
 14:32:18 ~ [en][v][Resonate]@[('')]/: filter

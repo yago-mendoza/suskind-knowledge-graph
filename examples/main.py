@@ -1,8 +1,16 @@
-def run(G):
-    cli = PrimaryInterface(G)
-    cli.cmdloop()
+test_CLI = True
+test_skcomponents = False
 
-###
+#########################################################
+
+def run(G):
+    if test_CLI:
+        cli = PrimaryInterface(G)
+        cli.cmdloop()
+    if test_skcomponents:
+        pass
+
+#########################################################
 
 def create_graph():
     data_file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.txt')
