@@ -53,10 +53,6 @@ No results founds.                                # si no encuentra resultados.
 | [ls] f2/lang('en')
 
 
-
-
-
-
 6. ls CLI ###########################################
 ##########################################
 
@@ -189,21 +185,20 @@ No results founds.                                # si no encuentra resultados.
 |  3. <new_lemma>
 >> Grupo
 14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: lemma -e
+
 14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: rm
 | Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
 >> Y
-14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: ?                # returns to the last node
-| The actions allowed at this status are ...
-| : cd, set/unset, lemma, name, rm, undo.
-| For further information, input '<action> --help'.
+
 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: ls
 | Showing 7/35 results:
 | 1. Caminador            | 5. Golfo
 | 2. Persona              | 6. Cercenar
 | 3. Atrapar antes po...  | 7. Vulgar
 | 4. Electrocutar
->> tf 4 6 1 7 > y0
->>
+>> 4 6 1 7 > y0
+
+TERMINAL
 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: term
 Python. Granted a pathway to SKComponents objects and methods.
 Type "Node" or "Graph" to inspect objects and "exit" to leave.
@@ -215,41 +210,31 @@ Type "Node" or "Graph" to inspect objects and "exit" to leave.
 Exiting terminal...
 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
 
-
-
-FUTUROS #############################################################################
-
+NESTED_HISTORY
 | Showing nested history:
 | root: [0] Andar(/7)
 |       └── [1] Cercenar (<6th> of 7)
 |            ├── [2] Elegía (<7th> of 7)
 |            └── [3] Esperanza (<42th> of 102)
-
 cd ..
 | Warning: this action will delete the nested search history. Are you sure? [Y/N]
 
 
-# ADDITIONAL IMPLEMENTATIONS ###########################
-- undo
-- status (already set, to do)
-- ? # info of what can be done in the screen
-- help ___
-- suggestions
-- and changing words from category (transfer)
-- traduccion con filter, no con funcion explicita (same for merging synset1's, just a way to merge nodes and them also)
-
-Useful symbols
-
-<, >
-clear, copy, paste
-extract / export, min
-commit, push, autosave 
-
-# OBSERVATIONS AND VERY FUTURE STEPS
-- min_path
-- reduce a set
-- search method
-- decide where to use 'rich' colors
-- I dont need a hist of every single action done. So hist will be just for visited nodes.
+¿Useful symbols?
+    <, >
+    clear, copy, paste
+    extract / export, min
+    commit, push, autosave 
+¿Very future steps?
+    min_path
+    reduce a set
+    search method
+    decide where to use 'rich' colors
+    I dont need a hist of every single action done. So hist will be just for visited nodes.
+    status (already set, to do)
+    suggestions
+    and changing words from category within a same node
+    traduccion con filter, no con funcion explicita
+    (same for merging synset1's, just a way to merge nodes and them also)
 
 '''
