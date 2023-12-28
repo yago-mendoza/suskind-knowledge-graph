@@ -32,7 +32,7 @@ if __name__ == '__main__':
     from src.skcomponents.sknodeset import NodeSet
     from src.skcomponents.skgraph import Graph
     from src.skcomponents.search_algorithms import *
-    from src.skcli.test_cli import *
+    from src.skcli.SKCLI import *
     from src.skcli.command_docstrings import *
     G = create_graph()
     run(G)
