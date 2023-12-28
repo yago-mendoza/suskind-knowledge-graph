@@ -1,31 +1,45 @@
+import os
 import cmd # Importing Python's built-in library for creating command-line interfaces (used for PrimaryInterface and upcoming sub-CLIs)
 import argparse
+
+from src.skcli.skplaceholder import *
+from src.skcli.aux_clis import *
 
 from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
-from src.skcli.aux_clis import *
 
 """
-
-# Write a command DOCSTRING for each new command dessigned
-# Document all the code with in-line comments
-# Make sure there's no hard coding at all
-# Make sure to extract behavior snippets and reuse them.
-# Also, allocate them in the most adequate objects.
-
-#################################################################################
-
-# 0. FAST TASKS ---------------------
-
-decentralize the setdiff function library as a aux_func or something
-decentralize the padding option for prints
-have great care of the warnings and other kinds of message (reach a consensus)
+###############################
+###########################
+#######################
+###################
+###############
+###########
+DISCLAIMER
+1. No metas más funcionalidades hasta que la actual versión no esté 
+PERFECTAMENTE documentada.
+2. Si metes funcionalidades próximamente, que sean VITALES para el
+funcionamiento del programa. No metas funcionalidades superfluas de momento.
+El objetivo es tenerlo ready para Bélgica.
+3. Próximamente, si creas un <COMANDO> nuevo, completa su DOCSTRING de forma
+ordenada. Y documenta todo su código con in-line comments apropiados.
+###########
+###############
+###################
+#######################
+###########################
+###############################
 
 # 1. Add additional flags at 'r' --------------------------------------------
 
+r -t (sin complementos terminados) causes a fatal error (should not) ni tampoco nadie a quien le falten argumentos debería
 r --summary (que active el summary cada vez que se ejecute)
 r --ls (que active el ls cada vez que se ejecute)
+r -f (not working as expected)
+
+do_new (creates a new node being able to set new language (-l) or lemma (-l), because if already existing, cannot create unless a lemma is set)
+do_save (save the graph to a file)
 
 # 2. Add local flags for 'ls' and global flags for 'ls' ---------------------------
 
@@ -178,7 +192,7 @@ class PrimaryInterface (cmd.Cmd):
         super().__init__()  # Initialize the base class (cmd.Cmd).
         self.G = graph  # Store the graph object.
         self.placeholder = Placeholder(self)  # Create a Placeholder instance.
-        self._set_random_node()  # Initialize a node at random.    
+        self._set_random_node()  # Initialize a node at random.   
 
     # Public Methods -----
         
@@ -338,7 +352,7 @@ class PrimaryInterface (cmd.Cmd):
 
         if self.placeholder.fields:
 
-            self._update_graph_permissions() # we set graph permissions to fields (for neighbors)
+            self._update_graph_permissions_to_fields() # we set graph permissions to fields (for neighbors)
             nodes_to_display = self.placeholder.node.get_neighbors().set()  # Assuming a method to get data from the current node
 
             if nodes_to_display:
@@ -366,32 +380,28 @@ class PrimaryInterface (cmd.Cmd):
         
         args = parser.parse_args(arg.split())
 
-        lang, lemma = None, None
+        # lang, lemma = None, None
 
-        if args.diff:
-            if len(args.diff)==2 and args.diff.islower():
-                lang = args.diff
-            else:
-                lemma = args.diff
+        # if args.diff:
+        #     if len(args.diff)==2 and args.diff.islower():
+        #         lang = args.diff
+        #     else:
+        #         lemma = args.diff
 
-        lang  = lang if lang else self.placeholder.lang
-        type_ = self.placeholder.type
-        name  = args.name
-        lemma = lemma if lemma else ''
+        # lang  = lang if lang else self.placeholder.lang
+        # type_ = self.placeholder.type
+        # name  = args.name
+        # lemma = lemma if lemma else ''
 
-        akin_nodes = self.G.find(lang=lang, type=type_, name=name, lemma=lemma)
+        # akin_nodes = self.G.find(lang=lang, type=type_, name=name, lemma=lemma)
 
-        if not akin_nodes:
-            self.G.create_node(lang, type_, name, lemma)
-        else:
-            print('This node already exists at this scope.')
-            for node in akin_nodes:
-                print(f'| {node}')
-            print('Tip: try using a different lemma.')
-        
-    def do_save(self, arg):
-        # saves everything to a custom TXT data file
-        pass
+        # if not akin_nodes:
+        #     self.G.create_node(lang, type_, name, lemma)
+        # else:
+        #     print('This node already exists at this scope.')
+        #     for node in akin_nodes:
+        #         print(f'| {node}')
+        #     print('Tip: try using a different lemma.')
 
     # Internal Methods  --------------------
             
@@ -406,7 +416,7 @@ class PrimaryInterface (cmd.Cmd):
         else:
             padded_print('No nodes met the criteria.')
 
-    def _update_graph_permissions(self):
+    def _update_graph_permissions_to_fields(self):
         long_parser = {'y0':'synset0', 'e0':'semset0',
                        'y1':'synset1', 'e1':'semset1',
                        'y2':'synset2','e2':'semset2'}
@@ -421,16 +431,18 @@ class PrimaryInterface (cmd.Cmd):
         console.print(Markdown("# Suskind Knowledge Graph"))
 
     # CMD private re-writen methods --------------------
-            
+        
+    def do_clear(self, arg):
+        self.preloop()
+        
     def preloop(self):
+        os.system('cls')
         self._print_markdown_title()
         padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER)
         print('-'*47)
 
     def default(self, line):
         padded_print(f"Unknown '{line[:2].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
-
-
 
 # los argumentos -> library argparse, action, help 
         

@@ -1,16 +1,20 @@
 from typing import Dict
 
 COMMAND_DOCSTRINGS : Dict[str, str] = {
-'cd': """\
-| Desc. Accesses a node and sets it as current.
-| Signature : cd <ent>
+'set': """\
+| Desc. Sets or adds properties to the current node or environment.
+| Signature : set <*settings>
 | Arguments :
-    1. <ent>  A single node name. Must match case.
-| Technical notes :
-    N1. If the node is not found on the current PlaceHolder scope, the method
-    progressively  broadens the search criteria for nodes by first using the
-    current language and type, then only the language, then only the type, and
-    finally neither, if more specific searches yield no results.\
+  <!> Supports shorthand for groups and individual settings.
+    1. <*settings>
+              "y/e"  Add all 'y' or 'e' prefixed fields (e.g., y0, y1, y2).
+            "y_/e_"  Add specific fields (e.g., y0 y1)
+        "es/fr/..."  Set the node language for the PlaceHolder.
+        "n/j/v/..."  Set the node type for the PlaceHolder.
+| Usage examples :
+    set y
+    set y0 e1
+    set en j y0 e2\
 """,
 
 'unset': """\
@@ -24,6 +28,18 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
 | Usage examples :
     unset e
     unset y e0 e2\
+""",
+
+'cd': """\
+| Desc. Accesses a node and sets it as current.
+| Signature : cd <ent>
+| Arguments :
+    1. <ent>  A single node name. Must match case.
+| Technical notes :
+    N1. If the node is not found on the current PlaceHolder scope, the method
+    progressively  broadens the search criteria for nodes by first using the
+    current language and type, then only the language, then only the type, and
+    finally neither, if more specific searches yield no results.\
 """,
 
 'r': """\
@@ -44,23 +60,13 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
 """,
 
 'ls': """\
-| Desc. Lists detailed information about the current node, including its neighbors and relevant properties.
+| Desc. Lists the current node's neighbors within the field scope.
 | Signature : ls
 """,
 
-'set': """\
-| Desc. Sets or adds properties to the current node or environment.
-| Signature : set <*settings>
-| Arguments :
-  <!> Supports shorthand for groups and individual settings.
-    1. <*settings>
-              "y/e"  Add all 'y' or 'e' prefixed fields (e.g., y0, y1, y2).
-            "y_/e_"  Add specific fields (e.g., y0 y1)
-        "es/fr/..."  Set the node language for the PlaceHolder.
-        "n/j/v/..."  Set the node type for the PlaceHolder.
-| Usage examples :
-    set y
-    set y0 e1
-    set en j y0 e2\
+'clear': """\
+| Desc. Clears the screen.
+| Signature : clear
 """
+
 }

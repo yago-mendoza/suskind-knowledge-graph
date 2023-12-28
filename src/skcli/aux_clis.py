@@ -11,7 +11,7 @@ class SelectNodeInterface(cmd.Cmd):
         self.nodes = nodes
         self.parent_cli = parent_cli
         self.display()
-
+    
     def display(self):
         padded_print("Do you mean ...")
         for index, node in enumerate(self.nodes, start=1):
@@ -21,8 +21,10 @@ class SelectNodeInterface(cmd.Cmd):
         padded_print("(Press Enter without any input to exit)")
 
     def default(self, line):
-        if line == '':
-            return True  # Exit if the input is empty.
+        """
+        The default method in a cmd.Cmd subclass is called when a command is entered
+        that doesn't match any existing do_*
+        """
         try:
             index = int(line) - 1  # Convert to zero-based index.
             if 0 <= index < len(self.nodes):
@@ -33,7 +35,11 @@ class SelectNodeInterface(cmd.Cmd):
                 print("Please enter a valid number from the list.")
         except ValueError:
             print("Please enter a number to select a node or just press Enter to exit.")
-
+    
+    def emptyline(self):
+        # To exit with an empty Enter key press
+        return True
+    
     def do_exit(self, arg):
         """Exit back to the main interface."""
-        return True  # Returning True exits the cmd loop.
+        return True 

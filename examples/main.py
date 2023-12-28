@@ -3,8 +3,8 @@
 # Flags below decide what snippet to run.
 # > py -i main.py to run
 
-test_CLI = False
-test_skcomponents = True
+test_CLI = True
+test_skcomponents = False
 
 #########################################################
 import sys 
