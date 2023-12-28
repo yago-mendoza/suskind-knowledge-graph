@@ -97,8 +97,8 @@ class Node:
         permission_dict = _parse_permission(permission_string)
 
         # Collect neighbors based on permissions and edge types
-        for i in range(3):
-            for edge_type in ['synset', 'semset']:
+        for edge_type in ['synset', 'semset']:
+            for i in range(3):
                 permission_dict = self.graph.edge_permissions if not permission_string else permission_dict
                 edge_key = f'{edge_type}{i}'
                 if permission_dict.get(edge_key):

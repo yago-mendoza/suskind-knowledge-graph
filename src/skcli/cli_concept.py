@@ -1,14 +1,7 @@
 
 '''
-TERMINAL CONCEPT ###########################################
-###########################################
-###########################################
-###########################################
 
-# el autocomplete del cd puede hacerse con la libreria prompt_toolkit
 
-1. filter ####################################
-##########################################
 
 # 1.1. Editing filters
 
@@ -59,43 +52,10 @@ No results founds.                                # si no encuentra resultados.
 | f1/lang('es')
 | [ls] f2/lang('en')
 
-# 4.2. Setting <lang> or <type>
 
-14:32:11 ~ [en][n][Normal]@[('')]/: set j
-14:32:11 ~ [en][j][Normal]@[('')]/:
 
-14:32:11 ~ [en][n][Dog]@[('')]/: set j
-14:32:11 ~ [en][j][Blackmail]@[('')]/:
 
-14:32:11 ~ [en][n][Dog]@[('')]/: set fr
-14:32:11 ~ [fr][j][Agréable]@[('')]/:     # suponiendo que fr-n es un campo vacío
 
-# 4.3. Setting <fields>
-
-14:32:11 ~ [en][n][Normal]@[('')]/: set y
-14:32:11 ~ [en][j][Normal]@[('')]/[y]: unset y2
-14:32:11 ~ [en][n][Normal]@[('')]/[y0,y1]: set e1
-14:32:11 ~ [en][j][Normal]@[('')]/[y0,y1,e1]: unset y
-14:32:11 ~ [en][j][Normal]@[('')]/[e1]:
-
-5. ls (use argparse) #########################################
-##########################################
-
-14:32:18 ~ [en][j][Normal]@[('')]/: ls
-| Error. Search field is needed.
-
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -s --sort       #   set sort <on>/<off>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -c 3 --ncol 3   #   set ncol <int>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -t 9 --stop 9   #   set stop <int>/<off>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -a 5 --abbr 5   #   set abbr <int>/<off>
-
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
-
-| Showing 8/1240 results:
-| 1. Arma biológica                       | 5. Hermandad
-| 2. Tortuga marina                       | 6. Cabellera
-| 3. Cárcel de muerte lenta e inevitable  | 7. Simplón
-| 4. Tiburones                            | 8. Carretera asfaltada
 
 6. ls CLI ###########################################
 ##########################################
@@ -127,15 +87,6 @@ No results founds.                                # si no encuentra resultados.
 | .slit -off  (sliting output)
 | .ncol 2     (nº of columns)
 | .abbr -off  (abbreviating results)
-
-99. summary ####################################
-##########################################
-
-14:32:18 ~ [en][j][Normal]@[('')]/: summary
-| Showing quick summary for <node> connections:
-| synset0 : 14   | semset0 : 61
-| synset1 : 515  | semset1 : 551
-| synset2 : 14   | semset2 : 65
 
 
 
