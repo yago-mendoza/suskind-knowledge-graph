@@ -1,12 +1,17 @@
+# Little explanation
+# The code run is the one in RUN(G) function.
+# Flags below decide what snippet to run.
+# > py -i main.py to run
+
 test_CLI = True
 test_skcomponents = False
 
 #########################################################
-
+import sys 
 def run(G):
     if test_CLI:
         cli = PrimaryInterface(G)
-        cli.cmdloop()
+        cli.cmdloop() # executes cmdqueue and leaves terminal ready
     if test_skcomponents:
         pass
 

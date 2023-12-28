@@ -101,53 +101,29 @@ class NodeSet(list):
             self.append(node)
         return self
 
-    def find(self, *args):
+    def find(self, lang="", type_="", name="", lemma=None):
         # Initialize results list.
         results = []
 
-        # Handle the case when a single object is entered (assumed to be a node-like object)
-        if len(args) == 1 and not isinstance(args[0], str):
-            node_like = args[0]
-            # Search for an object in the graph that matches the node-like object
-            for node in self:
-                if node == node_like:
-                    results.append(node)
+        # Iterate over each node in the container (e.g., a graph or list of nodes).
+        for node in self:
+            # Check if the node matches the non-empty criteria and the lemma, if provided.
+            if (not lang or node.lang == lang) and \
+            (not type_ or node.type == type_) and \
+            (not name or node.name == name) and \
+            (lemma is None or node.lemma == lemma):
+                results.append(node)
 
-        # Handle the case when a single name string is entered
-        elif len(args) == 1 and isinstance(args[0], str):
-            name = args[0]
-            # Search for objects by name
-            for node in self:
-                if node.name == name:
-                    results.append(node)
+        # Always return the results wrapped in a NodeSet object.
+        return NodeSet(results)
 
-        # Handle the case when 3 or 4 elements are entered
-        elif len(args) in [3, 4]:
-            # Unpack arguments
-            lang, type_, name = args[:3]
-            lemma = args[3] if len(args) == 4 else None
-            # Search for objects based on provided attributes
-            for node in self:
-                if (node.lang == lang and node.type == type_ and node.name == name and 
-                    (lemma is None or node.lemma == lemma)):
-                    results.append(node)
-
-        else:
-            # If the arguments don't match any of the above patterns, raise an error
-            raise ValueError("Invalid number of arguments or argument types for find")
-
-        # Return the appropriate result based on the number of matches found
-        if len(results) == 1:
-            return results[0]  # Return the single result directly
-        else:
-            return NodeSet(results)  # Wrap multiple results in a NodeSet object
-
-    def random(self, k=None):
-        if not k and self: return random.choice(self)
-        if not self or k < 1: return None
-        if k == 1: return NodeSet(nodes=random.choice(self))
-        if k <= len(self): return NodeSet(nodes=random.sample(self, k))
-        raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(self)} nodes.")
+    def random(self, lang="", type_="", k=None):
+        candidates = self.find(lang, type_)
+        if not k and candidates: return random.choice(candidates)
+        if not candidates or k < 1: return None
+        if k == 1: return NodeSet(nodes=random.choice(candidates))
+        if k <= len(candidates): return NodeSet(nodes=random.sample(candidates, k))
+        raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(candidates)} nodes.")
     
     def edit(self, **attr_edits):
         # Iterate through the keyword arguments provided in 'changes'

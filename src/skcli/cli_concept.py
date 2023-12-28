@@ -1,106 +1,150 @@
 
 '''
-TERMINAL CONCEPT
+TERMINAL CONCEPT ###########################################
+###########################################
+###########################################
+###########################################
+
+3. cd  ####################################
+###########################################
+
+
+# el autocomplete del cd puede hacerse con la libreria prompt_toolkit
+
+1. filter ####################################
+##########################################
+
+# 1.1. Editing filters
 
 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
 | Entered editor mode on filters:
 | f1/type('w').lang('es')
 | f2/starts('clar')
+>> rm f1
+>> add contains('esonate').lang('en')
+>> ''
+14:32:04 ~ [es][n][concept]@[(lemma)]/:
 
->> rm f1                                            # rm all
->> Y                                                Warning: do you want ro remove f1 filter? [Y/N]
->> contains('esonate').lang('en') > f1              # (> f1 is optional)
->> ''
-14:32:09 ~ [es][n][concept]@[(lemma)]/: filter
-| Showing defined filters:
-| f1/starts('clar')
-| f2/contains('esonate').lang('en')
-14:32:11 ~ [es][n][concept]@[(lemma)]/: r -favorite  # busqueda random por filtro favorito
-14:32:11 ~ [en][n][Dinero]@[('')]/: r -f2            # random but applying the filter
-14:32:15 ~ [en][v][Resonate]@[('')]/: ls -f1         # watches but applying the filter
-14:32:15 ~ [en][v][Resonate]@[('')]/: set f1
-14:32:04 ~ [es][n][Resonate]@[('')]/: filter
-| Entered editor mode on filters:
-| [>] f1/type('w').lang('es')                        # ahora está puesto este por defecto, y si no se aplica un arg, se usará
+# 1.2. Sowing filters
+
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+| Showing filters:
+| f1/lang('es').contains('trent')
 | f2/starts('clar')
-14:32:18 ~ [en][v][Resonate]@[('')]/:
-14:32:18 ~ [en][v][Resonate]@[('')]/: filter -rm
-14:32:18 ~ [en][v][Resonate]@[('')]/: filter
-14:32:18 ~ [en][v][Resonate]@[('')]/: filter -e
->> ''
-14:32:18 ~ [en][v][Resonate]@[('')]/: filter
-14:32:18 ~ [en][v][Resonate]@[('')]/: r
-14:32:18 ~ [es][n][Alabastro]@[('')]/: cd normal
-| Did you mean ...
-| a) [en][j][Normal]@[('')]
-| b) [es][j][Normal]@[('')]
->> a
-14:32:18 ~ [en][j][Normal]@[('')]/: summary
-| Showing quick summary for <node> connections:
-| synset0 : 14   | semset0 : 61
-| synset1 : 515  | semset1 : 551
-| synset2 : 14   | semset2 : 65
-14:32:18 ~ [en][j][Normal]@[('')]/: .sort -on   ######
-14:32:18 ~ [en][j][Normal]@[('')]/: .rand -on   ######
+14:32:04 ~ [es][n][concept]@[(lemma)]/:
+
+2. r ####################################
+##########################################
+
+14:32:11 ~ [es][n][concept]@[(lemma)]/: r -l -t   # random pero fijando lang and type
+14:32:11 ~ [es][n][Queso]@[('')]/: r              # truly random
+14:32:11 ~ [en][j][Small]@[('')]/: r -f           # will select a favorite one
+No results founds.                                # si no encuentra resultados.
+
+4. set ####################################
+##########################################
+
+# 4.1. Setting default global filter
+
+14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
+14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
+14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+| Showing filters:
+| [ls, cd, r] f1/lang('es')
+| [ls] f2/lang('en')
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
+| Showing filters:
+| f1/lang('es')
+| [>] f2/lang('en')
+14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+| Showing filters:
+| f1/lang('es')
+| [ls] f2/lang('en')
+
+# 4.2. Setting <lang> or <type>
+
+14:32:11 ~ [en][n][Normal]@[('')]/: set j
+14:32:11 ~ [en][j][Normal]@[('')]/:
+
+14:32:11 ~ [en][n][Dog]@[('')]/: set j
+14:32:11 ~ [en][j][Blackmail]@[('')]/:
+
+14:32:11 ~ [en][n][Dog]@[('')]/: set fr
+14:32:11 ~ [fr][j][Agréable]@[('')]/:     # suponiendo que fr-n es un campo vacío
+
+# 4.3. Setting <fields>
+
+14:32:11 ~ [en][n][Normal]@[('')]/: set y
+14:32:11 ~ [en][j][Normal]@[('')]/[y]: unset y2
+14:32:11 ~ [en][n][Normal]@[('')]/[y0,y1]: set e1
+14:32:11 ~ [en][j][Normal]@[('')]/[y0,y1,e1]: unset y
+14:32:11 ~ [en][j][Normal]@[('')]/[e1]:
+
+5. ls (use argparse) #########################################
+##########################################
+
 14:32:18 ~ [en][j][Normal]@[('')]/: ls
 | Error. Search field is needed.
-14:32:18 ~ [en][j][Normal]@[('')]/: set e
-14:32:18 ~ [en][j][Normal]@[('')]/[e0/e1/e2]: unset
-14:32:18 ~ [en][j][Normal]@[('')]/: set y
-14:32:18 ~ [en][j][Normal]@[('')]/[y0/y1/y2]: unset y0 y2
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]:
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: .ncol 2   ######
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls -slit 8
+
+14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -s --sort       #   set sort <on>/<off>
+14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -c 3 --ncol 3   #   set ncol <int>
+14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -t 9 --stop 9   #   set stop <int>/<off>
+14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -a 5 --abbr 5   #   set abbr <int>/<off>
+
+14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
+
 | Showing 8/1240 results:
 | 1. Arma biológica                       | 5. Hermandad
 | 2. Tortuga marina                       | 6. Cabellera
 | 3. Cárcel de muerte lenta e inevitable  | 7. Simplón
 | 4. Tiburones                            | 8. Carretera asfaltada
->> ''
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: .abbr 20   ######
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls -slit 8 -f2 ######
-| Showing 8/1240 results:
-| 1. Arma biológica          | 5. Hermandad
-| 2. Tortuga marina          | 6. Cabellera
-| 3. Cárcel de muerte le...  | 7. Simplón
-| 4. Tiburones               | 8. Carretera asfaltada
->> ''
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: .cut -off .rand -off
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls status
+
+6. ls CLI ###########################################
+##########################################
+
+>> del 8 7 6  # borrar entradas
+
+>> del 8 7 6 -r  # refreshes (shows)
+
+>> refresh  # refreshes (shows)
+
+>> add Alto, Normal (te refieres a...?) # tiene que existir
+| Error. Node 'asdf' was not found, hence, not included.
+
+97. ? ##########################################
+##########################################
+
+| Displaying options at this point:
+| ls : displays the nodes.
+| status : shows the variables.
+| Write '<command> ?' to obtain more info.
+
+98. status #####################################
+##########################################
+
+14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls --status
 | Showing 'ls' set parameters:
 | .rand -off  (randomization)
 | .sort -off  (sorting)
 | .slit -off  (sliting output)
 | .ncol 2     (nº of columns)
 | .abbr -off  (abbreviating results)
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls
-| Showing 8/1240 results:
-| 1. Arma biológica          | 5. Hermandad
-| 2. Tortuga marina          | 6. Cabellera
-| 3. Cárcel de muerte le...  | 7. Simplón
-| 4. Tiburones               | 8. Carretera asfaltada
->> del 8 7 6
->> refresh
-| 1. Arma biológica          | 4. Tiburones
-| 2. Tortuga marina          | 5. Hermandad
-| 3. Cárcel de muerte le...
->> add Perro de caza
->> add asdf
-| Error. Node 'asdf' was not found, hence, not included.
->> add Bat
-| Did you mean ...
-| a) [en][n][Bat]@[('mammal')]
-| b) [en][n][Bat]@[('tool')]
->> a
->> ''
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls
-| Showing 8/1240 results:
-| 1. Arma biológica          | 5. Hermandad
-| 2. Tortuga marina          | 6. Perro de caza
-| 3. Cárcel de muerte le...  | 7. Bat
-| 4. Tiburones
->> ''
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: set y
+
+99. summary ####################################
+##########################################
+
+14:32:18 ~ [en][j][Normal]@[('')]/: summary
+| Showing quick summary for <node> connections:
+| synset0 : 14   | semset0 : 61
+| synset1 : 515  | semset1 : 551
+| synset2 : 14   | semset2 : 65
+
+
+
+
+
 14:32:18 ~ [en][j][Normal]@[('')]/[y0/y1/y2]: cd QWERTY
 14:32:18 ~ [en][j][~QWERTY]@[('')]/[y0/y1/y2]: ls
 | Warning. Editing commands disabled due to multiple fielding.

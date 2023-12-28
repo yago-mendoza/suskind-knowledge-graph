@@ -1,135 +1,206 @@
-
-from src.skcomponents.skgraph import Graph
-
-import cmd
-import datetime
+import cmd # Importing Python's built-in library for creating command-line interfaces (used for PrimaryInterface and upcoming sub-CLIs)
+import datetime # Importing the datetime module to work with dates and times (used at 'get_string()' for PlaceHolder)
+from rich import print # Importing the 'print' function from the 'rich' module for enhanced formatting (upcoming implementation)
 import argparse
-from rich import print
 
-# los argumentos -> library argparse, action, help 
+# al pulsar enter repite el ultimo comando over and over
+# el fields ya está funcional pero... no deberia ser un filtro? (no, pero intersante)
+# estaria bien documentarlo todo antes de seguir
 
 class Placeholder(str):
-
     def __init__(self, cmd):
-        self.cmd = cmd  # static
-        self.lang, self.type, self.name, self.lemma = 'lang', 'type', 'name', 'lemma'  # updated through update(node)
-        self.fields = []  # starts out empty
+        self.cmd = cmd
+        self.lang, self.type, self.name, self.lemma = 'lang', 'type', 'name', 'lemma'
+        self.fields = []
 
-    def update(self, node):
+    def update_node(self, node):
         self.node = node
         self.lang, self.type, self.name, self.lemma = node.identify()
+        self._update_string()
+    
+    def update_field(self, mode, field):
+        getattr(self, f"_{mode}_field")(field)
+        self._update_string()
 
-    def get_string(self):
-        time_str = datetime.datetime.now().strftime("%H:%M:%S")
-        fields = '[' + '/'.join(self.fields) + ']'
-        return f"{time_str} ~ [{self.lang}][{self.type}]@[{self.name}({self.lemma or ''})]/{fields or ''}:"
+    # Atomic behavioral private functions
+ 
+    def _add_field(self, field):
+        if field not in self.fields: self.fields.append(field)
+
+    def _remove_field(self, field):
+        if field in self.fields: self.fields.remove(field)
+    
+    def _update_string(self):
+        str_time = datetime.datetime.now().strftime('%H:%M:%S')
+        self.fields = sorted(self.fields)
+        self.fields.reverse()
+        fields_list = '[' + '/'.join(self.fields) + ']'
+        self.cmd.prompt = f"{str_time} ~ [{self.lang}][{self.type}]@[{self.name}({self.lemma or ''})]/{fields_list or ''}: " 
 
 class PrimaryInterface (cmd.Cmd):
 
     def __init__(self, graph):
-        super().__init__()
-        self.G = graph
-        self.placeholder = Placeholder(self)
-        self.filters = FilterManager(self)
+        super().__init__()  # Initialize the base class (cmd.Cmd).
+        self.G = graph  # Store the graph object.
+        self.placeholder = Placeholder(self)  # Create a Placeholder instance.
+        self._set_random_node()  # Initialize a node at random.    
+
+    # CMD Default Functions
+
+    def preloop(self):
+        print('Welcome to my shell!')
+
+    def default(self, line):
+        print("Unknown command. Type 'help' to learn about allowed commands.")
+
+    # Command Functions
+        
+    def do_set(self, arg):
+        args = arg.split()
+        if not args:
+            for field in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
+                self.placeholder.update_field('add', field)
+
+        for setting in args:
+            if setting in ['y', 'e']:
+                for field in [f'{setting}{i}' for i in range(3)]:
+                    self.placeholder.update_field('add', field)
+            elif setting in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
+                field = setting
+                self.placeholder.update_field('add', field)
+            elif setting in self.G.list_langs():
+                lang = setting
+                self.placeholder.lang = lang
+                self._set_random_node(lang=setting, type_='')
+            elif setting in self.G.list_types():
+                type_ = setting
+                self.placeholder.type = type_
+                self._set_random_node(lang='', type_=setting)
+            else:
+                print("Invalid setting.")
     
-        self.set_random_node()  # inicializamos el PlaceHolder en un nodo aleatorio
+    def do_unset(self, arg):
+        args = arg.split()
+        if not args:
+            for field in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
+                self.placeholder.update_field('remove', field)
 
-    def set_random_node(self):
-        self.placeholder.update(self.G.random())
+        for setting in args:
+            if setting in ['y', 'e']:
+                for field in [f'{setting}{i}' for i in range(3)]:
+                    self.placeholder.update_field('remove', field)
+            elif setting in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
+                field = setting
+                self.placeholder.update_field('remove', field)
+            else:
+                print("Invalid setting.")
 
-    def do_set(self, element):
-        if element in self.graph.list_langs():
-            self.placeholder.lang = element
+    def do_r(self, arg):
+        self._set_random_node()
 
-        elif element in self.graph.list_types():
-            self.placeholder.type = type
+    def do_cd(self, arg):
+        # Create an argument parser for the 'cd' command
+        parser = argparse.ArgumentParser()
+        parser.add_argument('name', nargs='*', help='The name to search for')  # Name is a positional argument
 
-        elif element in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']:
-            self.placeholder.fields.append(element)
+        try:
+            # Parse the arguments
+            parsed_args = parser.parse_args(arg.split())
+            parsed_name = ' '.join(parsed_args.name)  # Join the list back into a string
 
-    def do_cd(self, concept_name):
-        concept = self.database.find(self.lang, self.type, concept_name, '')
-        if concept:
-            self.current_node = concept_name
-            self.current_field = 'concept'
-            self.update_prompt()
+        except SystemExit:
+            # argparse automatically exits on error, which would end your CLI
+            # Intercepting SystemExit prevents the entire script from exiting if the command is malformed.
+            print("Invalid command or arguments. Type 'help cd' for more information.")
+            return
+
+        # Start with the most specific search based on user input.
+        nodes = self.G.find(self.placeholder.lang, self.placeholder.type, parsed_name)
+
+        # Apply fallback logic only to the categories that weren't specified by the user.
+        if not nodes:
+            nodes = self.G.find(self.placeholder.lang, '', parsed_name)
+        if not nodes:
+            nodes = self.G.find('', self.placeholder.type, parsed_name)
+        if not nodes:
+            nodes = self.G.find('', '', parsed_name)
+
+        # Handle the result based on the number of nodes found.
+        if len(nodes) == 1:
+            self._set_node(nodes[0])  # Automatically update if only one node found.
+        elif nodes:
+            print('Still need to develop prompt_user subCLI')
         else:
-            print(f"No se encontró el concepto: {concept_name}")
+            print("No nodes found.")
+
+    # Internal Functions
+            
+    def _set_node(self, new_node):
+        if new_node:
+            self.placeholder.update_node(new_node)
+
+    def _set_random_node(self, lang='', type_=''):
+        new_node = self.G.random(lang=lang, type_=type_)
+        self._set_node(new_node)
+        
+
+
+# class SelectNodeInterface(cmd.Cmd):
+#     prompt = '>> '
+
+#     def __init__(self, nodes, parent_cli):
+#         super().__init__()
+#         self.nodes = nodes  # The list of nodes to choose from.
+#         self.parent_cli = parent_cli  # Reference to the parent CLI for returning data or state.
+#         self.display()
+
+#     def display(self):
+#         print("| Did you mean ...")
+#         for index, node in enumerate(self.nodes, start=1):
+#             lang, type, name, lemma = node.identify()
+#             print(f"| {index}) [{lang}][{type}][{name}]@[({lemma or ''})]")
+#         print("| (Press Enter without any input to exit)")
+
+#     def default(self, line):
+#         if line == '':
+#             return True  # Exit if the input is empty.
+#         try:
+#             index = int(line) - 1  # Convert to zero-based index.
+#             if 0 <= index < len(self.nodes):
+#                 selected_node = self.nodes[index]
+#                 self.parent_cli.set_node_directly(selected_node)
+#                 return True  # Return to the main CLI.
+#             else:
+#                 print("Please enter a valid number from the list.")
+#         except ValueError:
+#             print("Please enter a number to select a node or just press Enter to exit.")
+
+#     def do_exit(self, arg):
+#         """Exit back to the main interface."""
+#         return True  # Returning True exits the cmd loop.
+
+#     def postloop(self):
+#         print("Returning to main interface...")
 
 
 
-class FilterManager:
 
-    def __init__(self, cmd):
-        self.cmd = cmd
-        self.filters = {
-            'f1': "type('w').lang('es')",
-            'f2': "starts('clar')"
-        }
+
+# los argumentos -> library argparse, action, help 
+        
+# class CLIFilter(cmd.Cmd):
+#     prompt = '>'
+#     def __init__(self, filter_manager):
+#         super().__init__()
+#         self.filter_manager = filter_manager
+
+#     def do_filter(self, line):
+#         args = line.split()
+#         if "-e" in args:
+#             editor = CLIFilter(self.filter_manager)
+#             editor.cmdloop("Entered editor mode on filters:")
+#         else:
+#             self.show_filters()
     
-    def add_filter(self, filter_name, filter_def):
-        self.filters[filter_name] = filter_def
 
-    def remove_filter(self, filter_name):
-        if filter_name in self.filters:
-            del self.filters[filter_name]
-    
-    def show_filter(self):
-        return self.filters
-
-    def do_exit(self, arg):
-        print("Saliendo...")
-        return True
-    
-class CLIFilter(cmd.Cmd):
-    prompt = '>'
-    def __init__(self, filter_manager):
-        super().__init__()
-        self.filter_manager = filter_manager
-
-    def do_filter(self, line):
-        args = line.split()
-        if "-e" in args:
-            editor = CLIFilter(self.filter_manager)
-            editor.cmdloop("Entered editor mode on filters:")
-        else:
-            self.show_filters()
-    
-    def show_filters(self):
-        print("| Filters:")
-        for name, definition in self.filter_manager.list_filters().items():
-            print(f"| {name}/{definition}")
-
-    def do_exit(self, line):
-        """Exit the application."""
-        return True
-
-    def emptyline(self):
-        # Do nothing on empty input line
-        pass
-    
-    def do_add(self, line):
-        args = line.split()
-        if len(args) == 2:
-            self.filter_manager.add_filter(args[0], args[1])
-            print(f"Added filter: {args[0]}")
-        else:
-            print("Usage: add [filter_name] [filter_definition]")
-
-    def do_rm(self, line):
-        self.filter_manager.remove_filter(line)
-        print(f"Removed filter: {line}")
-
-    def do_list(self, line):
-        filters = self.filter_manager.list_filters()
-        for name, definition in filters.items():
-            print(f"{name}/{definition}")
-
-    def do_exit(self, line):
-        return True
-
-    def emptyline(self):
-        # Exit the editor when an empty line is entered
-        return True
-    
 
