@@ -1,10 +1,9 @@
 
 '''
 
-
+FILTERS
 
 # 1.1. Editing filters
-
 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
 | Entered editor mode on filters:
 | f1/type('w').lang('es')
@@ -15,20 +14,12 @@
 14:32:04 ~ [es][n][concept]@[(lemma)]/:
 
 # 1.2. Sowing filters
-
 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
 | Showing filters:
 | f1/lang('es').contains('trent')
 | f2/starts('clar')
 14:32:04 ~ [es][n][concept]@[(lemma)]/:
 
-2. r ####################################
-##########################################
-
-14:32:11 ~ [es][n][concept]@[(lemma)]/: r -l -t   # random pero fijando lang and type
-14:32:11 ~ [es][n][Queso]@[('')]/: r              # truly random
-14:32:11 ~ [en][j][Small]@[('')]/: r -f           # will select a favorite one
-No results founds.                                # si no encuentra resultados.
 
 4. set ####################################
 ##########################################

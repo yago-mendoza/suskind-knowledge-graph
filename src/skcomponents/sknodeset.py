@@ -101,24 +101,32 @@ class NodeSet(list):
             self.append(node)
         return self
 
-    def find(self, lang="", type_="", name="", lemma=None):
+    def find(self, **kwargs):
+
+        lang = kwargs.get('lang', '')
+        type_ = kwargs.get('type', '')
+        name = kwargs.get('name', '')
+        lemma = kwargs.get('lemma', None)
+        favorite = kwargs.get('favorite', None)
+
         # Initialize results list.
         results = []
 
-        # Iterate over each node in the container (e.g., a graph or list of nodes).
+        # Iterate over each node in the container.
         for node in self:
-            # Check if the node matches the non-empty criteria and the lemma, if provided.
+            # Check if the node matches the non-empty criteria.
             if (not lang or node.lang == lang) and \
-            (not type_ or node.type == type_) and \
-            (not name or node.name == name) and \
-            (lemma is None or node.lemma == lemma):
+               (not type_ or node.type == type_) and \
+               (not name or node.name == name) and \
+               (lemma is None or (isinstance(lemma, bool) and bool(node.lemma) == lemma) or node.lemma == lemma) and \
+               (not None or node.favorite == favorite):
                 results.append(node)
 
         # Always return the results wrapped in a NodeSet object.
         return NodeSet(results)
 
-    def random(self, lang="", type_="", k=None):
-        candidates = self.find(lang, type_)
+    def random(self, k=None, **kwargs):
+        candidates = self.find(**kwargs)
         if not k and candidates: return random.choice(candidates)
         if not candidates or k < 1: return None
         if k == 1: return NodeSet(nodes=random.choice(candidates))

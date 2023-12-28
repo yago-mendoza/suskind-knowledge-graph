@@ -20,6 +20,7 @@ must be able to set unknown langs (not types) for new entries
 prompt_toolkit for autocomplete
 
 cd ..
+undo
 
 ls)
 
@@ -135,17 +136,18 @@ class PrimaryInterface (cmd.Cmd):
                 field = setting
                 self.placeholder.update_field('add', field)
             # Check if the argument matches any known language in the graph.
-            elif setting in self.G.list_langs():
-                # If a language is specified, update the language in the placeholder and set a random node of that language.
-                lang = setting
-                self.placeholder.lang = lang
-                self._set_random_node(lang=setting, type_='')
-            # Check if the argument matches any known type in the graph.
             elif setting in self.G.list_types():
                 # If a type is specified, update the type in the placeholder and set a random node of that type.
                 type_ = setting
                 self.placeholder.type = type_
-                self._set_random_node(lang='', type_=setting)
+                self._set_random_node(type=type_)
+            elif len(setting)==2 and isinstance(setting, str) and setting.islower():
+                # new language being inputed
+                # If a language is specified, update the language in the placeholder and set a random node of that language.
+                lang = setting
+                self.placeholder.lang = lang
+                self._set_random_node(lang=lang)
+            # Check if the argument matches any known type in the graph.
             else:
                 # If the argument doesn't match any known settings, inform the user that the setting is invalid.
                 print("Invalid setting.")
@@ -194,15 +196,19 @@ class PrimaryInterface (cmd.Cmd):
             return
 
         # Initiates the search for nodes with the most specific criteria first, based on the current language and type context.
-        nodes = self.G.find(self.placeholder.lang, self.placeholder.type, parsed_name)
+        nodes = self.G.find(lang=self.placeholder.lang,
+                            type=self.placeholder.type,
+                            name=parsed_name)
 
         # Implements fallback logic: If the initial search yields no results, progressively broadens the search criteria.
         if not nodes:
-            nodes = self.G.find(self.placeholder.lang, '', parsed_name)
+            nodes = self.G.find(lang=self.placeholder.lang,
+                                name=parsed_name)
         if not nodes:
-            nodes = self.G.find('', self.placeholder.type, parsed_name)
+            nodes = self.G.find(type=self.placeholder.type,
+                                name=parsed_name)
         if not nodes:
-            nodes = self.G.find('', '', parsed_name)
+            nodes = self.G.find(name=parsed_name)
 
         # Processes the search results based on the number of nodes found.
         if len(nodes) == 1:
@@ -229,16 +235,20 @@ class PrimaryInterface (cmd.Cmd):
         # Adds optional arguments to specify the language and type, enhancing the command's flexibility.
         parser.add_argument('-l', '--lang', type=str, help='Specify the language')
         parser.add_argument('-t', '--type', type=str, help='Specify the type')
+        parser.add_argument('-f', '--fav', type=str, help='Toggle favorite switch')
         # Parses the arguments from the command line input.
         args = parser.parse_args(args.split())
 
         # Retrieves the language and type constraints from the parsed arguments, if provided.
         type_constraint = args.type if args.type else None
         lang_constraint = args.lang if args.lang else None
+        favorite_constraint = args.fav if args.fav else None
 
         # Calls the _set_random_node method with the provided language and type constraints.
         # This allows users to narrow down the search to a specific subset of nodes.
-        self._set_random_node(lang=lang_constraint, type_=type_constraint)
+        self._set_random_node(lang=lang_constraint,
+                              type=type_constraint,
+                              favorite=favorite_constraint)
 
     def do_ls(self, arg):
 
@@ -287,8 +297,8 @@ class PrimaryInterface (cmd.Cmd):
         if new_node:
             self.placeholder.update_node(new_node)
 
-    def _set_random_node(self, lang='', type_=''):
-        new_node = self.G.random(lang=lang, type_=type_)
+    def _set_random_node(self, *kwargs):
+        new_node = self.G.random(*kwargs)
         if new_node:
             self._set_node(new_node)
         else:
