@@ -1,18 +1,10 @@
 from src.skcomponents.sknodeset import NodeSet
+from src.skcomponents.skpath import Path
 
 from collections import deque
 from itertools import combinations
 
-class Path:
-    def __init__(self, nodes, edges):
-        self.nodes = nodes  # Tuple of nodes
-        self.edges = edges  # Tuple of edges
-
-    def __repr__(self):
-        # Representation showing the length of the path (number of edges)
-        return f"<Path(length={len(self.edges)})>"
-
-def shortest_path (start, end):
+def shortest_path (start, end, permission_string=''):
     if start == end:
         return Path(NodeSet((start,)), ())
     
@@ -23,7 +15,7 @@ def shortest_path (start, end):
         current_node, node_path, edge_path = queue.popleft()
         
         # Iterate through each neighbor of the current node
-        neighbors = current_node.get_neighbors()
+        neighbors = current_node.get_neighbors(permission_string)
         if neighbors is None:
             continue
 
@@ -39,7 +31,7 @@ def shortest_path (start, end):
     # Return an empty path if no path is found
     return Path(NodeSet(), ())
 
-def centrality(*nodes, scaled=False):
+def centrality(*nodes, scaled=False, permission_string=''):
     if not nodes:
         return {}
     
@@ -47,7 +39,7 @@ def centrality(*nodes, scaled=False):
     intersection_weights = {}  # Guarda el peso de cada intersección
     for r in range(2, len(nodes) + 1):  # Desde intersecciones de 2 hasta todas
         for combo in combinations(nodes, r):
-            intersection = set.intersection(*(node.get_neighbors().set() for node in combo))
+            intersection = set.intersection(*(node.get_neighbors(permission_string).set() for node in combo))
             if intersection:
                 for element in intersection:
                     intersection_weights[element] = intersection_weights.get(element, 0) + r  # Ponderar por el número de nodos
@@ -55,7 +47,7 @@ def centrality(*nodes, scaled=False):
     # Paso 2 y 3: Calcular Contribuciones de Nodos
     node_contributions = {node: 0 for node in nodes}
     for node in nodes:
-        neighbors = node.get_neighbors().set()
+        neighbors = node.get_neighbors(permission_string).set()
         for element in neighbors:
             if element in intersection_weights:
                 node_contributions[node] += intersection_weights[element]
@@ -71,29 +63,32 @@ def centrality(*nodes, scaled=False):
         scaled_contributions = {node: (contrib / ideal_contribution) if ideal_contribution else 0 for node, contrib in node_contributions.items()}
         return scaled_contributions
     
-def intersect(*nodes):
+def intersect(*nodes, permission_string=''):
     # is used as *NodeSet or directly, (node1, node2,)
     if not nodes:
         return set()
     # Base case: if only one node is provided, return its neighbors
     if len(nodes) == 1:
-        return nodes[0].get_neighbors().set()   
+        return nodes[0].get_neighbors(permission_string).set()   
     # Recursive case: intersect the neighbors of the first node with the result of the recursive call on the rest of the nodes
-    return nodes[0].get_neighbors().set().intersection(intersect(*nodes[1:]))
+    return nodes[0].get_neighbors(permission_string).set().intersection(intersect(*nodes[1:]))
 
-def containment (node1, node2, depth=2):
+def containment (node1, node2, depth=2, permission_string=''):
     return _calculate_similarity(node1, node2, depth,
-                                 strategy='containment')
+                                 strategy='containment',
+                                 permission_string=permission_string)
 
-def overlapping(node1, node2, depth=2):
+def overlapping(node1, node2, depth=2, permission_string=''):
     return _calculate_similarity(node1, node2, depth,
-                                 strategy='coincidence')
+                                 strategy='coincidence',
+                                 permission_string=permission_string)
 
-def intersection(node1, node2, depth=2):
+def intersection(node1, node2, depth=2, permission_string=''):
     return _calculate_similarity(node1, node2, depth,
-                                 strategy='intersection')
+                                 strategy='intersection',
+                                 permission_string=permission_string)
 
-def _calculate_similarity(node1, node2, depth, strategy):
+def _calculate_similarity(node1, node2, depth, strategy, permission_string=''):
     
     def jaccard_similarity(set1, set2):
         intersection = set1.intersection(set2)
@@ -108,11 +103,11 @@ def _calculate_similarity(node1, node2, depth, strategy):
     def second_neighbors(first_layer):
         second_layer = set()
         for neighbor in first_layer:
-            second_layer.update(neighbor.get_neighbors().set())
+            second_layer.update(neighbor.get_neighbors(permission_string).set())
         return second_layer
 
     # Firs & Second Layer Analysis
-    nghb11, nghb21 = node1.get_neighbors().set(), node2.get_neighbors().set()
+    nghb11, nghb21 = node1.get_neighbors(permission_string).set(), node2.get_neighbors(permission_string).set()
     nghb12, nghb22 = second_neighbors(nghb11), second_neighbors(nghb21)
 
     # Weighted Jaccard similarity (weights can be adjusted as needed)

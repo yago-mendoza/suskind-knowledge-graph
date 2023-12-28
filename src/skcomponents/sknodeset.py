@@ -1,3 +1,4 @@
+import difflib
 import random
 
 class NodeSet(list):
@@ -7,9 +8,9 @@ class NodeSet(list):
         nodes_as_list = self._convert_to_list(nodes)  # converts the data structure to a list        
         super().__init__(nodes_as_list)  # initialize the parent list class
 
-        self.define_permissions()        
+        self._define_permissions()        
 
-    def define_permissions(self):
+    def _define_permissions(self):
 
         synset0, synset1, synset2 = True, True, True
         semset0, semset1, semset2 = True, True, True
@@ -52,11 +53,18 @@ class NodeSet(list):
                 elif edge in self.edge_permissions:
                     self.edge_permissions[edge] = True
 
-    def list_nodes(self): return [node for node in self]
-    def list_langs(self): return [node.lang for node in self]
-    def list_types(self): return [node.type for node in self]
-    def list_names(self): return [node.name for node in self]
-    def list_lemmas(self): return [node.lemma for node in self]
+    def scan_for_similar_nodes(self, name, k=1):
+        scores = []
+        if k > len(self): k = len(self)
+        for node in self:
+            ratio = difflib.SequenceMatcher(None, name.lower(), node.name.lower()).ratio()
+            scores.append((ratio, node))
+        return NodeSet([node for ratio, node in sorted(scores, key=lambda x: x[0], reverse=True)[:k]])
+
+    def langs(self): return [node.lang for node in self]
+    def types(self): return [node.type for node in self]
+    def names(self): return [node.name for node in self]
+    def lemmas(self): return [node.lemma for node in self]
 
     def set_langs(self): return list(set([n.lang for n in self]))
     def set_types(self): return list(set([n.type for n in self]))

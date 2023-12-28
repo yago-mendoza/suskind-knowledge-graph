@@ -273,12 +273,12 @@ class PrimaryInterface (cmd.Cmd):
                 field = setting
                 self.placeholder.update_field('add', field)
             # Check if the argument matches any known language in the graph.
-            elif setting in self.G.list_types():
+            elif setting in self.G.set_types():
                 # If a type is specified, update the type in the placeholder and set a random node of that type.
                 type_ = setting
                 self.placeholder.type = type_
                 self._set_random_node(type=type_)
-            elif setting in self.G.list_langs():
+            elif setting in self.G.set_langs():
                 # new language being inputed
                 # If a language is specified, update the language in the placeholder and set a random node of that language.
                 lang = setting
