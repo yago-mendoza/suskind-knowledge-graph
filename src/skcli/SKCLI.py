@@ -9,20 +9,27 @@ from src.skcli.visuals import *
 from src.skcli.command_docstrings import *
 
 """
-# Write a command DOCSTRING for each new command
+
+# Write a command DOCSTRING for each new command dessigned
 # Document all the code with in-line comments
 # Make sure there's no hard coding at all
+# Make sure to extract behavior snippets and reuse them.
+# Also, allocate them in the most adequate objects.
+
+#################################################################################
+
+# 0. FAST TASKS ---------------------
+
+decentralize the setdiff function library as a aux_func or something
+decentralize the padding option for prints
+have great care of the warnings and other kinds of message (reach a consensus)
+
+# 1. Add additional flags at 'r' --------------------------------------------
 
 r --summary (que active el summary cada vez que se ejecute)
 r --ls (que active el ls cada vez que se ejecute)
 
-must be able to set unknown langs (not types) for new entries
-prompt_toolkit for autocomplete
-
-cd ..
-undo
-
-ls)
+# 2. Add local flags for 'ls' and global flags for 'ls' ---------------------------
 
 14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -s --sort       #   set sort <on>/<off>
 14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -c 3 --ncol 3   #   set ncol <int>
@@ -34,6 +41,136 @@ ls)
 | 2. Tortuga marina                       | 6. Cabellera
 | 3. Cárcel de muerte lenta e inevitable  | 7. Simplón
 | 4. Tiburones                            | 8. Carretera asfaltada
+
+and 'status' shows this variables
+14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls --status
+| Showing 'ls' set parameters:
+| .rand -off  (randomization)
+| .sort -off  (sorting)
+| .slit -off  (sliting output)
+| .ncol 2     (nº of columns)
+| .abbr -off  (abbreviating results)
+
+# 3. Add a subCLI for 'ls' -------------------------------------
+
+>> del 8 7 6  # borrar entradas
+>> del 8 7 6 -r  # refreshes (shows)
+>> refresh  # refreshes (shows)
+>> add Alto, Normal (te refieres a...?) # tiene que existir
+| Error. Node 'asdf' was not found, hence, not included.
+a random suggestor
+ls with multiple fields : makes mandatory write '> y0' for interactive subCLI
+ls -> warning if 'no connections yet'
+Showing X/X for 'ls'
+'r' habilitated within the 'ls' subCLI
+4 6 1 7 > y0
+
+# 4. Editing node properties ------------------------------------
+
+name -e
+>> Banco # y aquí editamos
+    >> Banco
+    | Warning. There's already 2 entries called 'Banco'. Select one to merge.
+    |  1. [es][n][Banco]@[('institución')]
+    |  2. [es][n][Banco]@[('mobiliario')]
+    |  3. <new_lemma>
+
+lemma -e
+| Other lemmas for this entry are ...
+|  1. Institución
+|  2. Mobiliario
+|  <new_lemma>
+>> Grupo
+-e or lang -e or type -e
+
+# 5. Deleting a node ---------------------------------------------
+
+14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: rm
+| Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
+>> Y
+
+# 6. Filters -----------------------
+
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
+| Entered editor mode on filters:
+| f1/type('w').lang('es')
+| f2/starts('clar')
+>> rm f1
+>> add contains('esonate').lang('en')
+>> ''
+14:32:04 ~ [es][n][concept]@[(lemma)]/:
+
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+| Showing filters:
+| f1/lang('es').contains('trent')
+| f2/starts('clar')
+14:32:04 ~ [es][n][concept]@[(lemma)]/:
+
+14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
+14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
+14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+| Showing filters:
+| [ls, cd, r] f1/lang('es')
+| [ls] f2/lang('en')
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
+| Showing filters:
+| f1/lang('es')
+| [>] f2/lang('en')
+14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
+14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+| Showing filters:
+| f1/lang('es')
+| [ls] f2/lang('en')
+
+# 7. TERMINAL ---------------------------------------
+
+14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: term
+Python. Granted a pathway to SKComponents objects and methods.
+Type "Node" or "Graph" to inspect objects and "exit" to leave.
+>>> Node.compress.expand('synset').compress('synset2')
+>>> G.view_names()
+>>> n = G.random()
+>>> G.disable('semset')    # implementar que podamos ahorrarnos comillas
+>>> ndst = G.filter_
+Exiting terminal...
+14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
+
+# 8. NESTED_HISTORY ------------------------------------
+
+| Showing nested history:
+| root: [0] Andar(/7)
+|       └── [1] Cercenar (<6th> of 7)
+|            ├── [2] Elegía (<7th> of 7)
+|            └── [3] Esperanza (<42th> of 102)
+cd ..
+| Warning: this action will delete the nested search history. Are you sure? [Y/N]
+
+#################################################################################
+
+# 98. Undo and Go back to previous node
+via 'undo' and 'cd ..'
+
+# 99. Autocomplete via 'tab' key
+prompt_toolkit for autocomplete
+
+¿Useful symbols?
+    <, >
+    clear, copy, paste
+    extract / export, min
+    commit, push, autosave 
+¿Very future steps?
+    min_path
+    reduce a set
+    search method
+    decide where to use 'rich' colors
+    I dont need a hist of every single action done. So hist will be just for visited nodes.
+    status (already set, to do)
+    suggestions
+    and changing words from category within a same node
+    traduccion con filter, no con funcion explicita
+    (same for merging synset1's, just a way to merge nodes and them also)
+
 
 """
 
@@ -141,7 +278,7 @@ class PrimaryInterface (cmd.Cmd):
                 type_ = setting
                 self.placeholder.type = type_
                 self._set_random_node(type=type_)
-            elif len(setting)==2 and isinstance(setting, str) and setting.islower():
+            elif setting in self.G.list_langs():
                 # new language being inputed
                 # If a language is specified, update the language in the placeholder and set a random node of that language.
                 lang = setting
@@ -235,20 +372,20 @@ class PrimaryInterface (cmd.Cmd):
         # Adds optional arguments to specify the language and type, enhancing the command's flexibility.
         parser.add_argument('-l', '--lang', type=str, help='Specify the language')
         parser.add_argument('-t', '--type', type=str, help='Specify the type')
-        parser.add_argument('-f', '--fav', type=str, help='Toggle favorite switch')
+        parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')  # Notice the action change.
+        
         # Parses the arguments from the command line input.
         args = parser.parse_args(args.split())
 
         # Retrieves the language and type constraints from the parsed arguments, if provided.
         type_constraint = args.type if args.type else None
         lang_constraint = args.lang if args.lang else None
-        favorite_constraint = args.fav if args.fav else None
 
         # Calls the _set_random_node method with the provided language and type constraints.
         # This allows users to narrow down the search to a specific subset of nodes.
         self._set_random_node(lang=lang_constraint,
                               type=type_constraint,
-                              favorite=favorite_constraint)
+                              favorite=args.fav)
 
     def do_ls(self, arg):
 
@@ -282,11 +419,35 @@ class PrimaryInterface (cmd.Cmd):
         columnize(elements, ncol=2)
 
     def do_new(self, arg):
-        # uses argparse
-        # selects fields as attributes
-        # asks for lemma
-        pass
 
+        parser = argparse.ArgumentParser(description='Creates a new node.')
+        parser.add_argument('-l', '--diff', type=str, help='Specify the language or lemma of the node, if needed.')
+        
+        args = parser.parse_args(arg.split())
+
+        lang, lemma = None, None
+
+        if args.diff:
+            if len(args.diff)==2 and args.diff.islower():
+                lang = args.diff
+            else:
+                lemma = args.diff
+
+        lang  = lang if lang else self.placeholder.lang
+        type_ = self.placeholder.type
+        name  = args.name
+        lemma = lemma if lemma else ''
+
+        akin_nodes = self.G.find(lang=lang, type=type_, name=name, lemma=lemma)
+
+        if not akin_nodes:
+            self.G.create_node(lang, type_, name, lemma)
+        else:
+            print('This node already exists at this scope.')
+            for node in akin_nodes:
+                print(f'| {node}')
+            print('Tip: try using a different lemma.')
+        
     def do_save(self, arg):
         # saves everything to a custom TXT data file
         pass
@@ -297,8 +458,8 @@ class PrimaryInterface (cmd.Cmd):
         if new_node:
             self.placeholder.update_node(new_node)
 
-    def _set_random_node(self, *kwargs):
-        new_node = self.G.random(*kwargs)
+    def _set_random_node(self, **kwargs):
+        new_node = self.G.random(**kwargs)
         if new_node:
             self._set_node(new_node)
         else:

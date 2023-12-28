@@ -129,7 +129,7 @@ class NodeSet(list):
         candidates = self.find(**kwargs)
         if not k and candidates: return random.choice(candidates)
         if not candidates or k < 1: return None
-        if k == 1: return NodeSet(nodes=random.choice(candidates))
+        if k == 1: return NodeSet(nodes=[random.choice(candidates)])
         if k <= len(candidates): return NodeSet(nodes=random.sample(candidates, k))
         raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(candidates)} nodes.")
     

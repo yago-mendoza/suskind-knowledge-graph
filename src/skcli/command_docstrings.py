@@ -28,10 +28,11 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
 
 'r': """\
 | Desc. Performs a random node search with optional language and type constraints.
-| Signature : r [-l LANG] [-t TYPE]
+| Signature : r [-l LANG] [-t TYPE] [-f FAVORITE]
 | Arguments :
-    -l, --lang LANG  Specify the language to narrow down the search.
-    -t, --type TYPE  Specify the type to narrow down the search.
+    -l, --lang LANG     Specify the language to narrow down the search.
+    -t, --type TYPE     Specify the type to narrow down the search.
+    -f, --fav FAVORITE  Specify wether the output must be favorite or not.
 | Usage examples :
     r
     r -l en -t n\
