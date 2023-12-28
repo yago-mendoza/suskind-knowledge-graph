@@ -33,7 +33,7 @@ if __name__ == '__main__':
     from src.skcomponents.skgraph import Graph
     from src.skcomponents.search_algorithms import *
     from src.skcli.SKCLI import *
-    from src.skcli.command_docstrings import *
+    from src.skcli.aux_funcs.command_docstrings import *
     G = create_graph()
     run(G)
 

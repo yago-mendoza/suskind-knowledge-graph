@@ -60,6 +60,9 @@ class NodeSet(list):
             ratio = difflib.SequenceMatcher(None, name.lower(), node.name.lower()).ratio()
             scores.append((ratio, node))
         return NodeSet([node for ratio, node in sorted(scores, key=lambda x: x[0], reverse=True)[:k]])
+    
+    def nodes(self):
+        return [_ for _ in self]
 
     def langs(self): return [node.lang for node in self]
     def types(self): return [node.type for node in self]

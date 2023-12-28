@@ -92,7 +92,8 @@ class Node:
         )
     
     def assess_similarity(self, node):
-        return difflib.SequenceMatcher(None, self.name.lower(), node.name.lower()).ratio()
+        name_to_compare = node if isinstance(node,str) else node.name
+        return difflib.SequenceMatcher(None, self.name.lower(), name_to_compare.lower()).ratio()
                 
     def get_neighbors(self, permission_string=''):
 
@@ -137,9 +138,9 @@ class Node:
     @classmethod
     def compress(cls, *edge_type):
         if not edge_type:
-            cls.toggle(*cls._identifier_flags, 1)
-            cls.toggle(*cls._descriptive_flags, 0)
-            cls.toggle(*cls._edge_flags, 0)
+            cls.toggle(*cls.identifier_flags, 1)
+            cls.toggle(*cls.descriptive_flags, 0)
+            cls.toggle(*cls.edge_flags, 0)
         else:
             cls.toggle(*edge_type, 0)
         return cls
@@ -147,9 +148,9 @@ class Node:
     @classmethod
     def expand(cls, *edge_type):
         if not edge_type:
-            cls.toggle(*cls._identifier_flags, 1)
-            cls.toggle(*cls._descriptive_flags, 1)
-            cls.toggle(*cls._edge_flags, 1)
+            cls.toggle(*cls.identifier_flags, 1)
+            cls.toggle(*cls.descriptive_flags, 1)
+            cls.toggle(*cls.edge_flags, 1)
         else:
             cls.toggle(*edge_type, 1)
         return cls

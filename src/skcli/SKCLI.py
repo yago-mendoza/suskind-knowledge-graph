@@ -1,12 +1,10 @@
 import cmd # Importing Python's built-in library for creating command-line interfaces (used for PrimaryInterface and upcoming sub-CLIs)
-import datetime # Importing the datetime module to work with dates and times (used at 'get_string()' for PlaceHolder)
 import argparse
 
-import difflib
-
-from src.skcli.err_mssg import *
-from src.skcli.visuals import *
-from src.skcli.command_docstrings import *
+from src.skcli.aux_funcs.err_mssg import *
+from src.skcli.aux_funcs.visuals import *
+from src.skcli.aux_funcs.command_docstrings import *
+from src.skcli.aux_clis import *
 
 """
 
@@ -174,58 +172,6 @@ prompt_toolkit for autocomplete
 
 """
 
-# The Placeholder class is designed to represent and manage the current state (or "Node") of the command prompt.
-class Placeholder():
-    def __init__(self, cmd):
-        self.cmd = cmd  # Holds a reference to the command module, allowing updates to the cmd.prompt with the generated string from this class.
-        # Initialize default properties for the node, representing its language, type, name, and lemma.
-        self.lang, self.type, self.name, self.lemma = 'lang', 'type', 'name', 'lemma'
-        self.fields = ['y1', 'e1']  # A list of additional fields that influence the outcome of commands like "ls".
-
-    # Public Methods -----
-
-    def update_node(self, node):
-        # Updates the current node and its properties. This method is typically called when the node context changes.
-        self.node = node  # Stores the entire node object for potential future use.
-        # Extracts and updates the node's fundamental attributes to reflect the new context.
-        self.lang, self.type, self.name, self.lemma = node.identify()
-        # Refreshes the command prompt to include the updated node information.
-        self._update_string()
-    
-    def update_field(self, mode, field):
-        # Dynamically calls the add or remove field method based on the mode ('add' or 'remove').
-        getattr(self, f"_{mode}_field")(field)  # Performs a single field operation update.
-        # Refreshes the command prompt to include the updated fields.
-        self._update_string()
-
-    # Private Methods -----
-
-    # Atomically adds a field to the list of fields if it's not already present.
-    def _add_field(self, field):
-        if field not in self.fields: self.fields.append(field)
-
-    # Atomically removes a field from the list of fields if it's present.
-    def _remove_field(self, field):
-        if field in self.fields: self.fields.remove(field)
-
-    # Updates the prompt of the cmd object to the newly generated string representing the current state.
-    def _update_string(self):
-        self.cmd.prompt = self._get_string()
-
-    # Constructs and returns the string that represents the current state and will be used as the cmd prompt.
-    def _get_string(self):
-        # Formats the current time as a string.
-        str_time = datetime.datetime.now().strftime('%H:%M:%S')
-        # Sorts and reverses the fields for consistent ordering.
-        self.fields = sorted(self.fields)
-        self.fields.reverse()
-        # Concatenates the fields into a single string.
-        fields_list = '[' + '/'.join(self.fields) + ']'
-        # Constructs and returns the final prompt string, incorporating time, node properties, and additional fields.
-        return f"{str_time} ~ [{self.lang}][{self.type}]@[{self.name}({self.lemma or ''})]/{fields_list or ''}: "
-
-
-
 class PrimaryInterface (cmd.Cmd):
     
     def __init__(self, graph):
@@ -356,15 +302,10 @@ class PrimaryInterface (cmd.Cmd):
             SelectNodeInterface(nodes, self).cmdloop()
         else:
             # If no matching nodes are found, informs the user accordingly.
+            candidates = self.G
             number_of_guesses = 3
-            scores = []
-            for node in self.G:
-                ratio = difflib.SequenceMatcher(None, parsed_name, node.name).ratio()
-                scores.append((ratio, node))
-            top_guessed_nodes = [node for ratio, node in sorted(scores, key=lambda x: x[0], reverse=True)[:number_of_guesses]]
-            SelectNodeInterface(top_guessed_nodes, self).cmdloop()
-            
-            
+            top_guessed_nodeset = candidates.scan_for_similar_nodes(name=parsed_name, k=number_of_guesses)
+            SelectNodeInterface(top_guessed_nodeset, self).cmdloop()
 
     def do_r(self, args):
         # Creates a new argument parser to interpret the command line inputs.
@@ -488,42 +429,6 @@ class PrimaryInterface (cmd.Cmd):
 
     def default(self, line):
         padded_print(f"Unknown '{line[:2].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
-        
-
-class SelectNodeInterface(cmd.Cmd):
-    prompt = '>> '
-
-    def __init__(self, nodes, parent_cli):
-        super().__init__()
-        self.nodes = nodes
-        self.parent_cli = parent_cli
-        self.display()
-
-    def display(self):
-        padded_print("Do you mean ...")
-        for index, node in enumerate(self.nodes, start=1):
-            lang, type, name, lemma = node.identify()
-            string_index = str(index).zfill(2 if len(self.nodes)>10 else 1)
-            print(f"| {string_index}) [{lang}][{type}][{name}]@[({lemma or ''})]")
-        padded_print("(Press Enter without any input to exit)")
-
-    def default(self, line):
-        if line == '':
-            return True  # Exit if the input is empty.
-        try:
-            index = int(line) - 1  # Convert to zero-based index.
-            if 0 <= index < len(self.nodes):
-                selected_node = self.nodes[index]
-                self.parent_cli._set_node(selected_node)  # Updated line
-                return True  # Return to the main CLI.
-            else:
-                print("Please enter a valid number from the list.")
-        except ValueError:
-            print("Please enter a number to select a node or just press Enter to exit.")
-
-    def do_exit(self, arg):
-        """Exit back to the main interface."""
-        return True  # Returning True exits the cmd loop.
 
 
 
