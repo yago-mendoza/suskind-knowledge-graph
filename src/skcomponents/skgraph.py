@@ -159,37 +159,29 @@ class Graph(NodeSet):
             for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                 if target_node in getattr(node, attr):
                     getattr(node, attr).remove(target_node)
-    
+
     def bind(self, target_node, edge_type, append_node):
-        if isinstance(append_node, Node):
-            self._update_relationship('append', target_node, edge_type, append_node)
-        elif isinstance(append_node, (list, set, NodeSet)):
-            for node in append_node:
-                self._update_relationship('append', target_node, edge_type, node)
+        
+        if edge_type.startswith('synset') or edge_type.startswith('semset'):
+            target_edge_type = edge_type
+            append_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
+            
+            if isinstance(append_node, Node):
+                
+                getattr(target_node, target_edge_type).append(append_node)
+                getattr(append_node, append_edge_type).append(target_node)
+                
 
-    def unbind(self, target_node, edge_type, append_node):
-        if isinstance(append_node, Node):
-            self._update_relationship('remove', target_node, edge_type, append_node)
-        elif isinstance(append_node, (list, set, NodeSet)):
-            for node in append_node:
-                self._update_relationship('remove', target_node, edge_type, node)
-    
-    def _update_relationship(self, action, target_node, edge_type, append_node):
-
-        def perform_action(node, edge, action_method, additional_node=None):
-            if additional_node is not None:
-                getattr(node, edge).__getattribute__(action_method)(additional_node)
-            else:
-                getattr(node, edge).__getattribute__(action_method)()
+    def unbind(self, target_node, edge_type, remove_node):
 
         if edge_type.startswith('synset') or edge_type.startswith('semset'):
-            target_edge_type = edge_type 
-            append_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
-            print(target_edge_type, append_edge_type)
+            target_edge_type = edge_type
+            remove_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
 
-            perform_action(target_node, target_edge_type, action, append_edge_type)
-            perform_action(append_node, append_edge_type, action, target_edge_type)
-        
+            if isinstance(remove_node, Node):
+
+                getattr(target_node, target_edge_type).remove(remove_node)
+                getattr(remove_node, remove_edge_type).remove(target_node)        
     
     def __repr__(self):
         return f'Graph(size={len(self)})'

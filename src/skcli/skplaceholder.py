@@ -6,7 +6,7 @@ class Placeholder():
         self.cmd = cmd  # Holds a reference to the command module, allowing updates to the cmd.prompt with the generated string from this class.
         # Initialize default properties for the node, representing its language, type, name, and lemma.
         self.lang, self.type, self.name, self.lemma = 'lang', 'type', 'name', 'lemma'
-        self.fields = ['y1', 'e1']  # A list of additional fields that influence the outcome of commands like "ls".
+        self.fields = ['y1']  # A list of additional fields that influence the outcome of commands like "ls".
 
     # Public Methods -----
 

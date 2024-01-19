@@ -1,8 +1,10 @@
 import cmd 
 import random
+import datetime
 import argparse
 
 from src.skcli.aux_funcs.visuals import *
+from src.skcli.aux_funcs.command_docstrings import *
 
 
 class LS_Interface(cmd.Cmd):
@@ -19,14 +21,22 @@ class LS_Interface(cmd.Cmd):
 
     def do_del(self, indexs):
         indexs = [int(_) for _ in indexs.split()]
+        print(indexs)
         for index in indexs:
             target_node = self.nodes[index-1]
             field_symb = self.parent_cli.placeholder.fields[0]
+            print(target_node)
+            print(field_symb)
             field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
+            print(field)
 
             # ?????????????????????????????????????????????????????
             print(target_node in
                   self.parent_cli.G.find(name=self.parent_cli.placeholder.node.name)[0].get_neighbors().set())
+            
+            print(self.parent_cli.placeholder.node in
+                  self.parent_cli.G.find(name=target_node.name)[0].get_neighbors().set())
+            
             # True
             self.parent_cli.G.unbind(self.parent_cli.placeholder.node,
                                      field, target_node)
@@ -59,60 +69,79 @@ class LS_Interface(cmd.Cmd):
                 lang, type_, lemma = creation_input.split()
                 self.parent_cli.G.create_node(lang, type_, name, lemma)
                 print(" "*3+"| Node created and binded.")
+
             elif selected_node:
                 current_node = self.parent_cli.placeholder.node
                 edge_type = self.parent_cli.placeholder.fields[0]
-                self.parent_cli.G.bind(current_node, edge_type, selected_node)
+
+                # Los tres argumentos se definen correctamente.
+                # El comando 'ls' ya has comprobado que actualiza los campos correctamente.
+                # El método 'bind' ya has comprobado que funciona correctamente.
+
+                field = ('synset' if edge_type[0] == 'y' else 'semset') + edge_type[1]
+
+                self.parent_cli.G.bind(current_node, field, selected_node)
 
             name = input("   add ")
+        
+        print('(SYS: Resumed edit-session)')
 
-    def default(self, line):
+    def do_cp(self, arg):
+        args = arg.split()
+        indices = [int(i) for i in args[:-1]]  # All but the last argument
+        target_fields = args[-1:]             # Only the last argument
+        target_nodes = [self.nodes[i-1] for i in indices]
+        for target_field in target_fields:
+            formatted_target_field = self._format_field(target_field)
 
-        if '>' in line:
-            indices, target_field = line.split('>')
-            try:
-                indices = [int(i) for i in indices.split()]
-                target_nodes = [self.nodes[i-1] for i in indices]
+            # Copy nodes to the target field
+            for node in target_nodes:
+                self.parent_cli.G.bind(node, formatted_target_field, node)
+        print(f"Copied {len(target_nodes)} nodes to '{', '.join(target_fields)}'.")
 
-                # Current field is determined by the CLI's placeholder settings
-                current_field = self.parent_cli.placeholder.fields
+    def do_mv(self, arg):
+        current_field = self.parent_cli.placeholder.fields
+        args = arg.split()
+        indices = [int(i) for i in args[:-1]]  # All but the last argument
+        target_fields = args[-1:]             # Only the last argument
+        target_nodes = [self.nodes[i-1] for i in indices]
+        for target_field in target_fields:
+            formatted_target_field = self._format_field(target_field)
+            # Copy nodes to the target field
+            for node in target_nodes:
+                self.parent_cli.G.bind(node, formatted_target_field, node)
+                self.parent_cli.G.unbind(node, current_field, node)
+        print(f"Moved {len(target_nodes)} nodes to '{', '.join(target_fields)}'.")
 
-                # Validate and format the target field
-                if target_field.strip().startswith('y'):
-                    target_edge_type = 'synset' + target_field.strip()[1]
-                elif target_field.strip().startswith('e'):
-                    target_edge_type = 'semset' + target_field.strip()[1]
-                else:
-                    raise ValueError("Invalid target field specification")
-
-                # Move nodes from the current field to the target field
-                for node in target_nodes:
-                    # Unbind from the current edge type
-                    self.parent_cli.G.unbind(node, current_field, node)
-                    # Bind to the new edge type
-                    self.parent_cli.G.bind(node, target_edge_type, node)
-
-                print(f"Moved {len(target_nodes)} nodes from '{current_field}' to '{target_edge_type}'.")
-            except Exception as e:
-                print(f"Error processing command: {e}")
-
+    def _format_field(self, field):
+        if field.strip().startswith('y'):
+            return 'synset' + field.strip()[1:]
+        elif field.strip().startswith('e'):
+            return 'semset' + field.strip()[1:]
         else:
-            padded_print(f'Unrecognized argument(s): {" ".join(line[:10])}')
-
-
-        # 15 96 22 > y0"   =   line
-        # takes this nodes and moves them to the field y0, for the use case
-
+            raise ValueError("Invalid field specification")
     
     def cmdloop(self, intro=None):
         super().cmdloop(intro)
 
     def do_help(self, arg=None):
-        print("'add <name>' to add")
-        print("'del' <int> <int> ...' to unbind")
-        print("'cd <int>' to enter")
-        print("'ls' to refresh")
-        print("'<int> <int> ... > y0' for example to transform")
+        """Provide help for a specified command or list all commands if none is specified."""
+        if arg:
+            # User asked for help on a specific command
+            help_text = COMMAND_DOCSTRINGS_LS.get(arg)
+            if help_text:
+                print(help_text)
+            else:
+                print(f"No help available for '{arg}'")
+        else:
+            # User typed "help" without specifying a command
+            padded_print("Available commands:")
+            mini_prompt = ''
+            right_padding = max([len(command) for command in COMMAND_DOCSTRINGS_LS]) + len(mini_prompt)
+            for command in COMMAND_DOCSTRINGS_LS:
+                # Only print the first line of each help text for an overview
+                first_line = COMMAND_DOCSTRINGS_LS[command].strip().split('\n')[0]
+                padded_print(f"{command+mini_prompt:<{right_padding}} : {first_line[8:]}")
         pass
     
     def default(self, line):
@@ -120,22 +149,22 @@ class LS_Interface(cmd.Cmd):
 
     def emptyline(self): #finished
         # To exit with an empty Enter key press
-        padded_print("Exited.")
+        print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
         return True
-    
-    def do_exit(self, arg):
-        padded_print("Exited.")
-        return True 
 
     def do_cd(self, index): # finisehd
         self.parent_cli._set_node(self.nodes[int(index)-1])
         return True
 
     def do_ls(self, arg=None):
-        names = [node.name for node in self.parent_cli.G.get_neighbors().set()]
-        # get_neighbors ya está establecido en fields
+
+        self.nodes = list(self.parent_cli.placeholder.node.get_neighbors().set())
+        # We update internal object self.nodes to reflect changes that might have been made during the session
+        self.nodes = sorted(self.nodes, key=lambda node: node.name)
+        # We sort these nodes for readibility (by name)
+
         padded_print(f"Refreshing...")
-        strings_to_display = [f'| {i + 1}. {name}' for i, name in enumerate(names)]
+        strings_to_display = [f'| {i + 1}. {name}' for i, name in enumerate([node.name for node in self.nodes])]
         columnize(strings_to_display, ncol=self.ls_args.ncol, col_width=self.ls_args.width)
 
 
@@ -158,12 +187,22 @@ class CreateNodeInterface(cmd.Cmd):
         super().cmdloop(intro)
 
     def display(self):
-        padded_print(f"(LANG/TYPE) assigned by default : ({self.default_lang}/{self.default_type})")
-        padded_print(f"Type <lang>/<type> to switch default pipe.")
+        print(f"(SYS: Started create-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
 
-    def do_help(self):
-        print()
-    
+    def do_help(self, arg):
+        padded_print("Desc. This sub-session allows for the interactive creation of new entries.")
+        padded_print("Actions.")
+        padded_print("  1. Name")
+        padded_print("     Write the intended <name> in the input prompt.")
+        padded_print("  2. Target Switch")
+        padded_print("     Enter 2-char <lang> or 1-char <type> in the input prompt.")
+        padded_print("Circumstance : Homologous Search")
+        padded_print("  Upon entering <name>, the system checks for homologous matches (that is,")
+        padded_print("  nodes with the same name yet different lang, type or lemma).")
+        padded_print("     If found, a menu shows existing nodes, helping users decide whether to")
+        padded_print("  add a new one or not (allowing for lemma definition).")
+        padded_print("     Otherwise, it will automatically create the node with default lemma 'NA'.")
+
     def default(self, line):
 
         self.selection_interface_output = None
@@ -199,7 +238,7 @@ class CreateNodeInterface(cmd.Cmd):
 
     def emptyline(self):
         # To exit with an empty Enter key press
-        padded_print("Exited.")
+        print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
         return True
     
     

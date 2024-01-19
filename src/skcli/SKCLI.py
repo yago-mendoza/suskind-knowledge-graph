@@ -325,6 +325,9 @@ class PrimaryInterface (cmd.Cmd):
         if self.placeholder.fields:
 
             self._update_graph_permissions_to_fields()
+            # self.placeholder.node.synset1.append(self.G.random())
+            # Adds a random node each time, just to test that 'ls' correctly
+            # retrieves updated data each time is called.
             nodes = list(self.placeholder.node.get_neighbors().set())
             nodes = sorted(nodes, key=lambda node: node.name)
 
@@ -358,6 +361,9 @@ class PrimaryInterface (cmd.Cmd):
                         
                     if ls_args.abbr:
                         names = [name[:ls_args.abbr] + '...' if len(name) > ls_args.abbr else name for name in names]
+
+                    if len(self.placeholder.fields) == 1:
+                        print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
                     
                     padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors().set())} results.")
                     strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
@@ -369,19 +375,8 @@ class PrimaryInterface (cmd.Cmd):
             else:
                 padded_print('The set field for the target node is empty.')
 
-            
-        
         if not self.placeholder.fields:
             padded_print("Error. Search field is needed")
-
-
-
-    def do_summary(self, arg):
-        node = self.placeholder.node
-        neighbors_dict = node.get_neighbors()
-        padded_print(f'Showing quick summary for targeted node.')
-        elements = [f"| {key} : {len(neighbors_dict.get(key))}" for key in neighbors_dict.keys()]
-        columnize(elements, ncol=2)
 
     def do_new(self, arg):
         CreateNodeInterface(self)

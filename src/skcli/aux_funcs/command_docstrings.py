@@ -1,12 +1,82 @@
 from typing import Dict
 
+# I HAVE TO CREATE 4 DICTIONNARIES, EACH FOR CLI 
+# - one for SCKLI
+# 3 others for CreateNode, SelectNode, LS_on_node jajaja ok¿?
+# Para que siempre puede implementarse el do_help de una forma u otra.
+# Ya sea en comandos o en general para devolver un mensaje informativo.
+# Y al dividir los comandos en diccionarios me aseguro de que no se pisan
+# algunas definiciones, que hay comandos de mismo nombre pero con behaviors
+# distintas entre CLIs.
+
+
+COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
+'cd': """\
+| Desc. Enters a given node within the results.
+| Signature : ls <index>
+| Arguments : 
+    1. <index>  A single index representing the target node to access as current
+| Usage examples :
+    cd 47\
+""",
+
+'add': """\
+| Desc. Binds nodes to the current.
+| Signature : add <name>
+| Arguments :
+    1. <name>  The name reference to find for a node to be binded.
+    <!> If multiple coincidences are encountered, pops an interface for selection.
+    <!> If no matching is encountered, allows for the creation (and binding) of the node.
+| Usage examples :
+    add Sensatez\
+""",
+
+'del': """\
+| Desc. Unbinds the given nodes(s).
+| Signature : del <*index>
+| Arguments :
+    1. <*index>  As many indexes as connections to be unbinded.
+| Usage examples :
+    del 1 62 6 95\
+""",
+
+'mv': """\
+| Desc. Moves bindings to a different field.
+| Signature : mv <*index> <*field>
+| Arguments :
+    1. <*index>  One or more indexes representing connections to be relocated.
+    2. <*field>  The field(s) to which the connections are intended to be reconnected.
+| Usage examples :
+    mv 50 12 13 14 y0 y1 
+""",
+
+'cp': """\
+| Desc. Copies bindings to a field.
+| Signature : cp <*index> <*field>
+| Arguments :
+    1. <*index>  One or more indexes representing connections to be copied.
+    2. <*field>  The field(s) to which the connections are intended to be copied.
+| Usage examples :
+    cp 50 12 13 14 y0 y1 
+""",
+
+'ls': """\
+| Desc. Refreshes the node contents by showing the stat within edits.
+| Signature : ls
+| Arguments : None
+| Usage examples :
+    ls\
+""",
+
+}
+
 COMMAND_DOCSTRINGS : Dict[str, str] = {
 'set': """\
 | Desc. Sets or adds properties to the current node or environment.
 | Signature : set <*settings>
 | Arguments :
   <!> Supports shorthand for groups and individual settings.
-    1. <*settings>
+    1. <settings>
               "y/e"  Add all 'y' or 'e' prefixed fields (e.g., y0, y1, y2).
             "y_/e_"  Add specific fields (e.g., y0 y1)
         "es/fr/..."  Set the node language for the PlaceHolder.
@@ -30,16 +100,6 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
     unset y e0 e2\
 """,
 
-'save': """\
-| Desc. Saves the actual version of the Graph in the current directory.
-| Signature : save [filename = 'data.txt']
-| Arguments :
-    1. filename : file to where the graph will be saved (terminated with .txt)
-| Usage examples :
-    save
-    save provisional_dat.txt\
-""",
-
 'cd': """\
 | Desc. Accesses a node and sets it as current.
 | Signature : cd <ent>
@@ -54,25 +114,49 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
 
 'r': """\
 | Desc. Performs a random node search with optional language and type constraints.
-| Signature : r [-l LANG] [-t TYPE] [-f FAVORITE]
+| Signature : r [-l <lang>] [-t <type>] [-f]
 | Arguments :
-    -l, --lang LANG     Specify the language to narrow down the search.
-    -t, --type TYPE     Specify the type to narrow down the search.
-    -f, --fav FAVORITE  Specify wether the output must be favorite or not.
-        --ls LS         Triggers the 'ls' command applying the flags set on the last call.
+    -l, --lang  Specify the language to narrow down the search.
+    -t, --type  Specify the type to narrow down the search.
+    -f, --fav   Specify wether the output must be favorite or not.
 | Usage examples :
     r
     r -l en -t n\
 """,
 
-'summary': """\
-| Desc. Provides a quick summary of the current node's connections.
-| Signature : summary
+'ls': """\
+| Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
+| Signature : ls [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
+| Arguments :
+    -d, --details   Single-column data & field sizes.
+    -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
+    -t, --stop      Limit the number of results.
+    (*) -w, --width     Max allowed width for column (absolute).
+    (*) -a, --abbr      Max allowed character length for names.
+    (*) -c, --ncol      Number of columns.
+    Note : the starred flags (*) only apply if '--details' isn't flagged.
+| Usage examples :
+    ls
+    ls -d -t 15 -r
+    ls -w 50 -a 5 -c 1
 """,
 
-'ls': """\
-| Desc. Lists the current node's neighbors within the field scope.
-| Signature : ls
+'new': """\
+| Desc. Enters a session for introducing new entries.
+| Signature : new
+| Arguments : None
+| Usage examples :
+    new\
+""",
+
+'save': """\
+| Desc. Saves the actual version of the Graph in the current directory.
+| Signature : save [filename='data.txt']
+| Arguments :
+    1. filename : file to where the graph will be saved (terminated with .txt)
+| Usage examples :
+    save
+    save provisional_dat.txt\
 """,
 
 'clear': """\
