@@ -17,31 +17,17 @@ class LS_Interface(cmd.Cmd):
         self.ls_args = ls_args
         self.cmdloop()
 
-    # DO_DEL and DO_ADD arent working
-
     def do_del(self, indexs):
         indexs = [int(_) for _ in indexs.split()]
-        print(indexs)
         for index in indexs:
             target_node = self.nodes[index-1]
             field_symb = self.parent_cli.placeholder.fields[0]
-            print(target_node)
-            print(field_symb)
-            field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
-            print(field)
 
-            # ?????????????????????????????????????????????????????
-            print(target_node in
-                  self.parent_cli.G.find(name=self.parent_cli.placeholder.node.name)[0].get_neighbors().set())
-            
-            print(self.parent_cli.placeholder.node in
-                  self.parent_cli.G.find(name=target_node.name)[0].get_neighbors().set())
-            
-            # True
+            field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
+
             self.parent_cli.G.unbind(self.parent_cli.placeholder.node,
                                      field, target_node)
-            # list.remove(x) : x not in list
-            
+
         padded_print(f"Deleted {len(indexs)} nodes.")
 
     def do_add(self, name):
@@ -66,17 +52,15 @@ class LS_Interface(cmd.Cmd):
 
             if not selected_node and input(" "*3+"| Do you want to create this node? [Y/N] : ").strip().lower() in ['Y','y']:
                 creation_input = input(" "*3+"| Enter <lang> <type> <lemma> in this format:\n"+" "*3+'> ')
-                lang, type_, lemma = creation_input.split()
+                lang, type_, *lemma = creation_input.split()
+                lemma = 'NA' if lemma == [] else lemma
                 self.parent_cli.G.create_node(lang, type_, name, lemma)
+                selected_node = self.parent_cli.G.find(lang, type_, name, lemma)
                 print(" "*3+"| Node created and binded.")
 
             elif selected_node:
                 current_node = self.parent_cli.placeholder.node
                 edge_type = self.parent_cli.placeholder.fields[0]
-
-                # Los tres argumentos se definen correctamente.
-                # El comando 'ls' ya has comprobado que actualiza los campos correctamente.
-                # El método 'bind' ya has comprobado que funciona correctamente.
 
                 field = ('synset' if edge_type[0] == 'y' else 'semset') + edge_type[1]
 
@@ -168,7 +152,7 @@ class LS_Interface(cmd.Cmd):
         columnize(strings_to_display, ncol=self.ls_args.ncol, col_width=self.ls_args.width)
 
 
-class CreateNodeInterface(cmd.Cmd):
+class NEW_Interface(cmd.Cmd):
 
     prompt = '<Name> : '
     def __init__(self, parent_cli):
@@ -190,6 +174,7 @@ class CreateNodeInterface(cmd.Cmd):
         print(f"(SYS: Started create-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
 
     def do_help(self, arg):
+        # estaria bien trasladar esto a command_docstrings.py
         padded_print("Desc. This sub-session allows for the interactive creation of new entries.")
         padded_print("Actions.")
         padded_print("  1. Name")
@@ -210,10 +195,6 @@ class CreateNodeInterface(cmd.Cmd):
             self.default_lang = line
         elif len(line)==1 and line.isalpha() and line.islower():
             self.default_type = line
-        elif line.strip() == '?':
-            pass
-            # padded_print(f"| LANG assigned by default : '{self.default_lang}'")
-            # padded_print(f"| TYPE assigned by default : '{self.default_type}'")
         else:
             name = line[0].upper() + line[1:]
             homologous = self.parent_cli.G.find(name=name,
@@ -227,12 +208,13 @@ class CreateNodeInterface(cmd.Cmd):
                 if isinstance(self.selection_interface_output, str):
                     if self.selection_interface_output not in [node.lemma for node in homologous]:
                         self.parent_cli.G.create_node(lang=self.default_lang,type_=self.default_type,name=name,lemma=self.selection_interface_output)
-                        print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[({self.selection_interface_output})]")
+                        print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{self.selection_interface_output}]")
                     else:
                         padded_print("Already existing. Did nothing.")
             else:
-                self.parent_cli.G.create_node(lang=self.default_lang,type_=self.default_type,name=name,lemma="NA")
-                print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[({self.selection_interface_output})]")
+                lemma = "NA"
+                self.parent_cli.G.create_node(lang=self.default_lang,type_=self.default_type,name=name,lemma=lemma)
+                print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{lemma}]")
         
         self.update_prompt()
 

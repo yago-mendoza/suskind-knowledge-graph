@@ -168,6 +168,9 @@ class PrimaryInterface (cmd.Cmd):
             for field in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
                 self.placeholder.update_field('add', field)
         for setting in args:
+            if {'e0', 'e1', 'e2', 'y0', 'y1', 'y2'}.issubset(self.placeholder.fields):
+                self.placeholder.fields = []
+                # Si esta lleno y estamos intentando hacer un 'set', será que queremos borrar y dejar solo ese. Lo entendemos.
             # Check if the argument is a shorthand ('y' or 'e') representing a set of fields.
             if setting in ['y', 'e']:
                 # If shorthand is used, add all related fields (e.g., y0, y1, y2 for 'y') to the placeholder.
@@ -192,7 +195,7 @@ class PrimaryInterface (cmd.Cmd):
             # Check if the argument matches any known type in the graph.
             else:
                 # If the argument doesn't match any known settings, inform the user that the setting is invalid.
-                print("Invalid setting.")
+                print("Setting not found.")
     
     def do_unset(self, arg):
         # Splits the input string into individual arguments for processing.
@@ -369,17 +372,17 @@ class PrimaryInterface (cmd.Cmd):
                     strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
                     columnize(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
 
-                if len(self.placeholder.fields) == 1:
-                    LS_Interface(nodes, self, ls_args)
-
             else:
                 padded_print('The set field for the target node is empty.')
+
+            if len(self.placeholder.fields) == 1:
+                LS_Interface(nodes, self, ls_args)
 
         if not self.placeholder.fields:
             padded_print("Error. Search field is needed")
 
     def do_new(self, arg):
-        CreateNodeInterface(self)
+        NEW_Interface(self)
 
     # Internal Methods  --------------------
             
