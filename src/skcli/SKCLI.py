@@ -1,5 +1,6 @@
 import os
 import cmd # Importing Python's built-in library for creating command-line interfaces (used for PrimaryInterface and upcoming sub-CLIs)
+import random
 import argparse
 
 from src.skcli.skplaceholder import *
@@ -9,182 +10,115 @@ from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
-"""
-###############################
-###########################
-#######################
-###################
-###############
-###########
-DISCLAIMER
-1. No metas más funcionalidades hasta que la actual versión no esté 
-PERFECTAMENTE documentada.
-2. Si metes funcionalidades próximamente, que sean VITALES para el
-funcionamiento del programa. No metas funcionalidades superfluas de momento.
-El objetivo es tenerlo ready para Bélgica.
-3. Próximamente, si creas un <COMANDO> nuevo, completa su DOCSTRING de forma
-ordenada. Y documenta todo su código con in-line comments apropiados.
-###########
-###############
-###################
-#######################
-###########################
-###############################
 
-# 1. Add additional flags at 'r' --------------------------------------------
 
-r -t (sin complementos terminados) causes a fatal error (should not) ni tampoco nadie a quien le falten argumentos debería
-r --summary (que active el summary cada vez que se ejecute)
-r --ls (que active el ls cada vez que se ejecute)
-r -f (not working as expected)
-
-do_new (creates a new node being able to set new language (-l) or lemma (-l), because if already existing, cannot create unless a lemma is set)
-do_save (save the graph to a file)
-
-# 2. Add local flags for 'ls' and global flags for 'ls' ---------------------------
-
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -s --sort       #   set sort <on>/<off>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -c 3 --ncol 3   #   set ncol <int>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -t 9 --stop 9   #   set stop <int>/<off>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -a 5 --abbr 5   #   set abbr <int>/<off>
-14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
-| Showing 8/1240 results:
-| 1. Arma biológica                       | 5. Hermandad
-| 2. Tortuga marina                       | 6. Cabellera
-| 3. Cárcel de muerte lenta e inevitable  | 7. Simplón
-| 4. Tiburones                            | 8. Carretera asfaltada
-
-and 'status' shows this variables
-14:32:18 ~ [en][j][Normal]@[('')]/[y1]: ls --status
-| Showing 'ls' set parameters:
-| .rand -off  (randomization)
-| .sort -off  (sorting)
-| .slit -off  (sliting output)
-| .ncol 2     (nº of columns)
-| .abbr -off  (abbreviating results)
-
-# 3. Add a subCLI for 'ls' -------------------------------------
-
->> del 8 7 6  # borrar entradas
->> del 8 7 6 -r  # refreshes (shows)
->> refresh  # refreshes (shows)
->> add Alto, Normal (te refieres a...?) # tiene que existir
-| Error. Node 'asdf' was not found, hence, not included.
-a random suggestor
-ls with multiple fields : makes mandatory write '> y0' for interactive subCLI
-ls -> warning if 'no connections yet'
-Showing X/X for 'ls'
-'r' habilitated within the 'ls' subCLI
-4 6 1 7 > y0
 
 # 4. Editing node properties ------------------------------------
 
-name -e
->> Banco # y aquí editamos
-    >> Banco
-    | Warning. There's already 2 entries called 'Banco'. Select one to merge.
-    |  1. [es][n][Banco]@[('institución')]
-    |  2. [es][n][Banco]@[('mobiliario')]
-    |  3. <new_lemma>
+# name -e
+# >> Banco # y aquí editamos
+#     >> Banco
+#     | Warning. There's already 2 entries called 'Banco'. Select one to merge.
+#     |  1. [es][n][Banco]@[('institución')]
+#     |  2. [es][n][Banco]@[('mobiliario')]
+#     |  3. <new_lemma>
 
-lemma -e
-| Other lemmas for this entry are ...
-|  1. Institución
-|  2. Mobiliario
-|  <new_lemma>
->> Grupo
--e or lang -e or type -e
+# lemma -e
+# | Other lemmas for this entry are ...
+# |  1. Institución
+# |  2. Mobiliario
+# |  <new_lemma>
+# >> Grupo
+# -e or lang -e or type -e
 
 # 5. Deleting a node ---------------------------------------------
 
-14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: rm
-| Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
->> Y
+# 14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: rm
+# | Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
+# >> Y
 
 # 6. Filters -----------------------
 
-14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
-| Entered editor mode on filters:
-| f1/type('w').lang('es')
-| f2/starts('clar')
->> rm f1
->> add contains('esonate').lang('en')
->> ''
-14:32:04 ~ [es][n][concept]@[(lemma)]/:
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
+# | Entered editor mode on filters:
+# | f1/type('w').lang('es')
+# | f2/starts('clar')
+# >> rm f1
+# >> add contains('esonate').lang('en')
+# >> ''
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/:
 
-14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-| Showing filters:
-| f1/lang('es').contains('trent')
-| f2/starts('clar')
-14:32:04 ~ [es][n][concept]@[(lemma)]/:
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+# | Showing filters:
+# | f1/lang('es').contains('trent')
+# | f2/starts('clar')
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/:
 
-14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
-14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
-14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
-14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-| Showing filters:
-| [ls, cd, r] f1/lang('es')
-| [ls] f2/lang('en')
-14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
-| Showing filters:
-| f1/lang('es')
-| [>] f2/lang('en')
-14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
-14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-| Showing filters:
-| f1/lang('es')
-| [ls] f2/lang('en')
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+# | Showing filters:
+# | [ls, cd, r] f1/lang('es')
+# | [ls] f2/lang('en')
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
+# | Showing filters:
+# | f1/lang('es')
+# | [>] f2/lang('en')
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
+# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+# | Showing filters:
+# | f1/lang('es')
+# | [ls] f2/lang('en')
 
 # 7. TERMINAL ---------------------------------------
 
-14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: term
-Python. Granted a pathway to SKComponents objects and methods.
-Type "Node" or "Graph" to inspect objects and "exit" to leave.
->>> Node.compress.expand('synset').compress('synset2')
->>> G.view_names()
->>> n = G.random()
->>> G.disable('semset')    # implementar que podamos ahorrarnos comillas
->>> ndst = G.filter_
-Exiting terminal...
-14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
+# 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: term
+# Python. Granted a pathway to SKComponents objects and methods.
+# Type "Node" or "Graph" to inspect objects and "exit" to leave.
+# >>> Node.compress.expand('synset').compress('synset2')
+# >>> G.view_names()
+# >>> n = G.random()
+# >>> G.disable('semset')    # implementar que podamos ahorrarnos comillas
+# >>> ndst = G.filter_
+# Exiting terminal...
+# 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
 
 # 8. NESTED_HISTORY ------------------------------------
 
-| Showing nested history:
-| root: [0] Andar(/7)
-|       └── [1] Cercenar (<6th> of 7)
-|            ├── [2] Elegía (<7th> of 7)
-|            └── [3] Esperanza (<42th> of 102)
-cd ..
-| Warning: this action will delete the nested search history. Are you sure? [Y/N]
+# | Showing nested history:
+# | root: [0] Andar(/7)
+# |       └── [1] Cercenar (<6th> of 7)
+# |            ├── [2] Elegía (<7th> of 7)
+# |            └── [3] Esperanza (<42th> of 102)
+# cd ..
+# | Warning: this action will delete the nested search history. Are you sure? [Y/N]
 
 #################################################################################
 
-# 98. Undo and Go back to previous node
-via 'undo' and 'cd ..'
+# # 98. Undo and Go back to previous node
+# via 'undo' and 'cd ..'
 
-# 99. Autocomplete via 'tab' key
-prompt_toolkit for autocomplete
+# # 99. Autocomplete via 'tab' key
+# prompt_toolkit for autocomplete
 
-¿Useful symbols?
-    <, >
-    clear, copy, paste
-    extract / export, min
-    commit, push, autosave 
-¿Very future steps?
-    min_path
-    reduce a set
-    search method
-    decide where to use 'rich' colors
-    I dont need a hist of every single action done. So hist will be just for visited nodes.
-    status (already set, to do)
-    suggestions
-    and changing words from category within a same node
-    traduccion con filter, no con funcion explicita
-    (same for merging synset1's, just a way to merge nodes and them also)
+# ¿Useful symbols?
+#     <, >
+#     clear, copy, paste
+#     extract / export, min
+#     commit, push, autosave 
+# ¿Very future steps?
+#     min_path
+#     reduce a set
+#     search method
+#     decide where to use 'rich' colors
+#     I dont need a hist of every single action done. So hist will be just for visited nodes.
+#     status (already set, to do)
+#     suggestions
+#     and changing words from category within a same node
+#     traduccion con filter, no con funcion explicita
+#     (same for merging synset1's, just a way to merge nodes and them also)
 
-
-"""
 
 class PrimaryInterface (cmd.Cmd):
     
@@ -194,7 +128,18 @@ class PrimaryInterface (cmd.Cmd):
         self.placeholder = Placeholder(self)  # Create a Placeholder instance.
         self._set_random_node()  # Initialize a node at random.   
 
+        self.selection_interface_output = None  # the delivery are for SelectNodeInterface
+
+        self.G.save(f"secCopy{datetime.datetime.now().strftime('%y.%m.%d.%H.%M.%S')}.txt")
+
     # Public Methods -----
+        
+    def do_save(self, arg):
+        filename = arg.strip() or 'data.txt'  # Use 'data' as default filename if none is provided
+        try:
+            self.G.save(filename)
+        except Exception as e:
+            print(f"Error saving data: {e}")
         
     def do_help(self, arg):
         """Provide help for a specified command or list all commands if none is specified."""
@@ -204,7 +149,7 @@ class PrimaryInterface (cmd.Cmd):
             if help_text:
                 print(help_text)
             else:
-                print(f"No help available for {arg}")
+                print(f"No help available for '{arg}'")
         else:
             # User typed "help" without specifying a command
             padded_print("Available commands:")
@@ -294,7 +239,7 @@ class PrimaryInterface (cmd.Cmd):
 
         # Initiates the search for nodes with the most specific criteria first, based on the current language and type context.
         nodes = self.G.find(lang=self.placeholder.lang,
-                            type=self.placeholder.type,
+                            type_=self.placeholder.type,
                             name=parsed_name)
 
         # Implements fallback logic: If the initial search yields no results, progressively broadens the search criteria.
@@ -313,22 +258,38 @@ class PrimaryInterface (cmd.Cmd):
             self._set_node(nodes[0])
         elif nodes:
             # If multiple matching nodes are found, indicates a future feature for user selection.
-            SelectNodeInterface(nodes, self).cmdloop()
+            statement_1 = "Do you mean ..."
+            statement_2 = "(Press Enter without any input to exit)"
+            SelectNodeInterface(nodes, self, statement_1, statement_2).cmdloop()
+            self._set_node(nodes[int(self.selection_interface_output)-1])
         else:
             # If no matching nodes are found, informs the user accordingly.
             candidates = self.G
             number_of_guesses = 3
             top_guessed_nodeset = candidates.scan_for_similar_nodes(name=parsed_name, k=number_of_guesses)
-            SelectNodeInterface(top_guessed_nodeset, self).cmdloop()
+            
+            statement_1 = "Do you mean ..."
+            statement_2 = "(Press Enter without any input to exit)"
+            SelectNodeInterface(top_guessed_nodeset, self, statement_1, statement_2).cmdloop()
+            self._set_node(top_guessed_nodeset[int(self.selection_interface_output)-1])
 
     def do_r(self, args):
+
+        # 1. Add additional flags at 'r' --------------------------------------------
+
+        # r --summary (que active el summary cada vez que se ejecute)
+        # r -f (not working as expected)
+
+        # do_new (creates a new node being able to set new language (-l) or lemma (-l), because if already existing, cannot create unless a lemma is set)
+        # do_save (save the graph to a file)
+
         # Creates a new argument parser to interpret the command line inputs.
         parser = argparse.ArgumentParser(description="Perform a random node search")
         # Adds optional arguments to specify the language and type, enhancing the command's flexibility.
         parser.add_argument('-l', '--lang', type=str, help='Specify the language')
         parser.add_argument('-t', '--type', type=str, help='Specify the type')
         parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')  # Notice the action change.
-        
+
         # Parses the arguments from the command line input.
         args = parser.parse_args(args.split())
 
@@ -344,27 +305,76 @@ class PrimaryInterface (cmd.Cmd):
 
     def do_ls(self, arg):
 
-        # Initialize the argument parser
-        parser = argparse.ArgumentParser(description='List information about the current node.')
-        parser.add_argument('-d', '--details', action='store_true', help='Show detailed information about each item.')
+        # 14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
 
-        args = parser.parse_args(arg.split())
+        parser = argparse.ArgumentParser(description='List information about the current node.')
+        parser.add_argument('-d', '--details', action='store_true', default=None, help='Provides a more detailed display.')
+        parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
+        parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
+        parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
+        parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
+        parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
+
+        ls_args, unknown = parser.parse_known_args(arg.split())
+        
+        # DO IT LIKE THIS FOR ALL TO AVOID BEING KICKED OUT FOR USING UNKNOWN FLAGS
+        if unknown:
+            padded_print(f'Unrecognized argument(s): {" ".join(unknown)}')
+
 
         if self.placeholder.fields:
 
-            self._update_graph_permissions_to_fields() # we set graph permissions to fields (for neighbors)
-            nodes_to_display = self.placeholder.node.get_neighbors().set()  # Assuming a method to get data from the current node
+            self._update_graph_permissions_to_fields()
+            nodes = list(self.placeholder.node.get_neighbors().set())
+            nodes = sorted(nodes, key=lambda node: node.name)
 
-            if nodes_to_display:
-                strings_to_display = [f'| {i}. {node.name}' for i, node in enumerate(nodes_to_display)]
-                columnize(strings_to_display, ncol=3, col_width=18)
-            else:
-                if not self.placeholder.node.get_neighbors('111111'):
-                    print('The target node is completely empty.')
+            if nodes:
+
+                if ls_args.shuffle:
+                    random.shuffle(nodes)
+
+                if ls_args.stop:
+                    if ls_args.stop <= len(nodes):
+                        nodes = nodes[:ls_args.stop]
+
+                if ls_args.details:
+
+                    # sin ponemos details, aplican todos los criterios menos 'abbr'
+                    # solo tienen sentido 'stop' y 'r' de 'random/suffle'
+                    to_print = []
+                    max_index_length = len(str(len(nodes) - 1))  # Length of the largest index
+
+                    for i, node in enumerate(nodes):
+                        
+                        sizes = [str(len(field)) for field in node.get_neighbors('111111').values()]
+                        str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
+                        to_print.append(f'[{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})')
+                    for i, _ in enumerate(to_print):
+                        print(f"{str(i+1).zfill(max_index_length)}) {_}")
+                
                 else:
-                    print('The set field for the target node is empty.')
-        else:
+
+                    names = [node.name for node in nodes]
+                        
+                    if ls_args.abbr:
+                        names = [name[:ls_args.abbr] + '...' if len(name) > ls_args.abbr else name for name in names]
+                    
+                    padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors().set())} results.")
+                    strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
+                    columnize(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
+
+                if len(self.placeholder.fields) == 1:
+                    LS_Interface(nodes, self, ls_args)
+
+            else:
+                padded_print('The set field for the target node is empty.')
+
+            
+        
+        if not self.placeholder.fields:
             padded_print("Error. Search field is needed")
+
+
 
     def do_summary(self, arg):
         node = self.placeholder.node
@@ -374,34 +384,7 @@ class PrimaryInterface (cmd.Cmd):
         columnize(elements, ncol=2)
 
     def do_new(self, arg):
-
-        parser = argparse.ArgumentParser(description='Creates a new node.')
-        parser.add_argument('-l', '--diff', type=str, help='Specify the language or lemma of the node, if needed.')
-        
-        args = parser.parse_args(arg.split())
-
-        # lang, lemma = None, None
-
-        # if args.diff:
-        #     if len(args.diff)==2 and args.diff.islower():
-        #         lang = args.diff
-        #     else:
-        #         lemma = args.diff
-
-        # lang  = lang if lang else self.placeholder.lang
-        # type_ = self.placeholder.type
-        # name  = args.name
-        # lemma = lemma if lemma else ''
-
-        # akin_nodes = self.G.find(lang=lang, type=type_, name=name, lemma=lemma)
-
-        # if not akin_nodes:
-        #     self.G.create_node(lang, type_, name, lemma)
-        # else:
-        #     print('This node already exists at this scope.')
-        #     for node in akin_nodes:
-        #         print(f'| {node}')
-        #     print('Tip: try using a different lemma.')
+        CreateNodeInterface(self)
 
     # Internal Methods  --------------------
             
@@ -442,7 +425,7 @@ class PrimaryInterface (cmd.Cmd):
         print('-'*47)
 
     def default(self, line):
-        padded_print(f"Unknown '{line[:2].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
+        padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
 
 # los argumentos -> library argparse, action, help 
         

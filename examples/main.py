@@ -1,3 +1,5 @@
+import datetime
+
 # Little explanation
 # The code run is the one in RUN(G) function.
 # Flags below decide what snippet to run.
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     # para evitar poner la línea de modificación del path
     # en cada archivo.
     import sys, os
-    sys.path.append(r'G:\Mi unidad\GATEWAY\[03] Dev\[04] On-going projects\[03] Suskind\suskind-knowledge-graph')
+    sys.path.append(r'G:\Mi unidad\GATEWAY\[01] Dev\[01] Python\[01] Suskind\suskind-knowledge-graph')
     from src.skcomponents.sknode import Node
     from src.skcomponents.sknodeset import NodeSet
     from src.skcomponents.skgraph import Graph

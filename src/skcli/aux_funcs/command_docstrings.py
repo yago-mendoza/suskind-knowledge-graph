@@ -30,6 +30,16 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
     unset y e0 e2\
 """,
 
+'save': """\
+| Desc. Saves the actual version of the Graph in the current directory.
+| Signature : save [filename = 'data.txt']
+| Arguments :
+    1. filename : file to where the graph will be saved (terminated with .txt)
+| Usage examples :
+    save
+    save provisional_dat.txt\
+""",
+
 'cd': """\
 | Desc. Accesses a node and sets it as current.
 | Signature : cd <ent>
@@ -49,6 +59,7 @@ COMMAND_DOCSTRINGS : Dict[str, str] = {
     -l, --lang LANG     Specify the language to narrow down the search.
     -t, --type TYPE     Specify the type to narrow down the search.
     -f, --fav FAVORITE  Specify wether the output must be favorite or not.
+        --ls LS         Triggers the 'ls' command applying the flags set on the last call.
 | Usage examples :
     r
     r -l en -t n\

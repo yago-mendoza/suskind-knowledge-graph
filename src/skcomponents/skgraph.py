@@ -144,7 +144,7 @@ class Graph(NodeSet):
 
     def create_node(self, lang, type_, name, lemma):
         # Check if a node with the given attributes already exists
-        if not self.find(lang, type_, name, lemma):
+        if not self.find(lang=lang, type_=type_, name=name, lemma=lemma):
             # If not, create a new Node instance with the provided attributes
             node = Node(lang, type_, name, lemma)
             # Append the new node to the graph
@@ -182,12 +182,14 @@ class Graph(NodeSet):
             else:
                 getattr(node, edge).__getattribute__(action_method)()
 
-        # Handle synset and semset relationships, which require a level
         if edge_type.startswith('synset') or edge_type.startswith('semset'):
             target_edge_type = edge_type 
             append_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
+            print(target_edge_type, append_edge_type)
+
             perform_action(target_node, target_edge_type, action, append_edge_type)
             perform_action(append_node, append_edge_type, action, target_edge_type)
+        
     
     def __repr__(self):
         return f'Graph(size={len(self)})'

@@ -106,7 +106,7 @@ def main():
     choice_model = 'synset'
     choice_data = 'data'
 
-    data = import_args(f'{data}.txt').random(n=3)    
+    # data = import_args(f'{data}.txt').random(n=3)    
     model = prompt_models[choice_model]
         
     for _ in data:

@@ -13,7 +13,16 @@ def columnize(elements, ncol, col_width=None):
         cols[col_num].append(element)
 
     # Determine the actual width of each column based on the longest word
-    actual_col_widths = {col: min(max(len(word) for word in cols[col]), col_width) for col in cols}
+
+    actual_col_widths = {}
+    for col in cols:
+        # Verifica si cols[col] está vacío
+        if cols[col]:
+            actual_col_width = min(max(len(word) for word in cols[col]), col_width)
+        else:
+            actual_col_width = 0  # o cualquier valor predeterminado que elijas
+
+        actual_col_widths[col] = actual_col_width
 
     # Truncate words in each column if they exceed the max col_width
     for col, words in cols.items():

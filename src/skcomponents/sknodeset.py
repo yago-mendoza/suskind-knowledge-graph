@@ -126,15 +126,14 @@ class NodeSet(list):
         # Iterate over each node in the container.
         for node in self:
             # Check if the node matches the non-empty criteria.
-            if (not lang or node.lang == lang) and \
-               (not type_ or node.type == type_) and \
-               (not name or node.name == name) and \
-               (lemma is None or (isinstance(lemma, bool) and bool(node.lemma) == lemma) or node.lemma == lemma) and \
-               (not None or node.favorite == favorite):
+            if ((not lang or node.lang == lang) and \
+                (not type_ or node.type == type_) and \
+                (not name or node.name == name) and \
+                (lemma is None or (isinstance(lemma, bool) and bool(node.lemma) == lemma) or node.lemma == lemma) and \
+                (favorite is None or node.favorite == favorite)):
                 results.append(node)
 
-        # Always return the results wrapped in a NodeSet object.
-        return NodeSet(results)
+        return results
 
     def random(self, k=None, **kwargs):
         candidates = self.find(**kwargs)
