@@ -126,6 +126,7 @@ class PrimaryInterface (cmd.Cmd):
         super().__init__()  # Initialize the base class (cmd.Cmd).
         self.G = graph  # Store the graph object.
         self.placeholder = Placeholder(self)  # Create a Placeholder instance.
+        self._update_graph_permissions_to_fields() # To the default defaulder fields
         self._set_random_node()  # Initialize a node at random.   
 
         self.selection_interface_output = None  # the delivery are for SelectNodeInterface
@@ -170,7 +171,7 @@ class PrimaryInterface (cmd.Cmd):
         for setting in args:
             if {'e0', 'e1', 'e2', 'y0', 'y1', 'y2'}.issubset(self.placeholder.fields):
                 self.placeholder.fields = []
-                # Si esta lleno y estamos intentando hacer un 'set', será que queremos borrar y dejar solo ese. Lo entendemos.
+                # DE ENTRADA, Si esta lleno y estamos intentando hacer un 'set', será que queremos borrar y dejar solo ese. Lo entendemos.
             # Check if the argument is a shorthand ('y' or 'e') representing a set of fields.
             if setting in ['y', 'e']:
                 # If shorthand is used, add all related fields (e.g., y0, y1, y2 for 'y') to the placeholder.
@@ -327,7 +328,6 @@ class PrimaryInterface (cmd.Cmd):
 
         if self.placeholder.fields:
 
-            self._update_graph_permissions_to_fields()
             # self.placeholder.node.synset1.append(self.G.random())
             # Adds a random node each time, just to test that 'ls' correctly
             # retrieves updated data each time is called.

@@ -5,10 +5,9 @@ import datetime
 # Flags below decide what snippet to run.
 # > py -i main.py to run
 
-# !!!!!!!!!! tienes que empezar corrigeindo las funciones 
-# do_cp, do_mv
 
-# luego tienes que poner bien el código, ver qué funciona, qué 
+
+# Tienes que poner bien el código, ver qué funciona, qué 
 # enllestir, qué todavía no, etcetera. Buenas practicas, esas cosas.
 # Te recomiendo que empieces generalizando la función get_neighbors
 # tanto como puedas. Y luego pases nivel a nivel, hacia arriba,

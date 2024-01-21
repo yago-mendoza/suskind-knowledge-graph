@@ -63,9 +63,13 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 'ls': """\
 | Desc. Refreshes the node contents by showing the stat within edits.
 | Signature : ls
-| Arguments : None
-| Usage examples :
-    ls\
+| Arguments : None\
+""",
+
+'<__>': """\
+| Desc. Switches to any field of format (y/e)(0/1/2).
+| Signature : __
+| Arguments : None\
 """,
 
 }
