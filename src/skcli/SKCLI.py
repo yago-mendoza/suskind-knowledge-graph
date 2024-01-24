@@ -1,5 +1,5 @@
 import os
-import cmd # Importing Python's built-in library for creating command-line interfaces (used for PrimaryInterface and upcoming sub-CLIs)
+import cmd
 import random
 import argparse
 
@@ -9,9 +9,6 @@ from src.skcli.aux_clis import *
 from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
-
-
-
 
 # 4. Editing node properties ------------------------------------
 
@@ -120,7 +117,7 @@ from src.skcli.aux_funcs.command_docstrings import *
 #     (same for merging synset1's, just a way to merge nodes and them also)
 
 
-class PrimaryInterface (cmd.Cmd):
+class SK_Interface (cmd.Cmd):
     
     def __init__(self, graph):
         super().__init__()  # Initialize the base class (cmd.Cmd).
@@ -146,7 +143,7 @@ class PrimaryInterface (cmd.Cmd):
         """Provide help for a specified command or list all commands if none is specified."""
         if arg:
             # User asked for help on a specific command
-            help_text = COMMAND_DOCSTRINGS.get(arg)
+            help_text = COMMAND_DOCSTRINGS_SK.get(arg)
             if help_text:
                 print(help_text)
             else:
@@ -155,10 +152,10 @@ class PrimaryInterface (cmd.Cmd):
             # User typed "help" without specifying a command
             padded_print("Available commands:")
             mini_prompt = ''
-            right_padding = max([len(command) for command in COMMAND_DOCSTRINGS]) + len(mini_prompt)
-            for command in COMMAND_DOCSTRINGS:
+            right_padding = max([len(command) for command in COMMAND_DOCSTRINGS_SK]) + len(mini_prompt)
+            for command in COMMAND_DOCSTRINGS_SK:
                 # Only print the first line of each help text for an overview
-                first_line = COMMAND_DOCSTRINGS[command].strip().split('\n')[0]
+                first_line = COMMAND_DOCSTRINGS_SK[command].strip().split('\n')[0]
                 padded_print(f"{command+mini_prompt:<{right_padding}} : {first_line[8:]}")
         
     def do_set(self, arg):

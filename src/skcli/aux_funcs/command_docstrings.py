@@ -74,7 +74,7 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 }
 
-COMMAND_DOCSTRINGS : Dict[str, str] = {
+COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 'set': """\
 | Desc. Sets or adds properties to the current node or environment.
 | Signature : set <*settings>

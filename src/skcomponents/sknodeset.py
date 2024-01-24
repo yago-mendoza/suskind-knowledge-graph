@@ -5,137 +5,67 @@ class NodeSet(list):
 
     def __init__(self, nodes=None):
 
-        nodes_as_list = self._convert_to_list(nodes)  # converts the data structure to a list        
-        super().__init__(nodes_as_list)  # initialize the parent list class
+        # Parses data structures into a list
+        if isinstance(nodes, (NodeSet, list, set, tuple)):
+            nodes = list(set(nodes)) # uniformize + listify
+        nodes_as_list = nodes or []
+   
+        super().__init__(nodes_as_list) # initialize the parent list class   
 
-        self._define_permissions()        
+    ##########
+    # Display
+    ##########
 
-    def _define_permissions(self):
-
-        synset0, synset1, synset2 = True, True, True
-        semset0, semset1, semset2 = True, True, True
-
-        self.edge_permissions = {
-            'synset0': synset0,
-            'synset1': synset1,
-            'synset2': synset2,
-            'semset0': semset0,
-            'semset1': semset1,
-            'semset2': semset2
-            }
-        
-        self.group_mappings = {
-            'synset': ['synset0', 'synset1', 'synset2'],
-            'semset': ['semset0', 'semset1', 'semset2']
-        }
-
-    def disable(self, *edge_types):
-        if not edge_types:
-            for edge in self.edge_permissions:
-                self.edge_permissions[edge] = False
-        else:
-            for edge in edge_types:
-                if edge in self.group_mappings:
-                    for group_edge in self.group_mappings[edge]:
-                        self.edge_permissions[group_edge] = False
-                elif edge in self.edge_permissions:
-                    self.edge_permissions[edge] = False
-
-    def enable(self, *edge_types):
-        if not edge_types:
-            for edge in self.edge_permissions:
-                self.edge_permissions[edge] = True
-        else:
-            for edge in edge_types:
-                if edge in self.group_mappings:
-                    for group_edge in self.group_mappings[edge]:
-                        self.edge_permissions[group_edge] = True
-                elif edge in self.edge_permissions:
-                    self.edge_permissions[edge] = True
-
-    def scan_for_similar_nodes(self, name, k=1):
-        scores = []
-        if k > len(self): k = len(self)
-        for node in self:
-            ratio = difflib.SequenceMatcher(None, name.lower(), node.name.lower()).ratio()
-            scores.append((ratio, node))
-        return NodeSet([node for ratio, node in sorted(scores, key=lambda x: x[0], reverse=True)[:k]])
+    def get_set(self, property):
+        return list(set(getattr(node, property) for node in self))
     
-    def nodes(self):
-        return [_ for _ in self]
-
-    def langs(self): return [node.lang for node in self]
-    def types(self): return [node.type for node in self]
-    def names(self): return [node.name for node in self]
-    def lemmas(self): return [node.lemma for node in self]
-
-    def set_langs(self): return list(set([n.lang for n in self]))
-    def set_types(self): return list(set([n.type for n in self]))
-
-    def _convert_to_list(self, input_nodes):
-        # If the input is a NodeSet, Graph, list, or set, convert it to a list
-        if isinstance(input_nodes, (NodeSet, list, set, tuple)):
-            return list(set(input_nodes))
-        return input_nodes or []
-
-    def _clean_edges(self):
-        # Create a set of node identifiers for faster membership checks
-        node_identifiers = {node.identify(format=True) for node in self}
-
-        # Remove connections to nodes not present in the NodeSet
-        for node in self:
-            for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
-                try:
-                    valid_nodes = getattr(node, attr, [])
-                except AttributeError:
-                    raise AttributeError(f"Node does not have attribute '{attr}'")
-
-                # Use set intersection for efficient filtering
-                setattr(node, attr, [n for n in valid_nodes if n.identify(format=True) in node_identifiers])
+    def look(self):
+        # Displays it in the __repr__ format set for <Node>, for fast inspection.
+        return [node for node in self]
     
-    def __getitem__(self, index):
-        # Redefine magic method so that it returns NodeSets
-        result = super().__getitem__(index)
-        if isinstance(result, list):
-            return NodeSet(result)
-        return result
-
-    def append(self, node):
-        # Ensure only Node instances can be added to the Graph
-        # Check if the node is unique based on its identifier
-        if all(existing_node != node for existing_node in self):
-            super().append(node)  # Use super() to avoid recursion
-            node.graph = self
-    
-    def extend(self, nodeset):
-        for node in nodeset:
-            self.append(node)
-        return self
+    #########
+    # Search
+    #########
 
     def find(self, **kwargs):
 
-        lang = kwargs.get('lang', '')
-        type_ = kwargs.get('type', '')
-        name = kwargs.get('name', '')
-        lemma = kwargs.get('lemma', None)
-        favorite = kwargs.get('favorite', None)
+        # Extract criteria, allowing either single values or lists.
 
-        # Initialize results list.
+            # node_set.find(lang='en', type='n')
+            # node_set.find(name=['dog', 'gato'])
+            # node_set.find(favorite=True)
+            # node_set.find(lang='fr', type='v')
+            # node_set.find(lemma='Sentimiento')
+        
+        lang = kwargs.get('lang', [])
+        type_ = kwargs.get('type', [])
+        name = kwargs.get('name', [])
+        lemma = kwargs.get('lemma', None)  # Can be a list, single value, or None
+        favorite = kwargs.get('favorite', None)  # Can be a list, single value, or None
+
+        # Ensure all criteria are in list form for uniformity.
+        if not isinstance(lang, list): lang = [lang]
+        if not isinstance(type_, list): type_ = [type_]
+        if not isinstance(name, list): name = [name]
+        if lemma is not None and not isinstance(lemma, list): lemma = [lemma]
+        if favorite is not None and not isinstance(favorite, list): favorite = [favorite]
+
         results = []
-
-        # Iterate over each node in the container.
         for node in self:
             # Check if the node matches the non-empty criteria.
-            if ((not lang or node.lang == lang) and \
-                (not type_ or node.type == type_) and \
-                (not name or node.name == name) and \
-                (lemma is None or (isinstance(lemma, bool) and bool(node.lemma) == lemma) or node.lemma == lemma) and \
-                (favorite is None or node.favorite == favorite)):
+            if ((not lang or node.lang in lang) and \
+                (not type_ or node.type in type_) and \
+                (not name or node.name in name) and \
+                (lemma is None or (isinstance(lemma, bool) and bool(node.lemma) in lemma) or node.lemma in lemma) and \
+                (favorite is None or node.favorite in favorite)):
                 results.append(node)
 
         return results
 
     def random(self, k=None, **kwargs):
+
+        # Admits the same **kwargs as the 'find' method.
+
         candidates = self.find(**kwargs)
         if not k and candidates: return random.choice(candidates)
         if not candidates or k < 1: return None
@@ -143,10 +73,20 @@ class NodeSet(list):
         if k <= len(candidates): return NodeSet(nodes=random.sample(candidates, k))
         raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(candidates)} nodes.")
     
-    def edit(self, **attr_edits):
-        # Iterate through the keyword arguments provided in 'changes'
+    def find_similars(self, name, k=1):
+
+        scores = []
+        if k > len(self): k = len(self)
         for node in self:
-            node.edit(**attr_edits)
+            ratio = difflib.SequenceMatcher(None, name.lower(), node.name.lower()).ratio()
+            scores.append((ratio, node))
+        return NodeSet([node for ratio, node in sorted(scores, key=lambda x: x[0], reverse=True)[:k]])
+    
+    ############
+    # Filtering
+    ############
+
+    # Filtering by syntax
 
     def is_lang(self, *langs, complement=False):
         return self._filter_nodes(lambda node: getattr(node, 'lang') in langs, complement)
@@ -178,12 +118,70 @@ class NodeSet(list):
     def ends_with(self, chain, on_lemma=False):
         return self._filter_nodes(lambda node: getattr(node, 'lemma' if on_lemma else 'name', "").lower().endswith(chain.lower()))
     
+    # Filtering by number of X connections
+
+    def filter_synset(self, operator, value, level=None):
+        # ndst.filter_synset('>',5,level=2)
+        # ndst.filter_synset('>',5,level=(1,2))
+        levels = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
+        return NodeSet([node for node in self
+                        for i in levels 
+                        if self.___compare(len(getattr(node, f'synset{i}', [])), operator, value)])
+    
+    def filter_semset(self, operator, value, level=None):
+        # ndst.filter_semset('>',5,level=2)
+        # ndst.filter_semset('>',5,level=(1,2))
+        levels = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
+        return NodeSet([node for node in self
+                        for i in levels 
+                        if self.___compare(len(getattr(node, f'semset{i}', [])), operator, value)])
+    
+    ##############
+    # Manteinance
+    ##############
+
+    def _clean_spurious_edges(self):
+        """Cleans connections to nodes not present in the structure."""
+        node_identifiers = {node._convert_header_to_str_format() for node in self}
+        # Create a set of node identifiers for faster membership checks
+        attrs_to_check = ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
+        # Define attributes to check in each node
+        for node in self:
+            # Remove connections to nodes not present in the NodeSet
+            for attr in attrs_to_check:
+                valid_nodes = [n for n in getattr(node, attr, []) if n._convert_header_to_str_format() in node_identifiers]
+                setattr(node, attr, valid_nodes)
+
+    #######################################
+    # Inner Workings (most of the unused) #
+    #######################################
+
+    def edit(self, **attr_edits):
+        # Mass-edit is enabled.
+        for node in self:
+            node.edit(**attr_edits)
+
+    def append(self, node):
+        # Checks for node uniqueness before appending.
+        if all(node != existing_node for existing_node in self):
+            node.graph = self
+            super().append(node) # Use super() to avoid recursion
+    
+    ### (inner workings for 'filter' functions from above)  ###
+    
     def _filter_by_length(self, length_type, *args, on_lemma=False):
+
         def condition_func(node):
+
             target = getattr(node, 'lemma' if on_lemma else 'name', "").lower()
             length_func = len if length_type == 'char_count' else lambda t: len(t.split())
             target_length = length_func(target)
-            return self._compare_length(target_length, *args)
+
+            if len(args) == 1:
+                return target_length == args[0]
+            elif len(args) == 2:
+                operator, value = args
+                return self.___compare(target_length, operator, value)
 
         return self._filter_nodes(condition_func)
 
@@ -217,15 +215,6 @@ class NodeSet(list):
         # Return a new instance of NodeSet containing the filtered nodes.
         return NodeSet(nodes=filtered_nodes)
 
-    def _compare_length(self, target_length, *args):
-        if len(args) == 1:
-            return target_length == args[0]
-        elif len(args) == 2:
-            operator, value = args
-            return self._compare(target_length, operator, value)
-        else:
-            raise ValueError("Invalid arguments for length comparison.")
-
     def _compare_string_occurrence(self, target, *args):
         if len(args) == 1:
             return args[0] in target
@@ -233,85 +222,22 @@ class NodeSet(list):
             return target.count(args[0]) == args[1]
         elif len(args) == 3:
             string, operator, value = args
-            return self._compare(target.count(string), operator, value)
+            return self.___compare(target.count(string), operator, value)
         else:
             raise ValueError("Invalid arguments for string occurrence comparison.")
 
-    def _compare(self, target_value, operator, value):
+    def ___compare(self, target_value, operator, value):
         operations = {
             '>=': target_value >= value,
             '<=': target_value <= value,
             '>': target_value > value,
             '<': target_value < value,
-            '=': target_value == value
+            '=': target_value == value,
+            '!=': target_value != value
         }
         return operations.get(operator, False)
     
-    def filter_synset(self, operator, value, level=None):
-        level = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
-        return [node for i in level for node in self._filter_by_attribute(f'synset{i}', operator, value)]
-    
-    def filter_semset(self, operator, value, level=None):
-        level = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
-        return [node for i in level for node in self._filter_by_attribute(f'semset{i}', operator, value)]
-
-    def _filter_by_attribute(self, attribute, operator, value):
-        filtered_nodes = []
-
-        for node in self:
-            node_value = len(getattr(node, attribute, None))
-
-            if operator == '=' and node_value == value:
-                filtered_nodes.append(node)
-            elif operator == '!=' and node_value != value:
-                filtered_nodes.append(node)
-            elif operator == '<' and node_value < value:
-                filtered_nodes.append(node)
-            elif operator == '<=' and node_value <= value:
-                filtered_nodes.append(node)
-            elif operator == '>' and node_value > value:
-                filtered_nodes.append(node)
-            elif operator == '>=' and node_value >= value:
-                filtered_nodes.append(node)
-
-        return NodeSet(nodes=filtered_nodes)
-    
-    def has_synset(self, target_nodes, sections=(0, 1, 2), tolerance=1.0, complement=False):
-        return self._filter_by_relationship_type('synset', target_nodes, sections, tolerance)
-    
-    def has_semset(self, target_nodes, sections=(0, 1, 2), tolerance=1.0, complement=False):
-        return self._filter_by_relationship_type('semset', target_nodes, sections, tolerance)
-    
-    def _filter_by_relationship_type(self, relationship_base, target_nodes, sections, tolerance, complement):
-        # Ensure target_nodes is a set for efficient lookup.
-        if not isinstance(target_nodes, (list, tuple)): target_nodes = (target_nodes,)
-        target_nodes_set = set(target_nodes)
-        # Initialize an empty NodeSet to hold nodes that pass the filter.
-        filtered_nodes = NodeSet()
-        # Calculate the minimum number of connections needed based on tolerance.
-        min_connections = max(1, round(tolerance * len(target_nodes_set)))
-
-        # Iterate over all nodes in the current set.
-        for node in self:
-            connections_met = 0  # Track the number of connections met.
-
-            # Check each specified section.
-            for section in sections:
-                related_nodes = getattr(node, f'{relationship_base}{section}', [])
-
-                # Increment connections_met for each target node that's connected.
-                connections_met += len(target_nodes_set.intersection(related_nodes))
-
-                # If the connections met the required number, add the node to filtered_nodes.
-                if connections_met >= min_connections:
-                    if not complement:
-                        filtered_nodes.append(node)
-                    break  # No need to check further sections for this node.
-                else:
-                    if complement:
-                        filtered_nodes.append(node)
-
-        return filtered_nodes
+    ###
        
     def __repr__(self):
         return f'NodeSet(size={len(self)})'

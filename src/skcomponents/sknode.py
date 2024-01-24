@@ -1,18 +1,154 @@
 from src.skcomponents.sknodeset import NodeSet
+import sktools as sk
 import difflib
 
 class Node:
 
-    # Define the sets of flags
-    identifier_flags = {'lang', 'type', 'name', 'lemma'}
-    descriptive_flags = {'favorite'}
-    front_flags = identifier_flags | descriptive_flags
-    edge_flags = {'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2'}
-    back_flags = edge_flags | {'examples'}
-    flags = front_flags | back_flags
+    def __init__(self, lang: str, type_: str, name: str, lemma: str,
+                 synset0: list = None, synset1: list = None, synset2: list = None,
+                 semset0: list = None, semset1: list = None, semset2: list = None,
+                 favorite: bool = False,
+                 examples: list = None) -> None:
+        
+        self.graph = None
+
+        # 1. Hash
+
+        self.lang, self.type, self.name = lang, type_, name # str
+        self.lemma = lemma if lemma is not None else "NA" # str ("NA" by default)
+        
+        # 2. Connections
+
+        self.synset0 = synset0 if synset0 else [] # list
+        self.synset1 = synset1 if synset1 else [] # list
+        self.synset2 = synset2 if synset2 else [] # list
+        self.semset0 = semset0 if semset0 else [] # list
+        self.semset1 = semset1 if semset1 else [] # list
+        self.semset2 = semset2 if semset2 else [] # list
+        
+        # 3. Additional   
+            
+        self.favorite = favorite == True # bool (False by default)
+        self.examples = examples if examples is not None else [] # list
+
+    def get_neighbors(self, fielding=None):
+
+        parsed_fields = sk.parse_field(fielding, long=True)
+
+        if not parsed_fields:
+            parsed_fields = sk.parse_field(['synset', 'semset'])
+        
+        class _WrapperDict(dict):
+            def set(self):
+                return {node for nodeset in self.values() for node in nodeset}
+            def nodeset(self):
+                return NodeSet(node for nodeset in self.values() for node in nodeset)
+            def count(self):
+                return {node: sum(nodeset.count(node) for nodeset in self.values()) for nodeset in self.values() for node in nodeset}
+            def frequency(self):
+                return {count: NodeSet([node for node in self.count() if self.count()[node] == count]) for count in set(self.count().values())}
+        
+        results = _WrapperDict()
+        for field in parsed_fields:
+            edge_type, index = field[:-1], int(field[-1])
+            neighbors = getattr(self, f'get_{edge_type}')(index)
+            results[field] = NodeSet(neighbors)
+
+        return results
+    
+    def get_synset(self, *levels):
+        levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
+        return NodeSet([node for i in levels for node in getattr(self, f'synset{i}', [])])
+    
+    def get_semset(self, *levels):
+        levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
+        return NodeSet([node for i in levels for node in getattr(self, f'semset{i}', [])])
+    
+    def edit(self, **attr_edits):
+        # Edits either 'lang', 'type', 'name' or 'lemma'.
+        for key, value in attr_edits.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+    # Additional functions
+
+    def identify(self, core_only=False):
+        # Used to enhance accessibility to hash attributes
+        if not core_only:
+            return (self.lang, self.type, self.name, self.lemma)
+        return (self.lang, self.type, self.name)
+    
+    def is_homologous(self, other):
+        # Checks if the core is the same for both Nodes.
+        if isinstance(other, Node):
+            return self.identify(core_only=True) == other.identify(core_only=True)
+        return False
+
+    def is_connected(self, other):
+        # Checks if it is connected in any way.
+        return other in self.get_neighbors().set()
+    
+    def assess_similarity(self, node):
+        name_to_compare = node if isinstance(node,str) else node.name
+        return difflib.SequenceMatcher(None, self.name.lower(), name_to_compare.lower()).ratio()
+    
+    ###########################
+    # Used by external Classes
+    ###########################
+    
+    #[not-documented]
+    def _convert_header_to_str_format(self):
+        # Used at _update_node_relationships() when load_data() is run from Graph object.
+        # Used at save() when we want to save the data from Graph object.
+        return f'{self.lang}-{self.type}:{self.name}({self.lemma})'
+
+    #[not-documented]
+    def _copy(self):
+        # Used during Graph "merging" functions.
+        return Node(
+            self.lang, self.type, self.name, self.lemma, self.favorite,
+            self.synset0[:], self.synset1[:], self.synset2[:],
+            self.semset0[:], self.semset1[:], self.semset2[:],
+            self.examples[:]
+        )   
+    
+    #[not-documented]
+    def __hash__(self):
+        # It is used at no point of the project.
+        return hash((self.lang, self.type, self.name, self.lemma))
+    
+    #[not-documented]
+    def __eq__(self, other):
+        # Checks perfect equivalence for identifiers.
+        if isinstance(other, Node):
+            return self.lang == other.lang and self.type == other.type and self.name == other.name and self.lemma == other.lemma
+        return False
+    
+    #################################
+    # Flags (developer visualisation)
+    #################################
+
+    """
+    Note for reviewers:
+    - FLAGS are useless beyond developing.
+    - They only set the way __repr__ set visualisatinon of <Node> objects for developers.
+    - The class really starts at line ~150 (after the __repr__ method re-definition)"""
+
+    #_FLAGS : keeps the relation between 'str' and 'binary' code.
+    #_repr_flags : actual state of the flags
+    #_back_labels : binary (1/0) that sets wether labels will be displayed
+    #    Ej. en-n:Dog(semset0=9, synset0=14, ...) OR en-n:Dog(9, 14, ...)
+
+    identifiers = {'lang', 'type', 'name', 'lemma'}
+    descriptive = {'favorite'}
+    edges = {'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2'}
+    front = identifiers | descriptive
+    back = edges | {'examples'}
+    all = front | back
 
     # Generate the dictionary _FLAGS with binary values
-    _FLAGS = {flag: 1 << i for i, flag in enumerate(sorted(flags))}
+    _FLAGS = {flag: 1 << i for i, flag in enumerate(sorted(sk.node_struct_str.all))}
+
     # >>> _FLAGS = {
     # ...         'lang':       0b000000000001,  
     # ...         'type':       0b000000000010,  
@@ -30,103 +166,7 @@ class Node:
 
     # Initially enable all flags
     _repr_flags = 0b111110000000
-
     _back_labels = 1
-
-    def __init__(self, lang: str, type_: str, name: str,
-                 lemma: str,
-                 favorite: bool = False,
-                 synset0: list = None, synset1: list = None, synset2: list = None,
-                 semset0: list = None, semset1: list = None, semset2: list = None,
-                 examples: list = None) -> None:
-        
-        self.graph = None
-
-        self.lang, self.type, self.name = lang, type_, name
-        self.lemma = lemma if lemma is not None else ''
-        self.favorite = favorite == True
-        self.synset0, self.synset1, self.synset2 = [synset if synset is not None else [] for synset in [synset0, synset1, synset2]]
-        self.semset0, self.semset1, self.semset2 = [semset if semset is not None else [] for semset in [semset0, semset1, semset2]]
-        self.examples = examples if examples is not None else []
-    
-    def __eq__(self, other):
-        if isinstance(other, Node):
-            return self.lang == other.lang and self.type == other.type and self.name == other.name and self.lemma == other.lemma
-        return False
-    
-    def __hash__(self):
-        return hash((self.lang, self.type, self.name, self.lemma))
-
-    def edit(self, **attr_edits):
-        # Iterate through the keyword arguments provided in 'changes'
-        for key, value in attr_edits.items():
-            if hasattr(self, key):
-                # For each attribute to be changed, update the target node's corresponding attribute
-                setattr(self, key, value)
-    
-    def add_edge(self, node, type_):
-        # Ensure the node is not already in the specified connexion type
-        if node not in self.__getattribute__(type_):
-            self.__getattribute__(type_).append(node)
-
-    def remove_edge(self, node, type_):
-        # Remove the node from the specified connexion type if it exists
-        try:
-            self.__getattribute__(type_).remove(node)
-        except ValueError:
-            pass
-
-    def identify(self, format=False):
-        if not format:
-            return (self.lang, self.type, self.name, self.lemma)
-        return f'{self.lang}-{self.type}:{self.name}({self.lemma})'
-    
-    def _copy(self):
-        # Creating a deep copy of the node to avoid aliasing issues when new Graph instances are created
-        # This ensures that changes to the copied node in one Graph instance do not affect the node in another
-        return Node(
-            self.lang, self.type, self.name, self.lemma, self.favorite,
-            self.synset0[:], self.synset1[:], self.synset2[:],
-            self.semset0[:], self.semset1[:], self.semset2[:],
-            self.examples[:]
-        )
-    
-    def assess_similarity(self, node):
-        name_to_compare = node if isinstance(node,str) else node.name
-        return difflib.SequenceMatcher(None, self.name.lower(), name_to_compare.lower()).ratio()
-                
-    def get_neighbors(self, permission_string=''):
-
-        results = _WrapperDict()
-
-        def _parse_permission(s):
-            bits = [bool(int(b)) for b in s.zfill(6)]
-            return {f'{type}{i}': bits[i + (3 if type == 'semset' else 0)]
-                    for i in range(3) for type in ['synset', 'semset']}
-        
-        permission_dict = _parse_permission(permission_string)
-
-        # Collect neighbors based on permissions and edge types
-        for edge_type in ['synset', 'semset']:
-            for i in range(3):
-                permission_dict = self.graph.edge_permissions if not permission_string else permission_dict
-                edge_key = f'{edge_type}{i}'
-                if permission_dict.get(edge_key):
-                    neighbors = getattr(self, f'get_{edge_type}')(i)
-                    results[edge_key] = NodeSet(neighbors)
-
-        return results
-
-    def is_connected(self, node):
-        return node in self.get_neighbors()
-
-    def get_synset(self, *levels):
-        levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
-        return NodeSet([node for i in levels for node in getattr(self, f'synset{i}', [])])
-    
-    def get_semset(self, *levels):
-        levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
-        return NodeSet([node for i in levels for node in getattr(self, f'semset{i}', [])])
 
     @classmethod
     def toggle_back_labels(cls, flag=None):
@@ -190,20 +230,15 @@ class Node:
         return cls
 
     def __repr__(self) -> str:
-
         lang = self.lang if (Node._repr_flags & Node._FLAGS['lang']) else ''
         type_ = self.type if (Node._repr_flags & Node._FLAGS['type']) else ''
         lang_type = '-'.join([lang, type_]) if (lang and type_) else lang+type_
-
         else_name = ':'.join([lang_type, self.name]) if lang_type else self.name
-
         lemma = f"({self.lemma})" if (Node._repr_flags & Node._FLAGS['lemma']) else ''
         favorite = '/m' if (Node._repr_flags & Node._FLAGS['favorite']) and self.favorite else ''
-
         header = else_name + lemma + favorite
 
         parts = []
-
         # Synsets and semsets
         for level in range(0, 3):
             synset_flag = Node._FLAGS[f'synset{level}']
@@ -217,36 +252,9 @@ class Node:
 
         if Node._repr_flags & Node._FLAGS['examples']:
             parts.append(f"{'examples=' if Node._back_labels else ''}{len(self.examples)}")
-
         parts = '['+', '.join(parts)+']' if parts else ''
 
         return f"Node({header}){parts}"
-    
-class _WrapperDict(dict):
-    def nodeset(self):
-        """Converts all the NodeSet values in the dictionary to a single set."""
-        all_nodes = NodeSet()
-        for nodeset in self.values():
-            all_nodes.extend(nodeset)
-        return all_nodes
 
-    def set(self):
-        all_nodes = set()
-        for nodeset in self.values():
-            all_nodes.update(nodeset)
-        return all_nodes
-    
-    def count(self):
-        """Returns a dictionary where the keys are the counts and the values are NodeSets of nodes that appear that many times."""
-        node_count = {}
-        for nodeset in self.values():
-            for node in nodeset:
-                node_count[node] = node_count.get(node, 0) + 1
 
-        count_dict = {}
-        for node, count in node_count.items():
-            if count not in count_dict:
-                count_dict[count] = NodeSet([])
-            count_dict[count].append(node)
 
-        return count_dict

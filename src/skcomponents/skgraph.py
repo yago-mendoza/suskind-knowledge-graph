@@ -8,7 +8,7 @@ class Graph(NodeSet):
     def __init__(self, parent=None):
         self.parent = parent
         self._build_nodes(parent)
-        self._clean_edges()
+        self._clean_spurious_edges()
 
     def _build_nodes(self, parent):
         if isinstance(parent, str):
@@ -47,7 +47,7 @@ class Graph(NodeSet):
             Update each node's attributes to reference other nodes in the graph.
             Removes connections to nodes not present in the graph (remember, only when from TXT)
             """
-            temp_nodes = {node.identify(format=True): node for node in nodes}
+            temp_nodes = {node._convert_header_to_str_format(): node for node in nodes}
             for node in nodes:
                 for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                     updated_relations = [] #poised to be the Node list
@@ -126,7 +126,7 @@ class Graph(NodeSet):
         # Open the file specified in 'filename' for writing
         string_ids = {}
         for node in self:
-            string_ids[node] = node.identify(format=True)
+            string_ids[node] = node._convert_header_to_str_format()
         with open(custom_filename, 'w') as file:
             # Iterate over each node in the graph
             for node in self:
@@ -160,28 +160,33 @@ class Graph(NodeSet):
                 if target_node in getattr(node, attr):
                     getattr(node, attr).remove(target_node)
 
-    def bind(self, target_node, edge_type, append_node):
-        
-        if edge_type.startswith('synset') or edge_type.startswith('semset'):
-            target_edge_type = edge_type
-            append_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
+    def _update_reciprocal_edges(self, node_a, edge_type_a, node_b, operation):
+        if isinstance(node_b, Node) and edge_type_a.startswith(('synset', 'semset')):
+            # Calcula el tipo de relación inversa.
+            edge_type_b = f"{edge_type_a[:-1]}{2 - int(edge_type_a[-1])}"
             
-            if isinstance(append_node, Node):
-                
-                getattr(target_node, target_edge_type).append(append_node)
-                getattr(append_node, append_edge_type).append(target_node)
-                
+            # Recupera o inicializa las listas de relaciones.
+            edges_from_a = getattr(node_a, edge_type_a, [])
+            edges_from_b = getattr(node_b, edge_type_b, [])
+            
+            # Añade o elimina nodos de las listas basado en la operación.
+            if operation == 'add':
+                edges_from_a.append(node_b)
+                edges_from_b.append(node_a)
+            elif operation == 'remove' and node_b in edges_from_a:
+                edges_from_a.remove(node_b)
+                edges_from_b.remove(node_a)
+            
+            # Actualiza las relaciones en los nodos.
+            setattr(node_a, edge_type_a, edges_from_a)
+            setattr(node_b, edge_type_b, edges_from_b)
 
-    def unbind(self, target_node, edge_type, remove_node):
+def bind(self, target_node, target_edge_type, append_node):
+    self._update_reciprocal_edges(target_node, target_edge_type, append_node, 'add')
 
-        if edge_type.startswith('synset') or edge_type.startswith('semset'):
-            target_edge_type = edge_type
-            remove_edge_type = edge_type[:-1] + str(2 - int(edge_type[-1]))
+def unbind(self, target_node, target_edge_type, remove_node):
+    self._update_reciprocal_edges(target_node, target_edge_type, remove_node, 'remove')
 
-            if isinstance(remove_node, Node):
-
-                getattr(target_node, target_edge_type).remove(remove_node)
-                getattr(remove_node, remove_edge_type).remove(target_node)        
     
     def __repr__(self):
         return f'Graph(size={len(self)})'

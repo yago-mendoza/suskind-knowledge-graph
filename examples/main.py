@@ -32,19 +32,17 @@ import datetime
 # since will depend on the actual configuration of the files, and I'll probably need help for that yikes
 
 
-test_CLI = True
+test_CLI = False
 
 #########################################################
 test_skcomponents = test_CLI==False
 import sys 
 def run(G):
     if test_CLI:
-        cli = PrimaryInterface(G)
+        cli = SK_Interface(G)
         cli.cmdloop() # executes cmdqueue and leaves terminal ready
     if test_skcomponents:
-        G.create_node('fr','q','Entry','NA')
-        print(G.set_types())
-        print(G.set_langs())
+        
         pass
 
 #########################################################

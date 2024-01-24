@@ -116,3 +116,25 @@ def _calculate_similarity(node1, node2, depth, strategy, permission_string=''):
 
     return weighted_jaccard
 
+# ESTOS DE DEBAJO LOS SAQUÉ DE SKNODESET.PY
+
+def synset_density_search(nodeset, target_nodes, sections=(0, 1, 2), tolerance=1.0, complement=False):
+        return nodeset._filter_by_relationship_type('synset', target_nodes, sections, tolerance, complement)
+    
+def semset_density_search(nodeset, target_nodes, sections=(0, 1, 2), tolerance=1.0, complement=False):
+    return nodeset._filter_by_relationship_type('semset', target_nodes, sections, tolerance, complement)
+
+def _filter_by_relationship_type(nodeset, relationship_base, target_nodes, sections, tolerance, complement):
+    target_nodes_set = set(target_nodes) if isinstance(target_nodes, (list, tuple)) else {target_nodes}
+    min_connections = max(1, round(tolerance * len(target_nodes_set)))
+    filtered_nodes = NodeSet()
+
+    for node in nodeset.nodes:
+        connections = sum(len(target_nodes_set.intersection(getattr(node, f'{relationship_base}{section}', []))) for section in sections)
+        meets_criteria = connections >= min_connections
+
+        if meets_criteria != complement:  # Simplifies the logic to handle both cases.
+            filtered_nodes.append(node)
+
+    return filtered_nodes
+
