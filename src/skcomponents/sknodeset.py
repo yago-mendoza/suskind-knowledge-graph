@@ -17,6 +17,7 @@ class NodeSet(list):
     ##########
 
     def get_set(self, property):
+        # Gets a set list of either 'lang' or 'type (or 'name' or 'lemma')
         return list(set(getattr(node, property) for node in self))
     
     def look(self):
@@ -27,60 +28,51 @@ class NodeSet(list):
     # Search
     #########
 
-    def find(self, **kwargs):
-
-        # Extract criteria, allowing either single values or lists.
-
-            # node_set.find(lang='en', type='n')
-            # node_set.find(name=['dog', 'gato'])
-            # node_set.find(favorite=True)
-            # node_set.find(lang='fr', type='v')
-            # node_set.find(lemma='Sentimiento')
-        
-        lang = kwargs.get('lang', [])
-        type_ = kwargs.get('type', [])
-        name = kwargs.get('name', [])
-        lemma = kwargs.get('lemma', None)  # Can be a list, single value, or None
-        favorite = kwargs.get('favorite', None)  # Can be a list, single value, or None
+    def select(self, **kwargs):
+       
+        lang_req = kwargs.get('lang', [])
+        type_req = kwargs.get('type', [])
+        name_req = kwargs.get('name', [])
+        lemma_req = kwargs.get('lemma', None)  # Can be a list, single value, or None
+        favorite_req = kwargs.get('favorite', None)  # Can be a list, single value, or None
 
         # Ensure all criteria are in list form for uniformity.
-        if not isinstance(lang, list): lang = [lang]
-        if not isinstance(type_, list): type_ = [type_]
-        if not isinstance(name, list): name = [name]
-        if lemma is not None and not isinstance(lemma, list): lemma = [lemma]
-        if favorite is not None and not isinstance(favorite, list): favorite = [favorite]
+        if not isinstance(lang_req, list): lang_req = [lang_req]
+        if not isinstance(type_req, list): type_req = [type_req]
+        if not isinstance(name_req, list): name_req = [name_req]
+        if not isinstance(lemma_req, list) and lemma_req != None: lemma_req = [lemma_req]
+        if not isinstance(favorite_req, list) and favorite_req != None: favorite_req = [favorite_req]
 
         results = []
         for node in self:
             # Check if the node matches the non-empty criteria.
-            if ((not lang or node.lang in lang) and \
-                (not type_ or node.type in type_) and \
-                (not name or node.name in name) and \
-                (lemma is None or (isinstance(lemma, bool) and bool(node.lemma) in lemma) or node.lemma in lemma) and \
-                (favorite is None or node.favorite in favorite)):
+            if ((not lang_req or node.lang in lang_req) and \
+                (not type_req or node.type in type_req) and \
+                (not name_req or node.name in name_req) and \
+                (not lemma_req or ((node.lemma!='NA') in lemma_req) or node.lemma in lemma_req) and \
+                (not favorite_req or node.favorite in favorite_req) and \
+                    any([lang_req, type_req, name_req, lemma_req, favorite_req])):
                 results.append(node)
 
-        return results
+        return NodeSet(results)
 
     def random(self, k=None, **kwargs):
+        candidates = self.select(**kwargs) if kwargs else self
+        
+        num_candidates = len(candidates)
+        if not candidates or k is not None and k < 1:
+            return None
+        if k is None or k == 1:
+            return random.choice(candidates) if k is None else NodeSet(nodes=[random.choice(candidates)])
+        if k <= num_candidates:
+            return NodeSet(nodes=random.sample(candidates, k))
+        raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {num_candidates} nodes.")
 
-        # Admits the same **kwargs as the 'find' method.
-
-        candidates = self.find(**kwargs)
-        if not k and candidates: return random.choice(candidates)
-        if not candidates or k < 1: return None
-        if k == 1: return NodeSet(nodes=[random.choice(candidates)])
-        if k <= len(candidates): return NodeSet(nodes=random.sample(candidates, k))
-        raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {len(candidates)} nodes.")
-    
-    def find_similars(self, name, k=1):
-
-        scores = []
-        if k > len(self): k = len(self)
-        for node in self:
-            ratio = difflib.SequenceMatcher(None, name.lower(), node.name.lower()).ratio()
-            scores.append((ratio, node))
-        return NodeSet([node for ratio, node in sorted(scores, key=lambda x: x[0], reverse=True)[:k]])
+    def find_similars(self, target_name, k=1):
+        k = min(k, len(self))  # Ensure k does not exceed the number of nodes
+        scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
+        top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
+        return [(round(ratio, 3), node) for ratio, node in top_scores]
     
     ############
     # Filtering

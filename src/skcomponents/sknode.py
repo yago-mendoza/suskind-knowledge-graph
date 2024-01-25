@@ -1,10 +1,10 @@
 from src.skcomponents.sknodeset import NodeSet
-import sktools as sk
+import src.sktools as sk
 import difflib
 
 class Node:
 
-    def __init__(self, lang: str, type_: str, name: str, lemma: str,
+    def __init__(self, lang: str, type: str, name: str, lemma: str,
                  synset0: list = None, synset1: list = None, synset2: list = None,
                  semset0: list = None, semset1: list = None, semset2: list = None,
                  favorite: bool = False,
@@ -14,7 +14,7 @@ class Node:
 
         # 1. Hash
 
-        self.lang, self.type, self.name = lang, type_, name # str
+        self.lang, self.type, self.name = lang, type, name # str
         self.lemma = lemma if lemma is not None else "NA" # str ("NA" by default)
         
         # 2. Connections
@@ -22,6 +22,7 @@ class Node:
         self.synset0 = synset0 if synset0 else [] # list
         self.synset1 = synset1 if synset1 else [] # list
         self.synset2 = synset2 if synset2 else [] # list
+
         self.semset0 = semset0 if semset0 else [] # list
         self.semset1 = semset1 if semset1 else [] # list
         self.semset2 = semset2 if semset2 else [] # list
@@ -31,30 +32,16 @@ class Node:
         self.favorite = favorite == True # bool (False by default)
         self.examples = examples if examples is not None else [] # list
 
-    def get_neighbors(self, fielding=None):
+    def get_neighbors(self, *fielding):
 
-        parsed_fields = sk.parse_field(fielding, long=True)
-
-        if not parsed_fields:
-            parsed_fields = sk.parse_field(['synset', 'semset'])
+        long_format_fields = sk.parse_field(*fielding, long=True)
         
-        class _WrapperDict(dict):
-            def set(self):
-                return {node for nodeset in self.values() for node in nodeset}
-            def nodeset(self):
-                return NodeSet(node for nodeset in self.values() for node in nodeset)
-            def count(self):
-                return {node: sum(nodeset.count(node) for nodeset in self.values()) for nodeset in self.values() for node in nodeset}
-            def frequency(self):
-                return {count: NodeSet([node for node in self.count() if self.count()[node] == count]) for count in set(self.count().values())}
-        
-        results = _WrapperDict()
-        for field in parsed_fields:
-            edge_type, index = field[:-1], int(field[-1])
-            neighbors = getattr(self, f'get_{edge_type}')(index)
-            results[field] = NodeSet(neighbors)
+        results = []
+        for long_format_field in long_format_fields:
+            edge_type, index = long_format_field[:-1], int(long_format_field[-1])
+            results += getattr(self, f'get_{edge_type}')(index)
 
-        return results
+        return NodeSet(results)
     
     def get_synset(self, *levels):
         levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
@@ -63,6 +50,10 @@ class Node:
     def get_semset(self, *levels):
         levels = (0, 1, 2) if not levels else (levels) if isinstance(levels, int) else levels
         return NodeSet([node for i in levels for node in getattr(self, f'semset{i}', [])])
+    
+    def get_sizes(self):
+        return (len(self.synset0), len(self.synset1), len(self.synset2),
+                len(self.semset0), len(self.semset1), len(self.semset2),)
     
     def edit(self, **attr_edits):
         # Edits either 'lang', 'type', 'name' or 'lemma'.
@@ -139,15 +130,15 @@ class Node:
     #_back_labels : binary (1/0) that sets wether labels will be displayed
     #    Ej. en-n:Dog(semset0=9, synset0=14, ...) OR en-n:Dog(9, 14, ...)
 
-    identifiers = {'lang', 'type', 'name', 'lemma'}
-    descriptive = {'favorite'}
-    edges = {'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2'}
-    front = identifiers | descriptive
-    back = edges | {'examples'}
-    all = front | back
+    identifier_structs = {'lang', 'type', 'name', 'lemma'}
+    descriptive_structs = {'favorite'}
+    edge_structs = {'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2'}
+    front_structs = identifier_structs | descriptive_structs
+    back_structs = edge_structs | {'examples'}
+    all_structs = front_structs | back_structs
 
     # Generate the dictionary _FLAGS with binary values
-    _FLAGS = {flag: 1 << i for i, flag in enumerate(sorted(sk.node_struct_str.all))}
+    _FLAGS = {flag: 1 << i for i, flag in enumerate(sorted(all_structs))}
 
     # >>> _FLAGS = {
     # ...         'lang':       0b000000000001,  
@@ -178,9 +169,9 @@ class Node:
     @classmethod
     def compress(cls, *edge_type):
         if not edge_type:
-            cls.toggle(*cls.identifier_flags, 1)
-            cls.toggle(*cls.descriptive_flags, 0)
-            cls.toggle(*cls.edge_flags, 0)
+            cls.toggle(*cls.identifier_structs, 1)
+            cls.toggle(*cls.descriptive_structs, 0)
+            cls.toggle(*cls.edge_structs, 0)
         else:
             cls.toggle(*edge_type, 0)
         return cls
@@ -188,9 +179,9 @@ class Node:
     @classmethod
     def expand(cls, *edge_type):
         if not edge_type:
-            cls.toggle(*cls.identifier_flags, 1)
-            cls.toggle(*cls.descriptive_flags, 1)
-            cls.toggle(*cls.edge_flags, 1)
+            cls.toggle(*cls.identifier_structs, 1)
+            cls.toggle(*cls.descriptive_structs, 1)
+            cls.toggle(*cls.edge_structs, 1)
         else:
             cls.toggle(*edge_type, 1)
         return cls
@@ -231,8 +222,8 @@ class Node:
 
     def __repr__(self) -> str:
         lang = self.lang if (Node._repr_flags & Node._FLAGS['lang']) else ''
-        type_ = self.type if (Node._repr_flags & Node._FLAGS['type']) else ''
-        lang_type = '-'.join([lang, type_]) if (lang and type_) else lang+type_
+        type = self.type if (Node._repr_flags & Node._FLAGS['type']) else ''
+        lang_type = '-'.join([lang, type]) if (lang and type) else lang+type
         else_name = ':'.join([lang_type, self.name]) if lang_type else self.name
         lemma = f"({self.lemma})" if (Node._repr_flags & Node._FLAGS['lemma']) else ''
         favorite = '/m' if (Node._repr_flags & Node._FLAGS['favorite']) and self.favorite else ''

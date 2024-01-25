@@ -42,8 +42,9 @@ def run(G):
         cli = SK_Interface(G)
         cli.cmdloop() # executes cmdqueue and leaves terminal ready
     if test_skcomponents:
-        
         pass
+
+        
 
 #########################################################
 
@@ -63,6 +64,7 @@ if __name__ == '__main__':
     from src.skcomponents.skgraph import Graph
     from src.skcomponents.search_algorithms import *
     from src.skcli.SKCLI import *
+    import src.sktools as sk
     from src.skcli.aux_funcs.command_docstrings import *
     G = create_graph()
     run(G)

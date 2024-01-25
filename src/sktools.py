@@ -1,35 +1,68 @@
-def parse_field(fielding, long=False, numeric=False):
+def parse_field(*fielding, long=False, numeric=False):
+
+    # Used to parse the 'get_neighbors()' fielding argument (at SKNode)
+
+    """
+    
+    {y0, y1, y2, e0, e1, e2,
+    synset0, synset1, synset2, semset0, semset1, semset2,
+    semset, synset,
+    e, y,
+    '111000' permission fieldings, or '11' (rest 0s)}
+    @ STRING / LIST
+    -> SHORT / LONG / NUMERIC format ((0-1-2, y-e) sorted)
+
+    INPUT #############################################################
+    (either standalone STRING or LIST of strings, or multiple arguments)
+    - single short :   parse_field('e1')
+    - single long :    parse_field('synset1')
+    - global short :   parse_field('e')
+    - global long :    parse_field('semset')
+    - binary partial : parse_field('111')
+    - binary full :    parse_field('111000')
+    
+    Note : if no fielding arg is used, will pick the WHOLE fielding set.
+
+    OUTPUT #############################################################
+    (LIST sorted as (0-1-2) and (y-e))
+    -      default : 'short'
+    -    long=True : 'long'
+    - numeric=True : 'numeric'
+
+    """
+
+    fielding = [item for sublist in fielding for item in (sublist if isinstance(sublist, list) else [sublist])]
+
+    short_y = ['y0', 'y1', 'y2']
+    short_e = ['e0', 'e1', 'e2']
 
     if not fielding:
-        return None
-    
-    # fielding = 'synset' / 'semset'
-    if isinstance(fielding, str) and len(fielding)==6:
-        fielding = [fielding[1]+str(i) for i in range(3)]
+        parsed = short_y + short_e
 
-    # fielding = '11' / '110000' / 'synset1' / 'e0'
-    if isinstance(fielding, str):
-        if fielding.isnumeric():
-            # 'fielding' str is a numeric permissions code
-            binary = fielding.ljust(6,'0') # in case it gave '0's by granted
-            fielding = [field for i, field in enumerate(['y0', 'y1', 'y2', 'e0', 'e1', 'e2'])if binary[i] == '1']
-        else:
-            # 'fielding' is a single str
-            fielding = [fielding]
+    else:
 
-    # fielding = ['synset0', 'semset1'] / ['y0', 'y1', ...] / ['semset0', 'y1']
-    parsed_fields = [field[1]+field[-1] if len(field)==7 else field for field in fielding]
+        global_map = {'synset': short_y, 'semset': short_e, 'y': short_y, 'e': short_e}
 
-    # Now that we know for sure the fields are in short-str format, we proceed to parse them into
-    # the requested format (either long or numeric).
+        def parse_item(item):
 
-    if long:
-        parsed_fields = [f"s{field[0]}nset{field[1]}" for field in parsed_fields]
-    elif numeric:
-        syns = ''.join(['1' if f'y{i}' in parsed_fields else '0' for i in range(3)])
-        sems = ''.join(['1' if f'e{i}' in parsed_fields else '0' for i in range(3)])
-        parsed_fields = syns+sems
-    
-    return parsed_fields
+            if item.isnumeric():
+                item = item.ljust(6, '0')
+                return [bichar for binary, bichar in zip(item, 'y0 y1 y2 e0 e1 e2'.split()) if binary == '1']
+            elif item in global_map:
+                return global_map[item]
+            elif len(item) == 7:
+                return [item[1] + item[-1]]
+            else:
+                return [item]
 
-    
+        items = [fielding] if isinstance(fielding, str) else fielding
+        parsed = sorted(set(sum([parse_item(item) for item in items], [])),
+                        key=lambda x: (x[0] == 'e', int(x[1])))
+
+    if numeric:
+        return ''.join(['1' if f'y{i}' in parsed else '0' for i in range(3)]) + \
+               ''.join(['1' if f'e{i}' in parsed else '0' for i in range(3)])
+    elif long:
+        return [f"synset{item[1]}" if item[0] == 'y' else f"semset{item[1]}" for item in parsed]
+
+    return parsed

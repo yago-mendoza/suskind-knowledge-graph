@@ -142,11 +142,11 @@ class Graph(NodeSet):
     # Editing Methods
     # ---------------------
 
-    def create_node(self, lang, type_, name, lemma):
+    def create_node(self, lang, type, name, lemma):
         # Check if a node with the given attributes already exists
-        if not self.find(lang=lang, type_=type_, name=name, lemma=lemma):
+        if not self.find(lang=lang, type=type, name=name, lemma=lemma):
             # If not, create a new Node instance with the provided attributes
-            node = Node(lang, type_, name, lemma)
+            node = Node(lang, type, name, lemma)
             # Append the new node to the graph
             self.append(node) # sets node.graph=graph
 
