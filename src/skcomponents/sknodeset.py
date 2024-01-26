@@ -1,3 +1,4 @@
+import src.sktools as sk
 import difflib
 import random
 
@@ -6,8 +7,9 @@ class NodeSet(list):
     def __init__(self, nodes=None):
 
         # Parses data structures into a list
-        if isinstance(nodes, (NodeSet, list, set, tuple)):
-            nodes = list(set(nodes)) # uniformize + listify
+        if not isinstance(nodes, (NodeSet, list, set, tuple)):
+            nodes = [nodes] # if its a single <Node> object
+        nodes = list(set(nodes)) # uniformize + listify
         nodes_as_list = nodes or []
    
         super().__init__(nodes_as_list) # initialize the parent list class   
@@ -68,29 +70,11 @@ class NodeSet(list):
             return NodeSet(nodes=random.sample(candidates, k))
         raise ValueError(f"k must be less than or equal to the number of nodes, got {k} for {num_candidates} nodes.")
 
-    def find_similars(self, target_name, k=1):
-        k = min(k, len(self))  # Ensure k does not exceed the number of nodes
-        scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
-        top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
-        return [(round(ratio, 3), node) for ratio, node in top_scores]
-    
     ############
     # Filtering
     ############
 
     # Filtering by syntax
-
-    def is_lang(self, *langs, complement=False):
-        return self._filter_nodes(lambda node: getattr(node, 'lang') in langs, complement)
-    
-    def is_type(self, *types, complement=False):
-        return self._filter_nodes(lambda node: getattr(node, 'type') in types, complement)
-
-    def has_lemma(self, lemma=True):
-        return self._filter_nodes(lambda node: bool(node.lemma) == lemma)
-
-    def is_favorite(self, favorite=True):
-        return self._filter_nodes(lambda node: bool(node.favorite) == favorite)
 
     def char_count(self, *args, on_lemma=False):
         return self._filter_by_length('char_count', *args, on_lemma=on_lemma)
@@ -109,55 +93,95 @@ class NodeSet(list):
 
     def ends_with(self, chain, on_lemma=False):
         return self._filter_nodes(lambda node: getattr(node, 'lemma' if on_lemma else 'name', "").lower().endswith(chain.lower()))
-    
-    # Filtering by number of X connections
 
-    def filter_synset(self, operator, value, level=None):
-        # ndst.filter_synset('>',5,level=2)
-        # ndst.filter_synset('>',5,level=(1,2))
-        levels = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
-        return NodeSet([node for node in self
-                        for i in levels 
-                        if self.___compare(len(getattr(node, f'synset{i}', [])), operator, value)])
-    
-    def filter_semset(self, operator, value, level=None):
-        # ndst.filter_semset('>',5,level=2)
-        # ndst.filter_semset('>',5,level=(1,2))
-        levels = (0, 1, 2) if level is None else (level,) if isinstance(level, int) else level
-        return NodeSet([node for node in self
-                        for i in levels 
-                        if self.___compare(len(getattr(node, f'semset{i}', [])), operator, value)])
-    
-    ##############
-    # Manteinance
-    ##############
+    # Filtering by amount of edges
 
-    def _clean_spurious_edges(self):
-        """Cleans connections to nodes not present in the structure."""
-        node_identifiers = {node._convert_header_to_str_format() for node in self}
-        # Create a set of node identifiers for faster membership checks
-        attrs_to_check = ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
-        # Define attributes to check in each node
-        for node in self:
-            # Remove connections to nodes not present in the NodeSet
-            for attr in attrs_to_check:
-                valid_nodes = [n for n in getattr(node, attr, []) if n._convert_header_to_str_format() in node_identifiers]
-                setattr(node, attr, valid_nodes)
-
-    #######################################
-    # Inner Workings (most of the unused) #
-    #######################################
+    def edge_count(self, *args):
+        operator, threshold = ('=', args[0]) if isinstance(args[0], int) else (args[0], args[1])
+        fielding = args[2:] if isinstance(args[0], str) else args[1:]
+        fielding = ['y','e'] if not fielding else fielding
+        return [node for node in self
+                if self.___compare(len(node.get_neighbors(*fielding)),operator, threshold)]
+    
+    #######
+    # Edit
+    #######
 
     def edit(self, **attr_edits):
         # Mass-edit is enabled.
         for node in self:
             node.edit(**attr_edits)
 
-    def append(self, node):
-        # Checks for node uniqueness before appending.
-        if all(node != existing_node for existing_node in self):
-            node.graph = self
-            super().append(node) # Use super() to avoid recursion
+    ######################################
+
+    ######################################
+
+    ######################################
+
+    ######################################
+
+    ######################################
+            
+            # con estas de aquí abajo no se qué hacer con ellas, no se si ponerlas
+            # en nodeset, en grafo, en search, ...
+            # y cambiar nodeset mejor el nombre por cluster, o un nombre mas intuitivo?
+
+            # cambiar documentation en consecuencia
+
+    def get_contour(self, interest_nodes, *fielding):
+        interest_nodes_neighbors = {}
+        for node in interest_nodes:
+            interest_nodes_neighbors[node] = node.get_neighbors(*fielding)
+        return NodeSet([item for sublist in interest_nodes_neighbors.values() for item in sublist])
+    
+    def find_similars(self, target_name, k=1):
+        k = min(k, len(self))  # Ensure k does not exceed the number of nodes
+        scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
+        top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
+        return [(round(ratio, 3), node) for ratio, node in top_scores]
+    
+    def density_search(self, interest_nodes, *args, complement=False):
+
+        # I want tolerance, operator and threshold to be allowed to be inputed as kwargs
+
+        # I want that when '=0.0' or '=0' or '0' it returns the whole database.
+
+        # G.density_search(n, '=', 0) >> 8 ¿¿¿HOW COME??? If candidates are at least related to 1 node from n
+
+        # Also would be interesting to be able to use it as G.filter.density_search(0.8)
+        #   that would require that interest_nodes was included in *args and by default was
+        #   parent_cli, so this mode won't be accessible from G.density_search(0.8)
+        #   (put some kind of security)
+
+        # document this
+
+        interest_nodes = NodeSet(interest_nodes)
+
+        if isinstance(args[0], float):
+            tolerance = args[0]
+            operator, threshold = '=', round(tolerance * len(interest_nodes))
+            fielding = args[1:] if len(args)>1 else []
+
+        elif isinstance(args[0], int):
+            operator, threshold, fielding = '=', args[0], args[1:] if len(args)>1 else []
+
+        elif isinstance(args[0], str):
+            operator, threshold, fielding = args[0], args[1], args[2:] if len(args)>2 else []
+
+        candidates = self.get_contour(interest_nodes, *fielding)
+
+        complying_candidates = []
+        for candidate in candidates:
+            ratio = sum([1 for neighbor in candidate.get_neighbors(*fielding) if neighbor in interest_nodes])
+            success = self.___compare(ratio, operator, threshold)
+            if success != complement:
+                complying_candidates.append(candidate)
+
+        return NodeSet(complying_candidates)
+
+    #######################################
+    # Inner Workings (most of the unused) #
+    #######################################
     
     ### (inner workings for 'filter' functions from above)  ###
     

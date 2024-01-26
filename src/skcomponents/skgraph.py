@@ -77,6 +77,18 @@ class Graph(NodeSet):
         except IOError:
             print(f"An error occurred while reading the file {parent}.")
     
+    def _clean_spurious_edges(self):
+        """Cleans connections to nodes not present in the structure."""
+        node_identifiers = {node._convert_header_to_str_format() for node in self}
+        # Create a set of node identifiers for faster membership checks
+        attrs_to_check = ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']
+        # Define attributes to check in each node
+        for node in self:
+            # Remove connections to nodes not present in the NodeSet
+            for attr in attrs_to_check:
+                valid_nodes = [n for n in getattr(node, attr, []) if n._convert_header_to_str_format() in node_identifiers]
+                setattr(node, attr, valid_nodes)
+    
     def fork(self):
         subset = [node._copy() for node in self]
         return Graph(subset)
