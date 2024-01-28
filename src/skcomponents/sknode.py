@@ -5,9 +5,9 @@ import difflib
 class Node:
 
     def __init__(self, lang: str, type: str, name: str, lemma: str,
+                 favorite: bool = False,
                  synset0: list = None, synset1: list = None, synset2: list = None,
                  semset0: list = None, semset1: list = None, semset2: list = None,
-                 favorite: bool = False,
                  examples: list = None) -> None:
         
         self.graph = None
@@ -156,7 +156,7 @@ class Node:
     # ...     }
 
     # Initially enable all flags
-    _repr_flags = 0b111110000000
+    _repr_flags = 0b111111111111
     _back_labels = 1
 
     @classmethod

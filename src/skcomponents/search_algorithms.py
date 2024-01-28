@@ -131,37 +131,5 @@ def _calculate_similarity(node1, node2, depth, strategy, permission_string=''):
 
 # ESTOS DE DEBAJO LOS SAQUÉ DE SKNODESET.PY
 
-def density_search(self, interest_nodes, *args, complement=False):
 
-        # I want tolerance, operator and threshold to be allowed to be inputed as kwargs
-
-        # I want that when '=0.0' or '=0' or '0' it returns the whole database.
-
-        # G.density_search(n, '=', 0) >> 8 ¿¿¿HOW COME??? If candidates are at least related to 1 node from n
-
-        # document this
-
-        interest_nodes = NodeSet(interest_nodes)
-
-        if isinstance(args[0], float):
-            tolerance = args[0]
-            operator, threshold = '=', round(tolerance * len(interest_nodes))
-            fielding = args[1:] if len(args)>1 else []
-
-        elif isinstance(args[0], int):
-            operator, threshold, fielding = '=', args[0], args[1:] if len(args)>1 else []
-
-        elif isinstance(args[0], str):
-            operator, threshold, fielding = args[0], args[1], args[2:] if len(args)>2 else []
-
-        candidates = self.get_contour(interest_nodes, *fielding)
-
-        complying_candidates = []
-        for candidate in candidates:
-            ratio = sum([1 for neighbor in candidate.get_neighbors(*fielding) if neighbor in interest_nodes])
-            success = self.___compare(ratio, operator, threshold)
-            if success != complement:
-                complying_candidates.append(candidate)
-
-        return NodeSet(complying_candidates)
 

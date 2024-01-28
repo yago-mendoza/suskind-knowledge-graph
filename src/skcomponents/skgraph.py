@@ -1,6 +1,7 @@
 from src.skcomponents.sknode import Node
 from src.skcomponents.sknodeset import NodeSet
 
+import difflib
 import os
 
 class Graph(NodeSet):
@@ -8,8 +9,67 @@ class Graph(NodeSet):
     def __init__(self, parent=None):
         self.parent = parent
         self._build_nodes(parent)
-        self._clean_spurious_edges()
 
+    def _scan_spurious_edges(self, rebind=False, remove=False):
+
+        c0 = sum([1 for node in self for _ in node.get_neighbors()])
+
+        for node in self:
+
+            for neighbor in node.get_neighbors('y1'):
+                if node not in neighbor.get_neighbors('y1'):
+                    if remove:
+                        node.synset1.remove(neighbor)
+                    elif rebind:
+                        self.bind(neighbor,'synset1',node)
+
+            for neighbor in node.get_neighbors('e1'):
+                if node not in neighbor.get_neighbors('e1'):
+                    if remove:
+                        node.semset1.remove(neighbor)
+                    elif rebind:
+                        self.bind(neighbor,'semset1',node)
+        
+        c1 = sum([1 for node in self for _ in node.get_neighbors()])
+
+        # print(f'Database augmented {c1-c0} edges, from {c0} to {c1} (+{round((c1-c0)/c0,5)}%)')
+
+        # SHOULD BE GRAPH THEORY
+
+    def get_contour(self, interest_nodes, *fielding):
+        interest_nodes_neighbors = {}
+        for node in interest_nodes:
+            interest_nodes_neighbors[node] = node.get_neighbors(*fielding)
+        return NodeSet([item for sublist in interest_nodes_neighbors.values() for item in sublist])
+    
+    # SHOULD BE GRAPHH THEORY
+
+    def density_search(self, interest_nodes, *args, complement=False):
+
+        interest_nodes = NodeSet(interest_nodes)
+
+        if isinstance(args[0], float):
+            tolerance = args[0]
+            operator, threshold = '=', round(tolerance * len(interest_nodes))
+            fielding = args[1:] if len(args)>1 else []
+
+        elif isinstance(args[0], int):
+            operator, threshold, fielding = '=', args[0], args[1:] if len(args)>1 else []
+
+        elif isinstance(args[0], str):
+            operator, threshold, fielding = args[0], args[1], args[2:] if len(args)>2 else []
+
+        candidates = self.get_contour(interest_nodes, *fielding)
+
+        complying_candidates = []
+        for candidate in candidates:
+            ratio = sum([1 for neighbor in candidate.get_neighbors(*fielding) if neighbor in interest_nodes])
+            success = self.___compare(ratio, operator, threshold)
+            if success != complement:
+                complying_candidates.append(candidate)
+
+        return NodeSet(complying_candidates)
+    
     def _build_nodes(self, parent):
         if isinstance(parent, str):
             self._handle_file_source(parent)
@@ -40,7 +100,12 @@ class Graph(NodeSet):
             name, lemma = parts[0][:-1].split(':')[1].split('(')
             favorite = True if parts[1] == 'T' else False
             sections = [part.split('/') for part in parts[2:]]
-            return Node(lang, type_, name, lemma, favorite, *sections)
+            synset0, synset1, synset2, semset0, semset1, semset2, examples = sections
+            return Node(lang=lang, type=type_, name=name, lemma=lemma,
+                        favorite=favorite,
+                        synset0=synset0, synset1=synset1, synset2=synset2,
+                        semset0=semset0, semset1=semset1, semset2=semset2,
+                        examples=examples)
         
         def _update_node_relationships(nodes):
             """
@@ -88,6 +153,12 @@ class Graph(NodeSet):
             for attr in attrs_to_check:
                 valid_nodes = [n for n in getattr(node, attr, []) if n._convert_header_to_str_format() in node_identifiers]
                 setattr(node, attr, valid_nodes)
+
+    def find_similars(self, target_name, k=1):
+        k = min(k, len(self))  # Ensure k does not exceed the number of nodes
+        scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
+        top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
+        return [(round(ratio, 3), node) for ratio, node in top_scores]
     
     def fork(self):
         subset = [node._copy() for node in self]
@@ -173,31 +244,33 @@ class Graph(NodeSet):
                     getattr(node, attr).remove(target_node)
 
     def _update_reciprocal_edges(self, node_a, edge_type_a, node_b, operation):
-        if isinstance(node_b, Node) and edge_type_a.startswith(('synset', 'semset')):
-            # Calcula el tipo de relación inversa.
-            edge_type_b = f"{edge_type_a[:-1]}{2 - int(edge_type_a[-1])}"
-            
-            # Recupera o inicializa las listas de relaciones.
-            edges_from_a = getattr(node_a, edge_type_a, [])
-            edges_from_b = getattr(node_b, edge_type_b, [])
-            
-            # Añade o elimina nodos de las listas basado en la operación.
-            if operation == 'add':
-                edges_from_a.append(node_b)
-                edges_from_b.append(node_a)
-            elif operation == 'remove' and node_b in edges_from_a:
-                edges_from_a.remove(node_b)
-                edges_from_b.remove(node_a)
-            
-            # Actualiza las relaciones en los nodos.
-            setattr(node_a, edge_type_a, edges_from_a)
-            setattr(node_b, edge_type_b, edges_from_b)
 
-def bind(self, target_node, target_edge_type, append_node):
-    self._update_reciprocal_edges(target_node, target_edge_type, append_node, 'add')
+        opposed_field = {'synset0':'synset2', 'synset1':'synset1', 'synset2':'synset0',
+                         'semset0':'semset2', 'semset1':'semset1', 'semset2':'semset0',}
+        
+        edge_type_b = opposed_field[edge_type_a]
+        
+        # Recupera o inicializa las listas de relaciones.
+        edges_from_a = getattr(node_a, edge_type_a, [])
+        edges_from_b = getattr(node_b, edge_type_b, [])
+        
+        # Añade o elimina nodos de las listas basado en la operación.
+        if operation == 'add':
+            edges_from_a.append(node_b)
+            edges_from_b.append(node_a)
+        elif operation == 'remove' and node_b in edges_from_a:
+            edges_from_a.remove(node_b)
+            edges_from_b.remove(node_a)
+        
+        # Actualiza las relaciones en los nodos.
+        setattr(node_a, edge_type_a, edges_from_a)
+        setattr(node_b, edge_type_b, edges_from_b)
 
-def unbind(self, target_node, target_edge_type, remove_node):
-    self._update_reciprocal_edges(target_node, target_edge_type, remove_node, 'remove')
+    def bind(self, target_node, target_edge_type, append_node):
+        self._update_reciprocal_edges(target_node, target_edge_type, append_node, 'add')
+
+    def unbind(self, target_node, target_edge_type, remove_node):
+        self._update_reciprocal_edges(target_node, target_edge_type, remove_node, 'remove')
 
     
     def __repr__(self):

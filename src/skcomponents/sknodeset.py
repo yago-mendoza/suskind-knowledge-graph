@@ -1,5 +1,4 @@
 import src.sktools as sk
-import difflib
 import random
 
 class NodeSet(list):
@@ -111,73 +110,6 @@ class NodeSet(list):
         # Mass-edit is enabled.
         for node in self:
             node.edit(**attr_edits)
-
-    ######################################
-
-    ######################################
-
-    ######################################
-
-    ######################################
-
-    ######################################
-            
-            # con estas de aquí abajo no se qué hacer con ellas, no se si ponerlas
-            # en nodeset, en grafo, en search, ...
-            # y cambiar nodeset mejor el nombre por cluster, o un nombre mas intuitivo?
-
-            # cambiar documentation en consecuencia
-
-    def get_contour(self, interest_nodes, *fielding):
-        interest_nodes_neighbors = {}
-        for node in interest_nodes:
-            interest_nodes_neighbors[node] = node.get_neighbors(*fielding)
-        return NodeSet([item for sublist in interest_nodes_neighbors.values() for item in sublist])
-    
-    def find_similars(self, target_name, k=1):
-        k = min(k, len(self))  # Ensure k does not exceed the number of nodes
-        scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
-        top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
-        return [(round(ratio, 3), node) for ratio, node in top_scores]
-    
-    def density_search(self, interest_nodes, *args, complement=False):
-
-        # I want tolerance, operator and threshold to be allowed to be inputed as kwargs
-
-        # I want that when '=0.0' or '=0' or '0' it returns the whole database.
-
-        # G.density_search(n, '=', 0) >> 8 ¿¿¿HOW COME??? If candidates are at least related to 1 node from n
-
-        # Also would be interesting to be able to use it as G.filter.density_search(0.8)
-        #   that would require that interest_nodes was included in *args and by default was
-        #   parent_cli, so this mode won't be accessible from G.density_search(0.8)
-        #   (put some kind of security)
-
-        # document this
-
-        interest_nodes = NodeSet(interest_nodes)
-
-        if isinstance(args[0], float):
-            tolerance = args[0]
-            operator, threshold = '=', round(tolerance * len(interest_nodes))
-            fielding = args[1:] if len(args)>1 else []
-
-        elif isinstance(args[0], int):
-            operator, threshold, fielding = '=', args[0], args[1:] if len(args)>1 else []
-
-        elif isinstance(args[0], str):
-            operator, threshold, fielding = args[0], args[1], args[2:] if len(args)>2 else []
-
-        candidates = self.get_contour(interest_nodes, *fielding)
-
-        complying_candidates = []
-        for candidate in candidates:
-            ratio = sum([1 for neighbor in candidate.get_neighbors(*fielding) if neighbor in interest_nodes])
-            success = self.___compare(ratio, operator, threshold)
-            if success != complement:
-                complying_candidates.append(candidate)
-
-        return NodeSet(complying_candidates)
 
     #######################################
     # Inner Workings (most of the unused) #
