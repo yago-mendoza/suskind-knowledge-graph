@@ -10,6 +10,37 @@ from typing import Dict
 # distintas entre CLIs.
 
 
+COMMAND_DOCSTRINGS_GRABBED : Dict[str, str] = {
+'grab': """\
+| Desc. Adds a new node.
+| Signature : grab <name>
+| Arguments :
+    1. <name>  The name of the node to be grabbed.
+| Usage examples :
+    grab Augusto César\
+""",
+
+'rm': """\
+| Desc. Removes the given nodes(s).
+| Signature : rm <*index>
+| Arguments :
+    1. <*index>  As many indexes as connections to be unbinded.
+| Usage examples :
+    rm 1 2 3\
+""",
+
+'clear': """\
+| Desc. Clears all node within the grabbed list.
+| Signature : clear\
+""",
+
+'grabbed': """\
+| Desc. Refreshes the grabbed nodes list in screen.
+| Signature : grabbed\
+""",
+
+}
+
 COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 'cd': """\
 | Desc. Enters a given node within the results.
@@ -128,6 +159,23 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     r -l en -t n\
 """,
 
+'run': """\
+| Desc. Runs a density search on the grabbed nodes set.
+| Signature : run [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
+| Arguments :
+    -d, --details   Single-column data & field sizes.
+    -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
+    -t, --stop      Limit the number of results.
+    (*) -w, --width     Max allowed width for column (absolute).
+    (*) -a, --abbr      Max allowed character length for names.
+    (*) -c, --ncol      Number of columns.
+    Note : the starred flags (*) only apply if '--details' isn't flagged.
+| Usage examples :
+    run
+    run -d -t 15 -r
+    run -w 50 -a 5 -c 1
+""",
+
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
 | Signature : ls [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
@@ -151,6 +199,24 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Arguments : None
 | Usage examples :
     new\
+""",
+
+'grabbed': """\
+| Desc. Enters a session for editing the grabbed nodes.
+| Signature : grabbed
+| Arguments : None
+| Usage examples :
+    grabbed\
+""",
+
+'grab': """\
+| Desc. Grabs the current node or a given one.
+| Signature : grab [name]
+| Arguments :
+    1. name [opt] : name of the node the function will try to grasp.
+| Usage examples :
+    grab
+    grab Augusto César\
 """,
 
 'save': """\

@@ -8,6 +8,8 @@ import src.sktools as sk
 from src.skcli.skplaceholder import *
 from src.skcli.aux_clis import *
 
+from src.skcomponents.search_algorithms import *
+
 from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
@@ -96,6 +98,7 @@ class SK_Interface (cmd.Cmd):
         self.G = graph 
         self.placeholder = Placeholder(self)
         self.response = None
+        self.grabbed_nodes = []
 
         self._set_random_node()
 
@@ -245,8 +248,107 @@ class SK_Interface (cmd.Cmd):
             if response:
                 self._set_node(nodes[int(response)-1])
 
-    def search
+    def do_grab(self, arg):
+
+        if arg:
+            # grab ____
+            parser = argparse.ArgumentParser()
+            parser.add_argument('name', nargs='*', help='The name to search for')
+            parsed_args = parser.parse_args(arg.split())
+            parsed_name = ' '.join(parsed_args.name)
+
+            nodes = self.G.select(name=parsed_name)
+
+            if len(nodes) == 1:
+                self.grabbed_nodes.append(nodes[0])
+
+            else:
+                if nodes:
+                    options = [node._convert_header_to_compact_format() for node in nodes]
+                else:
+                    number_of_guesses = 4
+                    nodes = sk.find_similars(graph=self.G, target_name=parsed_name, k=number_of_guesses)
+                    options = [node._convert_header_to_compact_format() for node in nodes]
+
+                header_statement = "Do you mean ..."
+                tail_statement = "(Press Enter without any input to exit)"
+                SelectInterface(options, self, header_statement, tail_statement).cmdloop()
+                response = self._get_response()
+                if response:
+                    target_node = nodes[int(response)-1]
+                    if target_node not in self.grabbed_nodes:
+                        self.grabbed_nodes.append(target_node)
+
+        else:
+            # grab (will grab the current)
+            if self.placeholder.node not in self.grabbed_nodes:
+                self.grabbed_nodes.append(self.placeholder.node)
     
+    def do_grabbed(self, arg):
+        GRABBED_Interface(self)
+    
+    def do_run(self, arg):
+        # Argument parser setup
+        parser = argparse.ArgumentParser(description='Run density search with specified parameters.')
+        parser.add_argument('-d', '--details', action='store_true', help='Provides a more detailed display.')
+        parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
+        parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
+        parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
+        parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
+        parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
+
+        ls_args, unknown = parser.parse_known_args(arg.split())
+        if unknown:
+            print(f'Unrecognized argument(s): {" ".join(unknown)}')
+            return
+
+        print(f"(SYS: Started search-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+
+        # Handle the k value for density search
+        k = None
+        while k is None:
+            try:
+                k_input = input(">> MSL (Minimum Shared Linkage) [int] : ")
+                k = int(k_input)
+            except ValueError:
+                print("Please enter a valid integer.")
+
+        # Perform the density search
+        output_nodes = density_search(self.grabbed_nodes, k)
+
+        for node in self.grabbed_nodes:
+            if node in output_nodes:
+                output_nodes.remove(node)
+
+        # Apply the arguments to the nodes
+        if ls_args.shuffle:
+            random.shuffle(output_nodes)
+
+        if ls_args.stop and ls_args.stop <= len(output_nodes):
+            output_nodes = output_nodes[:ls_args.stop]
+
+        if ls_args.details:
+            # Handle detailed display
+            max_index_length = len(str(len(output_nodes) - 1))
+            for i, node in enumerate(output_nodes):
+                sizes = [str(i) for i in node.get_sizes()]
+                str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
+                print(f"{str(i+1).zfill(max_index_length)}) [{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})")
+        else:
+            # Handle standard display
+            names = [node.name for node in output_nodes]
+            if ls_args.abbr:
+                names = [name[:ls_args.abbr] + '...' if len(name) > ls_args.abbr else name for name in names]
+
+            print(f"Showing {len(names)}/{len(output_nodes)} results.")
+            strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
+            formatted_lines = get_n_columns_from_elements(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
+            for line in formatted_lines:
+                print(line)
+        
+        print(f"(SYS: Ended search-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+
+
     # def do_filter(self, arg):
 
     #     parser = argparse.ArgumentParser(prog='filter', add_help=False)
@@ -391,8 +493,7 @@ class SK_Interface (cmd.Cmd):
                     max_index_length = len(str(len(nodes) - 1))  # Length of the largest index
 
                     for i, node in enumerate(nodes):
-                        
-                        sizes = node.get_sizes()
+                        sizes = [str(i) for i in node.get_sizes()]
                         str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
                         to_print.append(f'[{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})')
                     for i, _ in enumerate(to_print):

@@ -7,6 +7,76 @@ from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 from src.skcli.aux_funcs.err_mssg import *
 
+from src.skcomponents.search_algorithms import *
+
+
+class GRABBED_Interface(cmd.Cmd):
+
+    prompt = '>> '
+    def __init__(self, parent_cli):
+        super().__init__()
+        self.parent_cli = parent_cli
+
+        print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+        self.display()
+
+        self.cmdloop()
+
+    def display(self, represent_bars=True):
+
+        if len(self.parent_cli.grabbed_nodes) == 0:
+            print("No nodes grabbed yet.")
+        else:
+            padded_print(f'Grabbed {len(self.parent_cli.grabbed_nodes)} nodes:')
+            algorithm_output = centrality(self.parent_cli.grabbed_nodes)
+            sorted_output = dict(sorted(algorithm_output.items(), key=lambda item: item[1], reverse=True))
+
+            self.parent_cli.grabbed_nodes = list(sorted_output.keys()) # to match indexes when accesed via 'rm'
+            
+            contents = ["{:.4f}".format(round(n,3)) for n in sorted_output.values()]
+            formatted_nodes = [f"{i}) {node._convert_header_to_str_format()}"for i, node in enumerate(sorted_output.keys(), start=1)]          
+            sep = ':'
+
+            if represent_bars:
+                contents = [f'{content} | {"█" * round(float(content) * 20)}' for content in contents]
+            padded_print(get_label_aligned_lines(formatted_nodes, sep, contents), tab=1)
+
+    def do_help(self, arg):
+        if arg:
+            help_text = COMMAND_DOCSTRINGS_GRABBED.get(arg)
+            if help_text:
+                print(help_text)
+            else:
+                print(f"No help available for '{arg}'.")
+        else:
+            def get_description_from_docstring(docstring): return docstring.strip().split('\n')[0][8:]
+            commands = COMMAND_DOCSTRINGS_GRABBED.keys()
+            contents = [get_description_from_docstring(COMMAND_DOCSTRINGS_GRABBED[command]) for command in commands]
+            formatted_lines = get_label_aligned_lines(commands, ':', contents)
+            padded_print("Available commands:", formatted_lines, tab=0)
+    
+    def do_rm(self, idxs):
+        idxs = [int(_) for _ in idxs.split()]
+        for idx in idxs:
+            if idx > 0:
+                target_node = self.parent_cli.grabbed_nodes[idx-1]
+            self.parent_cli.grabbed_nodes.remove(target_node)
+        print(f"Deleted {len(idxs)} nodes.")
+    
+    def do_clear(self, arg):
+        self.parent_cli.grabbed_nodes = []
+        print(f"Cleared grabbed nodes.")
+    
+    def do_grab(self, arg):
+        self.parent_cli.do_grab(arg)
+
+    def do_grabbed(self, arg):
+        self.display()
+    
+    def emptyline(self):
+        # To exit with an empty Enter key press
+        print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+        return True
 
 class LS_Interface(cmd.Cmd):
 
@@ -180,7 +250,7 @@ class LS_Interface(cmd.Cmd):
         if not self.listed_nodes:
             print("The set field for the target node is empty.")
         strings_to_display = [f'| {i + 1}. {name}' for i, name in enumerate([node.name for node in self.listed_nodes])]
-        columnize(strings_to_display, ncol=self.ls_args.ncol, col_width=self.ls_args.width)
+        get_n_columns_from_elements(strings_to_display, ncol=self.ls_args.ncol, col_width=self.ls_args.width)
 
 class NEW_Interface(cmd.Cmd):
 
@@ -255,7 +325,7 @@ class NEW_Interface(cmd.Cmd):
 
 # POPUP CLIs ----------------------
     
-    # These CLIs don't require 
+    # These CLIs don't require HELP of any kind.
     
 class SelectInterface(cmd.Cmd):
 
