@@ -48,7 +48,7 @@ def parse_field(*fielding, long=False, numeric=False):
 
         def parse_item(item):
 
-            if item.isnumeric():
+            if item.isdigit():
                 item = item.ljust(6, '0')
                 return [bichar for binary, bichar in zip(item, 'y0 y1 y2 e0 e1 e2'.split()) if binary == '1']
             elif item in global_map:

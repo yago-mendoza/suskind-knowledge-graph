@@ -16,10 +16,8 @@ class GRABBED_Interface(cmd.Cmd):
     def __init__(self, parent_cli):
         super().__init__()
         self.parent_cli = parent_cli
-
         print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
         self.display()
-
         self.cmdloop()
 
     def display(self, represent_bars=True):
@@ -56,10 +54,12 @@ class GRABBED_Interface(cmd.Cmd):
             padded_print("Available commands:", formatted_lines, tab=0)
     
     def do_rm(self, idxs):
+        target_nodes = []
         idxs = [int(_) for _ in idxs.split()]
         for idx in idxs:
             if idx > 0:
-                target_node = self.parent_cli.grabbed_nodes[idx-1]
+                target_nodes.append(self.parent_cli.grabbed_nodes[idx-1])
+        for target_node in target_nodes:
             self.parent_cli.grabbed_nodes.remove(target_node)
         print(f"Deleted {len(idxs)} nodes.")
     
@@ -87,104 +87,130 @@ class LS_Interface(cmd.Cmd):
         self.listed_nodes = listed_nodes
         self.parent_cli = parent_cli
         self.ls_args = ls_args
+        self.response = None
         self.cmdloop()
+    
+    def do_cd(self, index): # finisehd
+        self.parent_cli._set_node(self.listed_nodes[int(index)-1])
+        return True
+    
+    def do_ls(self, arg=None):
+
+        if arg:
+            print("(SYS: arguments for 'ls' are disabled within the edit session)")
+        self._update_listed_nodes()
+        if not self.listed_nodes:
+            print("The set field for the target node is empty.")
+        strings_to_display = [f'| {i + 1}. {name}' for i, name in enumerate([node.name for node in self.listed_nodes])]
+       
+        formatted_lines = get_n_columns_from_elements(strings_to_display, ncol=self.ls_args.ncol, col_width=self.ls_args.width)
+        for line in formatted_lines:
+            print(line)
+
+    def _get_response(self, reset_response=True):
+        # Gets and decides wether it resets the response or not (by default, it does)
+        res, self.response = self.response, None if reset_response else self.response
+        return res
 
     def do_del(self, idxs):
+
+        # revisar que tire
+
         idxs = [int(_) for _ in idxs.split()]
+        unbind_cases = []
         for idx in idxs:
             target_node = self.listed_nodes[idx-1]
             field_symb = self.parent_cli.placeholder.fields[0]
-
             field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
-
-            self.parent_cli.G.unbind(self.ls_node, field, target_node)
+            unbind_cases.append((target_node, field))
+        for unbind_case in unbind_cases:
+            self.parent_cli.G.unbind(self.ls_node, unbind_case[0], unbind_case[1])
 
         padded_print(f"Deleted {len(idxs)} nodes.")
 
     def do_add(self, name):
 
-        if not name:  # Exit add loop if the name is empty
-            print("(SYS: 'add' command requires <name> argument)")
- 
-        else:
+        def capitalize_name(name):
+            return name[0].upper() + name[1:] if name else None
 
-            while True:
+        def select_node(name):
+            matched_nodes = self.parent_cli.G.select(name=name)
+            if matched_nodes:
+                header_statement = "Did you mean..."
+                tail_statement = "(Press Enter to select none)"
+                formatted_nodes = [node._convert_header_to_compact_format() for node in matched_nodes]
+                SelectInterface(formatted_nodes, self, header_statement, tail_statement).cmdloop()
+                response = self._get_response()
+                return matched_nodes[int(response)-1] if response else None
+            return None
 
-                if not name:
-                    break
-                
-                name = name[0].upper() + name[1:]
-                matched_nodes = self.parent_cli.G.select(name=name)
-                selected_node = None
+        def create_node():
+            user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
+            if user_input in ['y']:
+                creation_input = input("   | Enter <lang> <type> <lemma> in this format:\n   > ")
+                parts = creation_input.split()
+                if len(parts) >= 2:
+                    return parts[0], parts[1], ' '.join(parts[2:]) or 'NA'
+            return None, None, None
 
-                if len(matched_nodes)>1:
-                    selection_interface = SelectInterface(matched_nodes, self, "Did you mean...", "(Press Enter to select none)")
-                    selection_interface.cmdloop()
-                    selected_index = self.response
+        def bind_node(current_node, selected_node, edge_type):
+            if selected_node and not selected_node in current_node.get_neighbors(edge_type):
+                self.parent_cli.G.bind(current_node, selected_node, edge_type)
+                print(f"| Successfully binded '{selected_node.name}'.")
+            elif selected_node:
+                print('| The node was already present.')
 
-                    if selected_index and selected_index.isdigit():
-                        selected_node = matched_nodes[int(selected_index) - 1]
-                
-                if len(matched_nodes)==1:
-                    selected_node = matched_nodes[0]
+        while name:
+            name = capitalize_name(name)
+            selected_node = select_node(name)
 
-                if not selected_node and input(" "*3+"| Do you want to create this node? [Y/N] : ").strip().lower() in ['Y','y']:
-                    creation_input = input(" "*3+"| Enter <lang> <type> <lemma> in this format:\n"+" "*3+'> ')
-                    lang, type, *lemma = creation_input.split()
-                    lemma = 'NA' if lemma == [] else lemma
-                    self.parent_cli.G.create_node(lang, type, name, lemma)
-                    selected_node = self.parent_cli.G.select(lang, type, name, lemma)
-                    print(" "*3+"| Node created and binded.")
+            if not selected_node:
+                lang, type, lemma = create_node()
+                if lang and type and len(lang) == 2 and len(type) == 1:
+                    if not self.parent_cli.G.select(lang=lang, type=type, name=name, lemma=lemma):
+                        self.parent_cli.G.create_node(lang, type, name, lemma)
+                        selected_node = self.parent_cli.G.select(lang=lang, type=type, name=name, lemma=lemma)[0]
+                        print("| Node created.")
+                    else:
+                        print('| The specified set of characteristics already exists.')
+                elif lang or type or lemma:
+                    print('Failed to validate hash attributes.')
 
-                elif selected_node:
-                    current_node = self.ls_node
-                    edge_type = self.parent_cli.placeholder.fields[0]
+            if selected_node:
+                bind_node(self.ls_node, selected_node, self.parent_cli.placeholder.fields[0])
 
-                    field = ('synset' if edge_type[0] == 'y' else 'semset') + edge_type[1]
+            name = input(">> add ")
 
-                    self.parent_cli.G.bind(current_node, field, selected_node)
-
-                name = input(">> add ")
-            
-            print('(SYS: Resumed edit-session)')
+        print('(SYS: Resumed edit-session)')
 
     def do_cp(self, arg):
+
         args = arg.split()
-        indices = [int(i) for i in args if i.isdigit()]
+        idxs = [int(i) for i in args if i.isdigit()]
+        
+        target_nodes = [self.listed_nodes[i-1] for i in idxs]
         target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
 
-        target_nodes = [self.listed_nodes[i-1] for i in indices]
-
         for target_field in target_fields:
-            formatted_target_field = self._format_field(target_field)
-
-            # Copiar nodos a los campos objetivo
             for node in target_nodes:
-                self.parent_cli.G.bind(self.ls_node, formatted_target_field, node)
+                self.parent_cli.G.bind(self.ls_node, node, target_field)
 
         print(f"Copied {len(target_nodes)} nodes to '{', '.join(target_fields)}'.")
-
 
     def do_mv(self, arg):
 
         args = arg.split()
-        indices = [int(i) for i in args if i.isdigit()]
+        idxs = [int(i) for i in args if i.isdigit()]
+        
+        target_nodes = [self.listed_nodes[i-1] for i in idxs]
         target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
 
-        target_nodes = [self.listed_nodes[i-1] for i in indices]
-
         for target_field in target_fields:
-            formatted_target_field = self._format_field(target_field)
-
-            field_to_remove_from = self.parent_cli.placeholder.fields[0]
-            field_to_remove_from = ('synset' if field_to_remove_from[0] == 'y' else 'semset') + field_to_remove_from[1]
-
-            # Copiar nodos a los campos objetivo
             for node in target_nodes:
-                self.parent_cli.G.unbind(self.ls_node, field_to_remove_from, node)
-                self.parent_cli.G.bind(self.ls_node, formatted_target_field, node)
-        
-        self._update_listed_nodes()
+                self.parent_cli.G.bind(self.ls_node, node, target_field)
+
+                field_to_remove_from = self.parent_cli.placeholder.fields[0]
+                self.parent_cli.G.unbind(self.ls_node, node, field_to_remove_from)
 
         print(f"Moved {len(target_nodes)} nodes to '{', '.join(target_fields)}'.")
 
@@ -196,14 +222,6 @@ class LS_Interface(cmd.Cmd):
             self.do_ls()
         else:
             padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
-        
-    def _format_field(self, field):
-        if field.strip().startswith('y'):
-            return 'synset' + field.strip()[1:]
-        elif field.strip().startswith('e'):
-            return 'semset' + field.strip()[1:]
-        else:
-            raise ValueError("Invalid field specification")
     
     def cmdloop(self, intro=None):
         super().cmdloop(intro)
@@ -233,25 +251,12 @@ class LS_Interface(cmd.Cmd):
         print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
         return True
 
-    def do_cd(self, index): # finisehd
-        self.parent_cli._set_node(self.listed_nodes[int(index)-1])
-        return True
-
     def _update_listed_nodes(self):
-        self.listed_nodes = list(self.ls_node.get_neighbors(self.placeholder.fields))
+        self.listed_nodes = list(self.ls_node.get_neighbors(self.parent_cli.placeholder.fields))
         # We update internal object self.listed_nodes to reflect changes that might have been made during the session
         self.listed_nodes = sorted(self.listed_nodes, key=lambda node: node.name)
-        # We sort these nodes for readibility (by name)
-
-    def do_ls(self, arg=None):
-        if arg:
-            print("(SYS: arguments for 'ls' are disabled within the edit session)")
-        self._update_listed_nodes()
-        if not self.listed_nodes:
-            print("The set field for the target node is empty.")
-        strings_to_display = [f'| {i + 1}. {name}' for i, name in enumerate([node.name for node in self.listed_nodes])]
-        get_n_columns_from_elements(strings_to_display, ncol=self.ls_args.ncol, col_width=self.ls_args.width)
-
+        # We sort these nodes for readibility (by name)    
+    
 class NEW_Interface(cmd.Cmd):
 
     prompt = '<Name> : '
@@ -260,6 +265,7 @@ class NEW_Interface(cmd.Cmd):
         self.parent_cli = parent_cli
         self.default_lang = 'es'
         self.default_type = 'n'
+        self.response = None
         self.update_prompt()
         self.display()
         self.cmdloop()
@@ -290,31 +296,49 @@ class NEW_Interface(cmd.Cmd):
 
     def default(self, line):
 
+        def is_valid_language_code(code):
+            return len(code) == 2 and code.isalpha() and code.islower()
+
+        def is_valid_type_code(code):
+            return len(code) == 1 and code.isalpha() and code.islower()
+
+        def capitalize_name(name):
+            return name[0].upper() + name[1:] if name else None
+
+        def find_homologous(name):
+            return self.parent_cli.G.select(name=name, lang=self.default_lang, type=self.default_type)
+
+        def handle_homologous_response(homologous, name):
+            statement_1 = f"Found {len(homologous)} homologous."
+            statement_2 = "(Enter 'lemma' to create a new meaning or press Enter to move on.)"
+            formatted_nodes = [node._convert_header_to_compact_format() for node in homologous]
+            SelectInterface(formatted_nodes, self, statement_1, statement_2, 'Lemma: ').cmdloop()
+            response = self._get_response()
+            
+            if isinstance(response, str) and not response.isdigit():
+                if response not in [node.lemma for node in homologous]:
+                    self.parent_cli.G.create_node(lang=self.default_lang, type=self.default_type, name=name, lemma=response)
+                    print(f"| Created [{self.default_lang}][{self.default_type}][{name}]@[{response}]")
+                else:
+                    print("Already existing. Did nothing.")
+
+        def create_node_with_default_lemma(name):
+            lemma = "NA"
+            self.parent_cli.G.create_node(lang=self.default_lang, type=self.default_type, name=name, lemma=lemma)
+            print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{lemma}]")
+
         self.response = None
-        if len(line)==2 and line.isalpha() and line.islower():
+        if is_valid_language_code(line):
             self.default_lang = line
-        elif len(line)==1 and line.isalpha() and line.islower():
+        elif is_valid_type_code(line):
             self.default_type = line
         else:
-            name = line[0].upper() + line[1:]
-            homologous = self.parent_cli.G.find(name=name,
-                                   lang=self.default_lang,
-                                   type=self.default_type)
-            if len(homologous) > 0:
-                statement_1 = f"Found {len(homologous)} homologous."
-                statement_2 = "(Press Enter to move on.)"
-                interface_popup = SelectInterface(homologous, self, statement_1, statement_2, 'Lemma: ')
-                interface_popup.cmdloop()
-                if isinstance(self.response, str):
-                    if self.response not in [node.lemma for node in homologous]:
-                        self.parent_cli.G.create_node(lang=self.default_lang,type=self.default_type,name=name,lemma=self.response)
-                        print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{self.response}]")
-                    else:
-                        padded_print("Already existing. Did nothing.")
+            name = capitalize_name(line)
+            homologous = find_homologous(name)
+            if homologous:
+                handle_homologous_response(homologous, name)
             else:
-                lemma = "NA"
-                self.parent_cli.G.create_node(lang=self.default_lang,type=self.default_type,name=name,lemma=lemma)
-                print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{lemma}]")
+                create_node_with_default_lemma(name)
         
         self.update_prompt()
 
@@ -323,6 +347,11 @@ class NEW_Interface(cmd.Cmd):
         print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
         return True
 
+    def _get_response(self, reset_response=True):
+        # Gets and decides wether it resets the response or not (by default, it does)
+        res, self.response = self.response, None if reset_response else self.response
+        return res
+
 # POPUP CLIs ----------------------
     
     # These CLIs don't require HELP of any kind.
@@ -330,13 +359,6 @@ class NEW_Interface(cmd.Cmd):
 class SelectInterface(cmd.Cmd):
 
     def __init__(self, options, parent_cli, header_statement="", tail_statement="", prompt='>> '):
-        # Requires :
-        # - set of options (<Node>s)
-        # - statement to be displayed, indicating what can be entered.
-        # - reference to the parent_cli to which the resulting option will be sent.
-        #   (if [int] is entered -> return the <Node> (at 'n'th position)
-        #   (if [str] is entered -> return the <String>)
-        #   Note. It returns it by delivering it at .response attr from the parent_cli.
         super().__init__()
         self.options = options
         self.header_statement = header_statement

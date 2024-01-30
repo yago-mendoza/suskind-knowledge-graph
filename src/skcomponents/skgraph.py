@@ -138,14 +138,14 @@ class Graph(NodeSet):
                     getattr(node, attr).remove(target_node)
 
     def bind(self, target_node, append_node, target_edge_type):
-        self._update_reciprocal_edges(target_node, target_edge_type, append_node, 'add')
+        self._update_reciprocal_edges(target_node, append_node, target_edge_type, 'add')
 
     def unbind(self, target_node, remove_node, target_edge_type):
-        self._update_reciprocal_edges(target_node, target_edge_type, remove_node, 'remove')
+        self._update_reciprocal_edges(target_node, remove_node, target_edge_type, 'remove')
 
-    def _update_reciprocal_edges(self, node_a, edge_type_a, node_b, operation):
+    def _update_reciprocal_edges(self, node_a, node_b, edge_type_a, operation):
 
-        edge_type_a = sk.parse_field(edge_type_a, long=True)
+        edge_type_a = sk.parse_field(edge_type_a, long=True)[0] # make sure
 
         opposed_field = {'synset0':'synset2', 'synset1':'synset1', 'synset2':'synset0',
                          'semset0':'semset2', 'semset1':'semset1', 'semset2':'semset0'}

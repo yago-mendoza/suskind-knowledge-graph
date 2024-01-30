@@ -148,7 +148,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 """,
 
 'r': """\
-| Desc. Performs a random node search with optional language and type constraints.
+| Desc. Freely performs a random node search with optional language and type constraints.
 | Signature : r [-l <lang>] [-t <type>] [-f]
 | Arguments :
     -l, --lang  Specify the language to narrow down the search.
@@ -161,8 +161,9 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'run': """\
 | Desc. Runs a density search on the grabbed nodes set.
-| Signature : run [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
+| Signature : run [-f] [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
 | Arguments :
+    -f, --fielding  Restricts the search to results within the placeholder fielding.
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
     -t, --stop      Limit the number of results.

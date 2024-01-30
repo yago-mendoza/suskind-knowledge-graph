@@ -14,7 +14,18 @@ from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
+# how to clear whole fields even nodes
 
+# for the 'r' random method -------------------------------------------------
+    
+# a parameter -s like size that lets know how many nodes arep ossible of geting (in function of filter)
+
+# 1. Add additional flags at 'r' 
+# r --summary (que active el summary cada vez que se ejecute)
+# r -f (not working as expected)
+
+# do_new (creates a new node being able to set new language (-l) or lemma (-l), because if already existing, cannot create unless a lemma is set)
+# do_save (save the graph to a file)
 
 # 4. Editing node properties ------------------------------------
 
@@ -288,54 +299,51 @@ class SK_Interface (cmd.Cmd):
         GRABBED_Interface(self)
     
     def do_run(self, arg):
-        # Argument parser setup
+
+        print(f"(SYS: Started search-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+
         parser = argparse.ArgumentParser(description='Run density search with specified parameters.')
+        parser.add_argument('k', nargs='?', type=int, help='MSL (Minimum Shared Linkage) as an integer.', default=None)
+        parser.add_argument('-f', '--fielding', action='store_true', help='Restricts the search to results within the placeholder fielding.')
         parser.add_argument('-d', '--details', action='store_true', help='Provides a more detailed display.')
         parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
         parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
         parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
         parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
         parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
-
         ls_args, unknown = parser.parse_known_args(arg.split())
         if unknown:
             print(f'Unrecognized argument(s): {" ".join(unknown)}')
             return
-
-        print(f"(SYS: Started search-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
-
+        
         # Handle the k value for density search
-        k = None
-        while k is None:
-            try:
-                k_input = input(">> MSL (Minimum Shared Linkage) [int] : ")
-                k = int(k_input)
-            except ValueError:
-                print("Please enter a valid integer.")
+        k = (str(ls_args.k) if ls_args.k else None) or input(">> MSL (Minimum Shared Linkage) [int] : ")
+        while not k.isdigit() or int(k) > len(self.grabbed_nodes):
+            if not k.isdigit():
+                print("Please, enter a valid integer.")
+            elif int(k) > len(self.grabbed_nodes):
+                print(f"Please, enter an integer <{len(self.grabbed_nodes)} (selectable nodes).")
+            k = input(">> Minimum Shared Linkage (MSL) : ")
+        k = int(k)
 
-        # Perform the density search
-        output_nodes = density_search(self.grabbed_nodes, k)
+        fielding = self.placeholder.fields if ls_args.fielding else []
 
-        for node in self.grabbed_nodes:
-            if node in output_nodes:
-                output_nodes.remove(node)
+        # Perform the density search (excludes original ones)
+        output_nodes = [node for node in density_search(self.grabbed_nodes, k, *fielding) if node not in self.grabbed_nodes]
 
         # Apply the arguments to the nodes
+                
         if ls_args.shuffle:
             random.shuffle(output_nodes)
-
         if ls_args.stop and ls_args.stop <= len(output_nodes):
             output_nodes = output_nodes[:ls_args.stop]
-
         if ls_args.details:
-            # Handle detailed display
             max_index_length = len(str(len(output_nodes) - 1))
             for i, node in enumerate(output_nodes):
                 sizes = [str(i) for i in node.get_sizes()]
                 str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
                 print(f"{str(i+1).zfill(max_index_length)}) [{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})")
         else:
-            # Handle standard display
             names = [node.name for node in output_nodes]
             if ls_args.abbr:
                 names = [name[:ls_args.abbr] + '...' if len(name) > ls_args.abbr else name for name in names]
@@ -347,6 +355,160 @@ class SK_Interface (cmd.Cmd):
                 print(line)
         
         print(f"(SYS: Ended search-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+
+    def do_r(self, args):
+
+        parser = argparse.ArgumentParser(description="Perform a random node search")
+        parser.add_argument('-l', '--lang', type=str, help='Specify the language')
+        parser.add_argument('-t', '--type', type=str, help='Specify the type')
+        parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')  # Notice the action change.
+        args = parser.parse_args(args.split())
+
+        # Retrieves the language and type constraints from the parsed arguments, if provided.
+        type_constraint = args.type if args.type else None
+        lang_constraint = args.lang if args.lang else None
+
+        # Calls the _set_random_node method with the provided language and type constraints.
+        # This allows users to narrow down the search to a specific subset of nodes.
+        self._set_random_node(lang=lang_constraint,
+                              type=type_constraint,
+                              favorite=args.fav)
+
+    def do_ls(self, arg):
+
+        # 14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
+
+        parser = argparse.ArgumentParser(description='List information about the current node.')
+        parser.add_argument('-d', '--details', action='store_true', default=None, help='Provides a more detailed display.')
+        parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
+        parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
+        parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
+        parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
+        parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
+
+        ls_args, unknown = parser.parse_known_args(arg.split())
+        
+        # DO IT LIKE THIS FOR ALL TO AVOID BEING KICKED OUT FOR USING UNKNOWN FLAGS
+        if unknown:
+            padded_print(f'Unrecognized argument(s): {" ".join(unknown)}', tab=0)
+
+        if self.placeholder.fields:
+
+            # self.placeholder.node.synset1.append(self.G.random())
+            # Adds a random node each time, just to test that 'ls' correctly
+            # retrieves updated data each time is called.
+            nodes = list(self.placeholder.node.get_neighbors(self.placeholder.fields))
+            nodes = sorted(nodes, key=lambda node: node.name)
+
+            if nodes:
+
+                if ls_args.shuffle:
+                    random.shuffle(nodes)
+
+                if ls_args.stop:
+                    if ls_args.stop <= len(nodes):
+                        nodes = nodes[:ls_args.stop]
+
+                if ls_args.details:
+
+                    # sin ponemos details, aplican todos los criterios menos 'abbr'
+                    # solo tienen sentido 'stop' y 'r' de 'random/suffle'
+                    to_print = []
+                    max_index_length = len(str(len(nodes) - 1))  # Length of the largest index
+
+                    for i, node in enumerate(nodes):
+                        sizes = [str(i) for i in node.get_sizes()]
+                        str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
+                        to_print.append(f'[{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})')
+                    for i, _ in enumerate(to_print):
+                        print(f"{str(i+1).zfill(max_index_length)}) {_}")
+                
+                else:
+
+                    names = [node.name for node in nodes]
+                        
+                    if ls_args.abbr:
+                        names = [name[:ls_args.abbr] + '...' if len(name) > ls_args.abbr else name for name in names]
+
+                    if len(self.placeholder.fields) == 1:
+                        print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+                    
+                    padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors(self.placeholder.fields))} results.", tab=0)
+                    strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
+                    
+                    formatted_lines = get_n_columns_from_elements(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
+                    for line in formatted_lines:
+                        print(line)
+            else:
+                padded_print('The set field for the target node is empty.', tab=0)
+
+            if len(self.placeholder.fields) == 1:
+                LS_Interface(nodes, self, ls_args)
+
+        if not self.placeholder.fields:
+            padded_print("Error. Search field is needed", tab=0)
+
+    def do_new(self, arg):
+        NEW_Interface(self)
+
+    # Internal Methods  --------------------
+            
+    def _set_node(self, new_node):
+        if new_node:
+            self.placeholder.update_node(new_node)
+
+    def _set_random_node(self, **kwargs):
+        new_node = self.G.random(**kwargs)
+        if new_node:
+            self._set_node(new_node)
+        else:
+            padded_print('No nodes met the criteria.', tab=0)
+    
+    def _get_response(self, reset_response=True):
+        # Gets and decides wether it resets the response or not (by default, it does)
+        res, self.response = self.response, None if reset_response else self.response
+        return res
+
+    def _print_markdown_title(self):
+        from rich.console import Console
+        from rich.markdown import Markdown
+        console = Console()
+        console.print(Markdown("# Suskind Knowledge Graph"))
+
+    # CMD private re-writen methods --------------------
+        
+    def do_clear(self, arg):
+        self.preloop()
+        
+    def preloop(self):
+        os.system('cls')
+        self._print_markdown_title()
+        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, tab=0)
+        print('-'*47)
+
+    def default(self, line):
+        padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
+
+# los argumentos -> library argparse, action, help 
+        
+# class CLIFilter(cmd.Cmd):
+#     prompt = '>'
+#     def __init__(self, filter_manager):
+#         super().__init__()
+#         self.filter_manager = filter_manager
+
+#     def do_filter(self, line):
+#         args = line.split()
+#         if "-e" in args:
+#             editor = CLIFilter(self.filter_manager)
+#             editor.cmdloop("Entered editor mode on filters:")
+#         else:
+#             self.show_filters()
+    
+
+
+
+
 
 
     # def do_filter(self, arg):
@@ -395,190 +557,3 @@ class SK_Interface (cmd.Cmd):
     # # | Showing filters:
     # # | f1/lang('es')
     # # | [ls] f2/lang('en')
-                
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def do_r(self, args):
-
-        # a parameter -s like size that lets know how many nodes arep ossible of geting (in function of filter)
-
-        # 1. Add additional flags at 'r' --------------------------------------------
-
-        # r --summary (que active el summary cada vez que se ejecute)
-        # r -f (not working as expected)
-
-        # do_new (creates a new node being able to set new language (-l) or lemma (-l), because if already existing, cannot create unless a lemma is set)
-        # do_save (save the graph to a file)
-
-        # Creates a new argument parser to interpret the command line inputs.
-        parser = argparse.ArgumentParser(description="Perform a random node search")
-        # Adds optional arguments to specify the language and type, enhancing the command's flexibility.
-        parser.add_argument('-l', '--lang', type=str, help='Specify the language')
-        parser.add_argument('-t', '--type', type=str, help='Specify the type')
-        parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')  # Notice the action change.
-
-        # Parses the arguments from the command line input.
-        args = parser.parse_args(args.split())
-
-        # Retrieves the language and type constraints from the parsed arguments, if provided.
-        type_constraint = args.type if args.type else None
-        lang_constraint = args.lang if args.lang else None
-
-        # Calls the _set_random_node method with the provided language and type constraints.
-        # This allows users to narrow down the search to a specific subset of nodes.
-        self._set_random_node(lang=lang_constraint,
-                              type=type_constraint,
-                              favorite=args.fav)
-
-    def do_ls(self, arg):
-
-        # 14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
-
-        parser = argparse.ArgumentParser(description='List information about the current node.')
-        parser.add_argument('-d', '--details', action='store_true', default=None, help='Provides a more detailed display.')
-        parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
-        parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
-        parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
-        parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
-        parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
-
-        ls_args, unknown = parser.parse_known_args(arg.split())
-        
-        # DO IT LIKE THIS FOR ALL TO AVOID BEING KICKED OUT FOR USING UNKNOWN FLAGS
-        if unknown:
-            padded_print(f'Unrecognized argument(s): {" ".join(unknown)}', tab=0)
-
-
-        if self.placeholder.fields:
-
-            # self.placeholder.node.synset1.append(self.G.random())
-            # Adds a random node each time, just to test that 'ls' correctly
-            # retrieves updated data each time is called.
-            nodes = list(self.placeholder.node.get_neighbors(self.placeholder.fields))
-            nodes = sorted(nodes, key=lambda node: node.name)
-
-            if nodes:
-
-                if ls_args.shuffle:
-                    random.shuffle(nodes)
-
-                if ls_args.stop:
-                    if ls_args.stop <= len(nodes):
-                        nodes = nodes[:ls_args.stop]
-
-                if ls_args.details:
-
-                    # sin ponemos details, aplican todos los criterios menos 'abbr'
-                    # solo tienen sentido 'stop' y 'r' de 'random/suffle'
-                    to_print = []
-                    max_index_length = len(str(len(nodes) - 1))  # Length of the largest index
-
-                    for i, node in enumerate(nodes):
-                        sizes = [str(i) for i in node.get_sizes()]
-                        str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
-                        to_print.append(f'[{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})')
-                    for i, _ in enumerate(to_print):
-                        print(f"{str(i+1).zfill(max_index_length)}) {_}")
-                
-                else:
-
-                    names = [node.name for node in nodes]
-                        
-                    if ls_args.abbr:
-                        names = [name[:ls_args.abbr] + '...' if len(name) > ls_args.abbr else name for name in names]
-
-                    if len(self.placeholder.fields) == 1:
-                        print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
-                    
-                    padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors(self.placeholder.fields))} results.", tab=0)
-                    strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
-                    
-                    formatted_lines = get_n_columns_from_elements(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
-                    padded_print(formatted_lines, tab=0)
-            else:
-                padded_print('The set field for the target node is empty.', tab=0)
-
-            if len(self.placeholder.fields) == 1:
-                LS_Interface(nodes, self, ls_args)
-
-        if not self.placeholder.fields:
-            padded_print("Error. Search field is needed", tab=0)
-
-    def do_new(self, arg):
-        NEW_Interface(self)
-
-    # Internal Methods  --------------------
-            
-    def _set_node(self, new_node):
-        if new_node:
-            self.placeholder.update_node(new_node)
-
-    def _set_random_node(self, **kwargs):
-        new_node = self.G.random(**kwargs)
-        if new_node:
-            self._set_node(new_node)
-        else:
-            padded_print('No nodes met the criteria.', tab=0)
-    
-    def _get_response(self, reset_inlet=True):
-        # Gets and decides wether it resets the response or not (by default, it does)
-        res, self.response = self.response, None if reset_inlet else self.response
-        return res
-
-    def _print_markdown_title(self):
-        from rich.console import Console
-        from rich.markdown import Markdown
-        console = Console()
-        console.print(Markdown("# Suskind Knowledge Graph"))
-
-    # CMD private re-writen methods --------------------
-        
-    def do_clear(self, arg):
-        self.preloop()
-        
-    def preloop(self):
-        os.system('cls')
-        self._print_markdown_title()
-        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, tab=0)
-        print('-'*47)
-
-    def default(self, line):
-        padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
-
-# los argumentos -> library argparse, action, help 
-        
-# class CLIFilter(cmd.Cmd):
-#     prompt = '>'
-#     def __init__(self, filter_manager):
-#         super().__init__()
-#         self.filter_manager = filter_manager
-
-#     def do_filter(self, line):
-#         args = line.split()
-#         if "-e" in args:
-#             editor = CLIFilter(self.filter_manager)
-#             editor.cmdloop("Entered editor mode on filters:")
-#         else:
-#             self.show_filters()
-    
-
-
