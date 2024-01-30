@@ -44,13 +44,13 @@ class LS_Interface(cmd.Cmd):
                     break
                 
                 name = name[0].upper() + name[1:]
-                matched_nodes = self.parent_cli.G.find(name=name)
+                matched_nodes = self.parent_cli.G.select(name=name)
                 selected_node = None
 
                 if len(matched_nodes)>1:
-                    selection_interface = SelectNodeInterface(matched_nodes, self, "Did you mean...", "(Press Enter to select none)")
+                    selection_interface = SelectInterface(matched_nodes, self, "Did you mean...", "(Press Enter to select none)")
                     selection_interface.cmdloop()
-                    selected_index = self.selection_interface_output
+                    selected_index = self.response
 
                     if selected_index and selected_index.isdigit():
                         selected_node = matched_nodes[int(selected_index) - 1]
@@ -60,10 +60,10 @@ class LS_Interface(cmd.Cmd):
 
                 if not selected_node and input(" "*3+"| Do you want to create this node? [Y/N] : ").strip().lower() in ['Y','y']:
                     creation_input = input(" "*3+"| Enter <lang> <type> <lemma> in this format:\n"+" "*3+'> ')
-                    lang, type_, *lemma = creation_input.split()
+                    lang, type, *lemma = creation_input.split()
                     lemma = 'NA' if lemma == [] else lemma
-                    self.parent_cli.G.create_node(lang, type_, name, lemma)
-                    selected_node = self.parent_cli.G.find(lang, type_, name, lemma)
+                    self.parent_cli.G.create_node(lang, type, name, lemma)
+                    selected_node = self.parent_cli.G.select(lang, type, name, lemma)
                     print(" "*3+"| Node created and binded.")
 
                 elif selected_node:
@@ -168,7 +168,7 @@ class LS_Interface(cmd.Cmd):
         return True
 
     def _update_listed_nodes(self):
-        self.listed_nodes = list(self.ls_node.get_neighbors().set())
+        self.listed_nodes = list(self.ls_node.get_neighbors(self.placeholder.fields))
         # We update internal object self.listed_nodes to reflect changes that might have been made during the session
         self.listed_nodes = sorted(self.listed_nodes, key=lambda node: node.name)
         # We sort these nodes for readibility (by name)
@@ -220,7 +220,7 @@ class NEW_Interface(cmd.Cmd):
 
     def default(self, line):
 
-        self.selection_interface_output = None
+        self.response = None
         if len(line)==2 and line.isalpha() and line.islower():
             self.default_lang = line
         elif len(line)==1 and line.isalpha() and line.islower():
@@ -233,17 +233,17 @@ class NEW_Interface(cmd.Cmd):
             if len(homologous) > 0:
                 statement_1 = f"Found {len(homologous)} homologous."
                 statement_2 = "(Press Enter to move on.)"
-                interface_popup = SelectNodeInterface(homologous, self, statement_1, statement_2, 'Lemma: ')
+                interface_popup = SelectInterface(homologous, self, statement_1, statement_2, 'Lemma: ')
                 interface_popup.cmdloop()
-                if isinstance(self.selection_interface_output, str):
-                    if self.selection_interface_output not in [node.lemma for node in homologous]:
-                        self.parent_cli.G.create_node(lang=self.default_lang,type_=self.default_type,name=name,lemma=self.selection_interface_output)
-                        print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{self.selection_interface_output}]")
+                if isinstance(self.response, str):
+                    if self.response not in [node.lemma for node in homologous]:
+                        self.parent_cli.G.create_node(lang=self.default_lang,type=self.default_type,name=name,lemma=self.response)
+                        print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{self.response}]")
                     else:
                         padded_print("Already existing. Did nothing.")
             else:
                 lemma = "NA"
-                self.parent_cli.G.create_node(lang=self.default_lang,type_=self.default_type,name=name,lemma=lemma)
+                self.parent_cli.G.create_node(lang=self.default_lang,type=self.default_type,name=name,lemma=lemma)
                 print(f"OK : [{self.default_lang}][{self.default_type}][{name}]@[{lemma}]")
         
         self.update_prompt()
@@ -252,37 +252,39 @@ class NEW_Interface(cmd.Cmd):
         # To exit with an empty Enter key press
         print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
         return True
-    
-    
-class SelectNodeInterface(cmd.Cmd):
 
-    def __init__(self, nodes, parent_cli, statement_1="", statement_2="", prompt='>> '):
+# POPUP CLIs ----------------------
+    
+    # These CLIs don't require 
+    
+class SelectInterface(cmd.Cmd):
+
+    def __init__(self, options, parent_cli, header_statement="", tail_statement="", prompt='>> '):
         # Requires :
         # - set of options (<Node>s)
         # - statement to be displayed, indicating what can be entered.
         # - reference to the parent_cli to which the resulting option will be sent.
         #   (if [int] is entered -> return the <Node> (at 'n'th position)
         #   (if [str] is entered -> return the <String>)
-        #   Note. It returns it by delivering it at .selection_interface_output attr from the parent_cli.
+        #   Note. It returns it by delivering it at .response attr from the parent_cli.
         super().__init__()
-        self.nodes = nodes
-        self.statement_1 = statement_1
-        self.statement_2 = statement_2
+        self.options = options
+        self.header_statement = header_statement
+        self.tail_statement = tail_statement
         self.parent_cli = parent_cli
         self.prompt = prompt
         self.display()
     
     def display(self):
-        padded_print(self.statement_1)
-        for index, node in enumerate(self.nodes, start=1):
-            lang, type, name, lemma = node.identify()
-            string_index = str(index).zfill(2 if len(self.nodes)>10 else 1)
-            print(f"|   {string_index}) [{lang}][{type}][{name}]@[({lemma or ''})]")
-        padded_print(self.statement_2)
+        padded_print(self.header_statement)
+        for index, option in enumerate(self.options, start=1):
+            string_index = str(index).zfill(2 if len(self.options)>10 else 1)
+            padded_print(f"{string_index}) {option}", tab=1)
+        padded_print(self.tail_statement)
 
-    def deliver_result(self, selection_interface_output):
-        self.parent_cli.selection_interface_output = None
-        self.parent_cli.selection_interface_output = selection_interface_output
+    def deliver_result(self, response):
+        self.parent_cli.response = None
+        self.parent_cli.response = response
 
     def default(self, line):
         """
@@ -294,12 +296,12 @@ class SelectNodeInterface(cmd.Cmd):
                 self.deliver_result(line.strip())
             else:
                 index = int(line) - 1  # Convert to zero-based index.
-                if 0 <= index < len(self.nodes):
+                if 0 <= index < len(self.options):
                     self.deliver_result(line)
                 else:
-                    print("Please enter a valid number from the list.")
+                    print("Please enter a valid index.")
         except ValueError:
-            print("Please enter a number to select a node or just press Enter to exit.")
+            print("Please enter a number to select an option or just press Enter to exit.")
         return True # exits loops
     
     def emptyline(self):

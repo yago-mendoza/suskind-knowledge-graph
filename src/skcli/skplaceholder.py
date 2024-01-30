@@ -23,7 +23,6 @@ class Placeholder():
         getattr(self, f"_{mode}_field")(field)  # Performs a single field operation update.
         # Refreshes the command prompt to include the updated fields.
         self._update_string()
-        self.cmd._update_graph_permissions_to_fields()
 
     # Private Methods -----
 

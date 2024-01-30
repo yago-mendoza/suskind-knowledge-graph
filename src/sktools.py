@@ -1,9 +1,13 @@
+import difflib
+
+def find_similars(graph, target_name, k=1):
+    scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in graph]
+    top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
+    return [node for ratio, node in top_scores]
+
 def parse_field(*fielding, long=False, numeric=False):
 
-    # Used to parse the 'get_neighbors()' fielding argument (at SKNode)
-
     """
-    
     {y0, y1, y2, e0, e1, e2,
     synset0, synset1, synset2, semset0, semset1, semset2,
     semset, synset,
@@ -28,7 +32,6 @@ def parse_field(*fielding, long=False, numeric=False):
     -      default : 'short'
     -    long=True : 'long'
     - numeric=True : 'numeric'
-
     """
 
     fielding = [item for sublist in fielding for item in (sublist if isinstance(sublist, list) else [sublist])]

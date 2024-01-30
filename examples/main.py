@@ -32,7 +32,7 @@ import datetime
 # since will depend on the actual configuration of the files, and I'll probably need help for that yikes
 
 
-test_CLI = False
+test_CLI = True
 
 #########################################################
 test_skcomponents = test_CLI==False

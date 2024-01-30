@@ -3,21 +3,14 @@ import cmd
 import random
 import argparse
 
+import src.sktools as sk
+
 from src.skcli.skplaceholder import *
 from src.skcli.aux_clis import *
 
 from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
-
-import difflib
-
-# def find_similars(self, target_name, k=1):
-#     k = min(k, len(self))  # Ensure k does not exceed the number of nodes
-#     scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
-#     top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
-#     return [(round(ratio, 3), node) for ratio, node in top_scores]
-
 
 
 
@@ -45,39 +38,7 @@ import difflib
 # | Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
 # >> Y
 
-# 6. Filters -----------------------
 
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
-# | Entered editor mode on filters:
-# | f1/type('w').lang('es')
-# | f2/starts('clar')
-# >> rm f1
-# >> add contains('esonate').lang('en')
-# >> ''
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/:
-
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-# | Showing filters:
-# | f1/lang('es').contains('trent')
-# | f2/starts('clar')
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/:
-
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-# | Showing filters:
-# | [ls, cd, r] f1/lang('es')
-# | [ls] f2/lang('en')
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
-# | Showing filters:
-# | f1/lang('es')
-# | [>] f2/lang('en')
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
-# 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-# | Showing filters:
-# | f1/lang('es')
-# | [ls] f2/lang('en')
 
 # 7. TERMINAL ---------------------------------------
 
@@ -131,25 +92,25 @@ import difflib
 class SK_Interface (cmd.Cmd):
     
     def __init__(self, graph):
-        super().__init__()  # Initialize the base class (cmd.Cmd).
-        self.G = graph  # Store the graph object.
-        self.placeholder = Placeholder(self)  # Create a Placeholder instance.
-        self._update_graph_permissions_to_fields() # To the default defaulder fields
-        self._set_random_node()  # Initialize a node at random.   
+        super().__init__()
+        self.G = graph 
+        self.placeholder = Placeholder(self)
+        self.response = None
 
-        self.selection_interface_output = None  # the delivery are for SelectNodeInterface
-
-        self.G.save(f"secCopy{datetime.datetime.now().strftime('%y.%m.%d.%H.%M.%S')}.txt")
+        self._set_random_node()
 
     # Public Methods -----
-        
-    def do_save(self, arg):
+    
+    # [DONE]
+    def do_save(self, arg): 
         filename = arg.strip() or 'data.txt'  # Use 'data' as default filename if none is provided
         try:
             self.G.save(filename)
         except Exception as e:
             print(f"Error saving data: {e}")
-        
+    
+    # [DONE]
+    # Uses get_label_aligned_lines
     def do_help(self, arg):
         """Provide help for a specified command or list all commands if none is specified."""
         if arg:
@@ -158,17 +119,19 @@ class SK_Interface (cmd.Cmd):
             if help_text:
                 print(help_text)
             else:
-                print(f"No help available for '{arg}'")
+                print(f"No help available for '{arg}'.")
         else:
             # User typed "help" without specifying a command
-            padded_print("Available commands:")
-            mini_prompt = ''
-            right_padding = max([len(command) for command in COMMAND_DOCSTRINGS_SK]) + len(mini_prompt)
-            for command in COMMAND_DOCSTRINGS_SK:
-                # Only print the first line of each help text for an overview
-                first_line = COMMAND_DOCSTRINGS_SK[command].strip().split('\n')[0]
-                padded_print(f"{command+mini_prompt:<{right_padding}} : {first_line[8:]}")
+            def get_description_from_docstring(docstring): return docstring.strip().split('\n')[0][8:]
+            commands = COMMAND_DOCSTRINGS_SK.keys()
+            contents = [get_description_from_docstring(COMMAND_DOCSTRINGS_SK[command]) for command in commands]
+            formatted_lines = get_label_aligned_lines(commands, ':', contents)
+            padded_print("Available commands:", formatted_lines, tab=0)
         
+    # [DONE]
+    # If its full, seting will first empty and then set.
+    # Accepts only single/global-short fielding format (multiple)
+    # Also 'lang' and 'type'
     def do_set(self, arg):
         # Set is a multi-purpose function.
         args = arg.split()
@@ -190,22 +153,28 @@ class SK_Interface (cmd.Cmd):
                 field = setting
                 self.placeholder.update_field('add', field)
             # Check if the argument matches any known language in the graph.
-            elif setting in self.G.set_types():
-                # If a type is specified, update the type in the placeholder and set a random node of that type.
-                type_ = setting
-                self.placeholder.type = type_
-                self._set_random_node(type=type_)
-            elif setting in self.G.set_langs():
-                # new language being inputed
-                # If a language is specified, update the language in the placeholder and set a random node of that language.
-                lang = setting
-                self.placeholder.lang = lang
-                self._set_random_node(lang=lang)
-            # Check if the argument matches any known type in the graph.
             else:
-                # If the argument doesn't match any known settings, inform the user that the setting is invalid.
-                print("Setting not found.")
+                if len(setting) == 1: 
+                    if setting in self.G.get_set('type'):
+                        # If a type is specified, update the type in the placeholder and set a random node of that type.
+                        type = setting
+                        self.placeholder.type = type
+                        self._set_random_node(type=type)
+                    else:
+                        print("Invalid 'type'.")
+                elif len(setting) == 2:
+                    if setting in self.G.get_set('lang'):
+                        # new language being inputed
+                        # If a language is specified, update the language in the placeholder and set a random node of that language.
+                        lang = setting
+                        self.placeholder.lang = lang
+                        self._set_random_node(lang=lang)
+                    else:
+                        print("Invalid 'lang'.")
+                else:
+                    print("Invalid setting.")
     
+    # [DONE]
     def do_unset(self, arg):
         # Splits the input string into individual arguments for processing.
         args = arg.split()
@@ -231,6 +200,9 @@ class SK_Interface (cmd.Cmd):
                 # If the argument doesn't match any known settings, inform the user that the setting is invalid.
                 print("Invalid setting.")
 
+    # [DONE]
+    # If not recognized, guesses 4.
+    # If multiple options, lets picking.
     def do_cd(self, arg):
         # Initializes an argument parser specifically for the 'cd' (change directory) command.
         parser = argparse.ArgumentParser()
@@ -246,46 +218,106 @@ class SK_Interface (cmd.Cmd):
         except SystemExit:
             # Handles the situation where argparse encounters a parsing error and attempts to exit the script.
             # Intercepting SystemExit here prevents the entire CLI from shutting down due to a malformed command.
-            padded_print("Invalid command or arguments. Type 'help cd' for more information.")
+            padded_print("Invalid command or arguments. Type 'help cd' for more information.", tab=0)
             return
 
-        # Initiates the search for nodes with the most specific criteria first, based on the current language and type context.
-        nodes = self.G.find(lang=self.placeholder.lang,
-                            type_=self.placeholder.type,
-                            name=parsed_name)
-
-        # Implements fallback logic: If the initial search yields no results, progressively broadens the search criteria.
-        if not nodes:
-            nodes = self.G.find(lang=self.placeholder.lang,
-                                name=parsed_name)
-        if not nodes:
-            nodes = self.G.find(type=self.placeholder.type,
-                                name=parsed_name)
-        if not nodes:
-            nodes = self.G.find(name=parsed_name)
+        nodes = self.G.select(name=parsed_name)
 
         # Processes the search results based on the number of nodes found.
         if len(nodes) == 1:
             # If exactly one matching node is found, it's automatically set as the current context.
             self._set_node(nodes[0])
-        elif nodes:
-            # If multiple matching nodes are found, indicates a future feature for user selection.
-            statement_1 = "Do you mean ..."
-            statement_2 = "(Press Enter without any input to exit)"
-            SelectNodeInterface(nodes, self, statement_1, statement_2).cmdloop()
-            self._set_node(nodes[int(self.selection_interface_output)-1])
+
         else:
-            # If no matching nodes are found, informs the user accordingly.
-            candidates = self.G
-            number_of_guesses = 3
-            top_guessed_nodeset = candidates.scan_for_similar_nodes(name=parsed_name, k=number_of_guesses)
             
-            statement_1 = "Do you mean ..."
-            statement_2 = "(Press Enter without any input to exit)"
-            SelectNodeInterface(top_guessed_nodeset, self, statement_1, statement_2).cmdloop()
-            self._set_node(top_guessed_nodeset[int(self.selection_interface_output)-1])
+            # If multiple matching nodes are found, indicates a future feature for user selection.
+            if nodes:
+                options = [node._convert_header_to_compact_format() for node in nodes]
+            else:
+                number_of_guesses = 4
+                nodes = sk.find_similars(graph=self.G, target_name=parsed_name, k=number_of_guesses)
+                options = [node._convert_header_to_compact_format() for node in nodes]
+
+            header_statement = "Do you mean ..."
+            tail_statement = "(Press Enter without any input to exit)"
+            SelectInterface(options, self, header_statement, tail_statement).cmdloop()
+            response = self._get_response()
+            if response:
+                self._set_node(nodes[int(response)-1])
+
+    def search
+    
+    # def do_filter(self, arg):
+
+    #     parser = argparse.ArgumentParser(prog='filter', add_help=False)
+    #     parser.add_argument('-e', '--edit', action='store_true', help='Enter filter editing mode')
+    #     args = parser.parse_args(arg.split())
+    
+    #     if args.edit:
+    #         self._enter_filter_editor()
+    #     else:
+    #         if self.filters:
+    #             for idx, filter in enumerate(self.filters, 1):
+    #                 padded_print(f"f{idx}/{filter}")
+    #         else:
+    #             print("No filters set.")
+
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
+    # # | Entered editor mode on filters:
+    # # | f1/type('w').lang('es')
+    # # | f2/starts('clar')
+    # # >> rm f1
+    # # >> add contains('esonate').lang('en')
+    # # >> ''
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/:
+
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+    # # | Showing filters:
+    # # | f1/lang('es').contains('trent')
+    # # | f2/starts('clar')
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/:
+
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+    # # | Showing filters:
+    # # | [ls, cd, r] f1/lang('es')
+    # # | [ls] f2/lang('en')
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
+    # # | Showing filters:
+    # # | f1/lang('es')
+    # # | [>] f2/lang('en')
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
+    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
+    # # | Showing filters:
+    # # | f1/lang('es')
+    # # | [ls] f2/lang('en')
+                
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def do_r(self, args):
+
+        # a parameter -s like size that lets know how many nodes arep ossible of geting (in function of filter)
 
         # 1. Add additional flags at 'r' --------------------------------------------
 
@@ -331,7 +363,7 @@ class SK_Interface (cmd.Cmd):
         
         # DO IT LIKE THIS FOR ALL TO AVOID BEING KICKED OUT FOR USING UNKNOWN FLAGS
         if unknown:
-            padded_print(f'Unrecognized argument(s): {" ".join(unknown)}')
+            padded_print(f'Unrecognized argument(s): {" ".join(unknown)}', tab=0)
 
 
         if self.placeholder.fields:
@@ -339,7 +371,7 @@ class SK_Interface (cmd.Cmd):
             # self.placeholder.node.synset1.append(self.G.random())
             # Adds a random node each time, just to test that 'ls' correctly
             # retrieves updated data each time is called.
-            nodes = list(self.placeholder.node.get_neighbors().set())
+            nodes = list(self.placeholder.node.get_neighbors(self.placeholder.fields))
             nodes = sorted(nodes, key=lambda node: node.name)
 
             if nodes:
@@ -360,7 +392,7 @@ class SK_Interface (cmd.Cmd):
 
                     for i, node in enumerate(nodes):
                         
-                        sizes = [str(len(field)) for field in node.get_neighbors('111111').values()]
+                        sizes = node.get_sizes()
                         str_sizes = '/'.join(sizes[:3]) + ' - ' + '/'.join(sizes[3:])
                         to_print.append(f'[{node.lang}][{node.type}][{node.name}][{node.lemma}]....({str_sizes})')
                     for i, _ in enumerate(to_print):
@@ -376,18 +408,19 @@ class SK_Interface (cmd.Cmd):
                     if len(self.placeholder.fields) == 1:
                         print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
                     
-                    padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors().set())} results.")
+                    padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors(self.placeholder.fields))} results.", tab=0)
                     strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
-                    columnize(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
-
+                    
+                    formatted_lines = get_n_columns_from_elements(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
+                    padded_print(formatted_lines, tab=0)
             else:
-                padded_print('The set field for the target node is empty.')
+                padded_print('The set field for the target node is empty.', tab=0)
 
             if len(self.placeholder.fields) == 1:
                 LS_Interface(nodes, self, ls_args)
 
         if not self.placeholder.fields:
-            padded_print("Error. Search field is needed")
+            padded_print("Error. Search field is needed", tab=0)
 
     def do_new(self, arg):
         NEW_Interface(self)
@@ -403,15 +436,12 @@ class SK_Interface (cmd.Cmd):
         if new_node:
             self._set_node(new_node)
         else:
-            padded_print('No nodes met the criteria.')
-
-    def _update_graph_permissions_to_fields(self):
-        long_parser = {'y0':'synset0', 'e0':'semset0',
-                       'y1':'synset1', 'e1':'semset1',
-                       'y2':'synset2','e2':'semset2'}
-        self.G.disable()
-        for field in self.placeholder.fields:
-            self.G.enable(long_parser[field])
+            padded_print('No nodes met the criteria.', tab=0)
+    
+    def _get_response(self, reset_inlet=True):
+        # Gets and decides wether it resets the response or not (by default, it does)
+        res, self.response = self.response, None if reset_inlet else self.response
+        return res
 
     def _print_markdown_title(self):
         from rich.console import Console
@@ -427,11 +457,11 @@ class SK_Interface (cmd.Cmd):
     def preloop(self):
         os.system('cls')
         self._print_markdown_title()
-        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER)
+        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, tab=0)
         print('-'*47)
 
     def default(self, line):
-        padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
+        padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
 
 # los argumentos -> library argparse, action, help 
         

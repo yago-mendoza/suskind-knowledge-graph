@@ -92,6 +92,11 @@ class Node:
         # Used at _update_node_relationships() when load_data() is run from Graph object.
         # Used at save() when we want to save the data from Graph object.
         return f'{self.lang}-{self.type}:{self.name}({self.lemma})'
+    
+    def _convert_header_to_compact_format(self):
+        # Used at _update_node_relationships() when load_data() is run from Graph object.
+        # Used at save() when we want to save the data from Graph object.
+        return f'[{self.lang}][{self.type}]@[{self.name}({self.lemma})]'
 
     #[not-documented]
     def _copy(self):
