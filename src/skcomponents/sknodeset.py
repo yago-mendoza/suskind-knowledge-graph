@@ -23,11 +23,15 @@ class NodeSet(list):
     
     def look(self):
         # Displays it in the __repr__ format set for <Node>, for fast inspection.
-        return [node for node in self]
+        return [node._convert_header_to_str_format() for node in self]
     
     #########
     # Search
     #########
+
+    def find(self, **kwargs):
+        ndst = self.select(**kwargs)
+        return ndst[0] if len(ndst) == 1 else None
 
     def select(self, **kwargs):
        

@@ -10,6 +10,17 @@ from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
+import difflib
+
+# def find_similars(self, target_name, k=1):
+#     k = min(k, len(self))  # Ensure k does not exceed the number of nodes
+#     scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in self]
+#     top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
+#     return [(round(ratio, 3), node) for ratio, node in top_scores]
+
+
+
+
 # 4. Editing node properties ------------------------------------
 
 # name -e

@@ -42,12 +42,8 @@ def run(G):
         cli = SK_Interface(G)
         cli.cmdloop() # executes cmdqueue and leaves terminal ready
     if test_skcomponents:
-        pass
-
-
-        
-
-        
+        Node.compress()
+       
 
 #########################################################
 

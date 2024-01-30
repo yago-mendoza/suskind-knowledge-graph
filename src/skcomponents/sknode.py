@@ -133,8 +133,9 @@ class Node:
     identifier_structs = {'lang', 'type', 'name', 'lemma'}
     descriptive_structs = {'favorite'}
     edge_structs = {'synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2'}
+    examples = {'examples'}
     front_structs = identifier_structs | descriptive_structs
-    back_structs = edge_structs | {'examples'}
+    back_structs = edge_structs | examples
     all_structs = front_structs | back_structs
 
     # Generate the dictionary _FLAGS with binary values
@@ -172,6 +173,7 @@ class Node:
             cls.toggle(*cls.identifier_structs, 1)
             cls.toggle(*cls.descriptive_structs, 0)
             cls.toggle(*cls.edge_structs, 0)
+            cls.toggle(*cls.examples, 0)
         else:
             cls.toggle(*edge_type, 0)
         return cls
@@ -182,6 +184,7 @@ class Node:
             cls.toggle(*cls.identifier_structs, 1)
             cls.toggle(*cls.descriptive_structs, 1)
             cls.toggle(*cls.edge_structs, 1)
+            cls.toggle(*cls.examples, 1)
         else:
             cls.toggle(*edge_type, 1)
         return cls
