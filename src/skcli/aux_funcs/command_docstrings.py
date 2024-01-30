@@ -10,7 +10,7 @@ from typing import Dict
 # distintas entre CLIs.
 
 
-COMMAND_DOCSTRINGS_GRABBED : Dict[str, str] = {
+COMMAND_DOCSTRINGS_GB : Dict[str, str] = {
 'grab': """\
 | Desc. Adds a new node.
 | Signature : grab <name>
@@ -34,7 +34,7 @@ COMMAND_DOCSTRINGS_GRABBED : Dict[str, str] = {
 | Signature : clear\
 """,
 
-'grabbed': """\
+'ls': """\
 | Desc. Refreshes the grabbed nodes list in screen.
 | Signature : grabbed\
 """,
@@ -173,6 +173,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     Note : the starred flags (*) only apply if '--details' isn't flagged.
 | Usage examples :
     run
+    run -f
     run -d -t 15 -r
     run -w 50 -a 5 -c 1
 """,

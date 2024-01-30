@@ -296,7 +296,7 @@ class SK_Interface (cmd.Cmd):
                 self.grabbed_nodes.append(self.placeholder.node)
     
     def do_grabbed(self, arg):
-        GRABBED_Interface(self)
+        GB_Interface(self)
     
     def do_run(self, arg):
 
@@ -433,7 +433,7 @@ class SK_Interface (cmd.Cmd):
                     if len(self.placeholder.fields) == 1:
                         print(f"(SYS: Started edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
                     
-                    padded_print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors(self.placeholder.fields))} results.", tab=0)
+                    print(f"Showing {len(names)}/{len(self.placeholder.node.get_neighbors(self.placeholder.fields))} results.")
                     strings_to_display = [f'| {i+1}. {name}' for i, name in enumerate(names)]
                     
                     formatted_lines = get_n_columns_from_elements(strings_to_display, ncol=ls_args.ncol, col_width=ls_args.width)
@@ -449,7 +449,7 @@ class SK_Interface (cmd.Cmd):
             padded_print("Error. Search field is needed", tab=0)
 
     def do_new(self, arg):
-        NEW_Interface(self)
+        NW_Interface(self)
 
     # Internal Methods  --------------------
             
