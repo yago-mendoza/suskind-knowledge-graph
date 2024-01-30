@@ -140,11 +140,8 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Signature : cd <ent>
 | Arguments :
     1. <ent>  A single node name. Must match case.
-| Technical notes :
-    N1. If the node is not found on the current PlaceHolder scope, the method
-    progressively  broadens the search criteria for nodes by first using the
-    current language and type, then only the language, then only the type, and
-    finally neither, if more specific searches yield no results.\
+| Usage examples :
+    cd Augustus César\
 """,
 
 'r': """\

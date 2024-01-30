@@ -14,6 +14,8 @@ from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
+# be able to use grab on LS command
+
 # how to clear whole fields even nodes
 
 # for the 'r' random method -------------------------------------------------
@@ -115,7 +117,6 @@ class SK_Interface (cmd.Cmd):
 
     # Public Methods -----
     
-    # [DONE]
     def do_save(self, arg): 
         filename = arg.strip() or 'data.txt'  # Use 'data' as default filename if none is provided
         try:
@@ -123,8 +124,6 @@ class SK_Interface (cmd.Cmd):
         except Exception as e:
             print(f"Error saving data: {e}")
     
-    # [DONE]
-    # Uses get_label_aligned_lines
     def do_help(self, arg):
         """Provide help for a specified command or list all commands if none is specified."""
         if arg:
@@ -142,10 +141,6 @@ class SK_Interface (cmd.Cmd):
             formatted_lines = get_label_aligned_lines(commands, ':', contents)
             padded_print("Available commands:", formatted_lines, tab=0)
         
-    # [DONE]
-    # If its full, seting will first empty and then set.
-    # Accepts only single/global-short fielding format (multiple)
-    # Also 'lang' and 'type'
     def do_set(self, arg):
         # Set is a multi-purpose function.
         args = arg.split()
@@ -188,7 +183,6 @@ class SK_Interface (cmd.Cmd):
                 else:
                     print("Invalid setting.")
     
-    # [DONE]
     def do_unset(self, arg):
         # Splits the input string into individual arguments for processing.
         args = arg.split()
@@ -214,9 +208,6 @@ class SK_Interface (cmd.Cmd):
                 # If the argument doesn't match any known settings, inform the user that the setting is invalid.
                 print("Invalid setting.")
 
-    # [DONE]
-    # If not recognized, guesses 4.
-    # If multiple options, lets picking.
     def do_cd(self, arg):
         # Initializes an argument parser specifically for the 'cd' (change directory) command.
         parser = argparse.ArgumentParser()
@@ -388,15 +379,11 @@ class SK_Interface (cmd.Cmd):
 
         ls_args, unknown = parser.parse_known_args(arg.split())
         
-        # DO IT LIKE THIS FOR ALL TO AVOID BEING KICKED OUT FOR USING UNKNOWN FLAGS
         if unknown:
             padded_print(f'Unrecognized argument(s): {" ".join(unknown)}', tab=0)
 
         if self.placeholder.fields:
 
-            # self.placeholder.node.synset1.append(self.G.random())
-            # Adds a random node each time, just to test that 'ls' correctly
-            # retrieves updated data each time is called.
             nodes = list(self.placeholder.node.get_neighbors(self.placeholder.fields))
             nodes = sorted(nodes, key=lambda node: node.name)
 
@@ -504,12 +491,6 @@ class SK_Interface (cmd.Cmd):
 #             editor.cmdloop("Entered editor mode on filters:")
 #         else:
 #             self.show_filters()
-    
-
-
-
-
-
 
     # def do_filter(self, arg):
 

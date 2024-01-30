@@ -349,9 +349,6 @@ class GB_Interface(cmd.Cmd):
         self.parent_cli.do_grab(arg)
 
     def do_ls(self, arg):
-        self.do_grabbed(arg)
-
-    def do_grabbed(self, arg):
         self.display()
     
     def emptyline(self):
