@@ -3,8 +3,8 @@
 This project introduces a graph-based framework designed to complement traditional Natural Language Processing (NLP) models. Central to this approach is a dynamic graph where nodes are featured entities, interconnected with contextual relevance. This structure allows for a nuanced understanding of relationships and context, offering precision beyond linear text analysis. The database is the culmination of three years of  data collection, manually undertaken to ensure quality. To facilitate user interaction, multiple Command Line Interfaces (CLI) makes database management intuitive. It also incorporates algorithms of graph search that can be configured on the fly, further enhancing its adaptability and utility for diverse data interaction needs.
 
 ## Documentation
-The following documentation provides an exhaustive study of all components of the system, especially those related with the CLIs interaction.
-[Documentation](https://yago-mendoza.gitbook.io/suskind_knowledge_graph/)
+The following [documentation](https://yago-mendoza.gitbook.io/suskind_knowledge_graph/) provides an exhaustive study of all components of the system, especially those related with the CLIs interaction.
+
 
 ## Roadmap
 
