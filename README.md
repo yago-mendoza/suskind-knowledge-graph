@@ -1,28 +1,60 @@
 # Suskind Knowledge Graph
 
-This project introduces a novel graph-based conceptual framework designed to enhance and complement traditional Natural Language Processing (NLP) models. Central to this approach is a dynamic graph where nodes are featured entities, interconnected with contextual relevance. This structure allows for a nuanced understanding of relationships and context, vital for the depth and accuracy in NLP tasks, offering depth and precision beyond linear text analysis. Unlike linear text analysis, this multi-dimensional approach captures the complexity of language and thought, providing a robust foundation for advanced NLP applications.
-
-This graph database is the culmination of seven years of meticulous data collection, manually undertaken to ensure quality and relevance. We've leveraged LangChain to scale and refine this vast dataset, aligning it with principles of "atomicity" and "proximity", ensuring that each piece of information is both granular and contextually placed. The result is a rich, actionable knowledge base, that redifines how we understand language in a multi-dimensional space.
-
-To facilitate user interaction with this complex dataset, I've developed an intuitive Command Line Interface (CLI) designed with 'skcomponents', designed to offer a seamless, user-friendly experience. This interface makes database management intuitive and efficient, enabling users to harness the full potential of the database with ease. Moreover, it incorporates algorithms of graph search that can be configured on the fly, further enhancing its adaptability and utility for diverse data interaction needs.
-
+This project introduces a graph-based framework designed to complement traditional Natural Language Processing (NLP) models. Central to this approach is a dynamic graph where nodes are featured entities, interconnected with contextual relevance. This structure allows for a nuanced understanding of relationships and context, offering precision beyond linear text analysis. The database is the culmination of three years of  data collection, manually undertaken to ensure quality. To facilitate user interaction, multiple Command Line Interfaces (CLI) makes database management intuitive. It also incorporates algorithms of graph search that can be configured on the fly, further enhancing its adaptability and utility for diverse data interaction needs.
 
 ## Documentation
+The following documentation provides an exhaustive study of all components of the system, especially those related with the CLIs interaction.
 [Documentation](https://yago-mendoza.gitbook.io/suskind_knowledge_graph/)
-
 
 ## Roadmap
 
-- Graph filtering
-- ai integration
+- **Database Preparation**
+  - ~~Cleaning Initial Node Database~~
 
+- **SK Components Dessign**
+  - ~~Design of Node Class~~
+  - ~~Design of NodeSet~~
+  - ~~Design of Graph~~
+
+- **Implementation of Search Algorithms**
+  - ~~Design of Centrality Algorithm~~
+  - ~~Development of Density Search Algorithm~~
+  - ~~Optional Design of Shortest Path Algorithm~~
+
+- ~~Organizing All Files into a Single Directory~~
+
+- **Development of Main Command Line Interface (CLI)**
+  - ~~Implementation of Basic Commands (cd, ls, etc.)~~
+  - ~~Development of Helper Functions~~
+  - ~~Creation of User Interfaces for Specific Functions~~
+  - ~~**Design of Auxiliary CLIs**~~
+    - ~~LS_Interface~~
+    - ~~VG_Interface~~
+    - ~~NW_Interface~~
+    - ~~GB_Interface~~
+  - ~~Integration of Centrality, Density Search, and Shortest Path Algorithms~~
+  - ~~Edge cases testing.~~
+
+- **AI for data processing**
+  - Study existing heuristic methods applicable to network analysis.
+  - Create a test corpus aligned with the principles of "atomicity" and "proximity".
+    
+  - **Large Language Model (LLM) Integration**
+    - Research and select an appropriate LLM for the task.
+    - Dessign the display to rate the success (granularity + contextual placement).
+    - **Testing and Validation**
+      - Implement the heuristic model on a subset of data.
+      - Monitor performance and adjust prompting to maximize success rate.
+        
+- **CLI Integration**
+  - Dessign a pipeline that connects AI generative capabilities with a gateway on CLI.
+  - Test success rate with updated tooling.
 
 ## Execution
 
 ```bash
-  pip -i skcli.py
+  py -i main.py
 ```
-
     
 ## License
 
