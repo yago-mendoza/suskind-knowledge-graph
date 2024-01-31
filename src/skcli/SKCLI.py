@@ -256,6 +256,14 @@ class SK_Interface (cmd.Cmd):
                 if response:
                     self._set_node(nodes[int(response)-1])
 
+    def do_pin(self, arg):
+        self.placeholder.node.edit(favorite=True)
+        self._set_node(self.placeholder.node)
+        
+    def do_unpin(self, arg):
+        self.placeholder.node.edit(favorite=False)
+        self._set_node(self.placeholder.node)
+
     def do_del(self, arg):
 
         current_node = self.placeholder.node

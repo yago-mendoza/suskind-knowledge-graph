@@ -253,6 +253,16 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     edit lemma NA\
 """,
 
+'pin': """\
+| Desc. Pins a node, which means it sets 'favorite' attr to True.
+| Signature : pin\
+""",
+
+'unpin': """\
+| Desc. Unpins a node, which means it sets 'favorite' attr to False.
+| Signature : unpin\
+""",
+
 'term': """\
 | Desc. Starts a terminal within the SKCLI terminal.
 | Signature : term\

@@ -22,9 +22,12 @@ class LS_Interface(cmd.Cmd):
         self.cmdloop()
     
     def do_cd(self, index): # finisehd
-        new_current_node = self.listed_nodes[int(index)-1]
-        self.parent_cli._set_node(new_current_node)
-        return True
+        if index.isdigit():
+            new_current_node = self.listed_nodes[int(index)-1]
+            self.parent_cli._set_node(new_current_node)
+            return True
+        else:
+            print('Index must be digit.')
     
     def do_ls(self, arg=None):
 
@@ -142,83 +145,87 @@ class LS_Interface(cmd.Cmd):
     # Q2. Also, how to avoid '>>> tf' from breaking (no arguments) without adding deeper tabs. That is : how to stop the execution of a command because arguments are not as expected, to avoid the app to break.
 
     def do_tf(self, arg):
-
         
         def _parse_command(parts):
             idxs = [int(part) for part in parts if part.isdigit()]
-            fields = [part for part in parts if part.startswith('y') or part.startswith('e')]
+            fields = [part for part in parts if part[0] in 'ye']
             name_index = next((i for i, part in enumerate(parts) if not part.isdigit()), len(parts))
             field_index = next((i for i, part in enumerate(parts) if part in fields), len(parts))
-            node_name = " ".join(parts[name_index:field_index])
-            return idxs, node_name, fields
-        
-        args = arg.split()
-        if len(args)<1:
-            print('Not enough arguments.')
-        
-        idxs, node_name, fields = _parse_command(args)
+            return idxs, " ".join(parts[name_index:field_index]), fields
 
-        if not fields:
-            fields = self.parent_cli.placeholder.fields
-        
-        if not idxs:
-            nodes_to_be_transferred = self.listed_nodes
-        else:
-            if (max(idxs)+1) > len(self.listed_nodes):
-                print('Indexes exceed dimensions.')
-                nodes_to_be_transferred = []
-            else: 
-                nodes_to_be_transferred = [self.listed_nodes[i-1] for i in idxs]
+        args = arg.split()
+        if not args:
+            return print('Not enough arguments.')
+
+        idxs, node_name, fields = _parse_command(args)
+        fields = fields or self.parent_cli.placeholder.fields
+        nodes_to_be_transferred = [self.listed_nodes[i-1] for i in idxs] if idxs else self.listed_nodes
+        if idxs and max(idxs) >= len(self.listed_nodes):
+            return print('Indexes exceed dimensions.')
 
         homologous = self.parent_cli.G.select(name=node_name)
+        if not nodes_to_be_transferred:
+            return
 
-        if nodes_to_be_transferred:
+        match_node = None
+        if len(homologous) == 1:
+            match_node = homologous[0]
+        elif homologous:
+            SelectInterface([node._convert_header_to_compact_format() for node in homologous], 
+                            self, f"Found {len(homologous)} homologous.",
+                            "(Select the node to which to transfer the connections)", '>> ').cmdloop()
+            response = self._get_response()
+            match_node = homologous[int(response)-1] if response.isdigit() else None
 
-            if len(homologous)==1:
-                match_node = homologous[0]
-            else:
-                statement_1 = f"Found {len(homologous)} homologous."
-                statement_2 = "(Select the node to which to transfer the connections)"
-                formatted_nodes = [node._convert_header_to_compact_format() for node in homologous]
-                SelectInterface(formatted_nodes, self, statement_1, statement_2, '>> ').cmdloop()
-                response = self._get_response()
-                
-                if response.isdigit():
-                    match_node = homologous[response-1]
-                else:
-                    match_node = None
+        initialNeighborCount = len(match_node._get_raw_content())
 
-            if match_node:
+        if match_node:
+            for node in nodes_to_be_transferred:
                 for field in fields:
-                    for node in nodes_to_be_transferred:
-                        self.parent_cli.G.bind(match_node, node, field)
-                print(f"Succesfully transferred {len(nodes_to_be_transferred)} connections to '{node_name}' at {fields} field(s).")
-            else:
-                print('Transfer process aborted.')
-
-
-
+                    self.parent_cli.G.bind(match_node, node, field)
+            finalNeighborCount = len(match_node._get_raw_content())
+            N = len(nodes_to_be_transferred) * len(fields)
+            n = finalNeighborCount - initialNeighborCount
+            diff = (finalNeighborCount-initialNeighborCount)/initialNeighborCount*100
+            print(f"Transferred {n}/{N} (+{round(diff,2)}%) connections to '{node_name}' at {fields} field(s).")
+        else:
+            print('Transfer process aborted.')
 
     def do_cp(self, arg):
 
         args = arg.split()
-        idxs = [int(i) for i in args.split() if i.isdigit()]
+        idxs = [int(i) for i in args if i.isdigit()]
         
-        target_nodes = [self.listed_nodes[i-1] for i in idxs]
+        if not idxs:
+            target_nodes = self.listed_nodes
+        else:
+            target_nodes = [self.listed_nodes[i-1] for i in idxs]
+
         target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
+
+        initialNeighborCount = len(self.ls_node._get_raw_content())
 
         for target_field in target_fields:
             for node in target_nodes:
                 self.parent_cli.G.bind(self.ls_node, node, target_field)
+        
+        finalNeighborCount = len(self.ls_node._get_raw_content())
 
-        print(f"Copied {len(target_nodes)} nodes to {'{'}{', '.join(target_fields)}{'}'}.")
+        N = len(target_nodes)
+        n = finalNeighborCount - initialNeighborCount
+        diff = (finalNeighborCount-initialNeighborCount)/initialNeighborCount*100 
+        print(f"Copied nodes to {target_fields} fields (+{round(diff,2)}%).")
 
     def do_mv(self, arg):
 
         args = arg.split()
-        idxs = [int(i) for i in args.split() if i.isdigit()]
-        
-        target_nodes = [self.listed_nodes[i-1] for i in idxs]
+        idxs = [int(i) for i in args if i.isdigit()]
+
+        if not idxs:
+            target_nodes = self.listed_nodes
+        else:
+            target_nodes = [self.listed_nodes[i-1] for i in idxs]
+            
         target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
 
         for target_field in target_fields:
@@ -228,7 +235,7 @@ class LS_Interface(cmd.Cmd):
                 field_to_remove_from = self.parent_cli.placeholder.fields[0]
                 self.parent_cli.G.unbind(self.ls_node, node, field_to_remove_from)
 
-        print(f"Moved {len(target_nodes)} nodes to {'{'}{', '.join(target_fields)}{'}'}.")
+        print(f"Moved {len(target_nodes)} nodes to {target_fields} fields.")
 
     def default(self, line):
         line = line.strip()

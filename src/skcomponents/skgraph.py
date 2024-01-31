@@ -149,7 +149,8 @@ class Graph(NodeSet):
         self.delete_node(node_b)
 
     def bind(self, target_node, append_node, target_edge_type):
-        self._update_reciprocal_edges(target_node, append_node, target_edge_type, 'add')
+        if target_node != append_node:
+            self._update_reciprocal_edges(target_node, append_node, target_edge_type, 'add')
 
     def unbind(self, target_node, remove_node, target_edge_type):
         self._update_reciprocal_edges(target_node, remove_node, target_edge_type, 'remove')

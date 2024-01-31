@@ -86,6 +86,13 @@ class Node:
     ###########################
     # Used by external Classes
     ###########################
+
+    def _get_raw_content(self):
+        # Returns all neighbors (repeated among fields, differently to get_neighbors)
+        lst = []
+        for field in ['y0', 'y1', 'y2','e0', 'e1', 'e2']:
+            lst.extend(self.get_neighbors(field))
+        return lst
     
     #[not-documented]
     def _convert_header_to_str_format(self):
@@ -96,7 +103,7 @@ class Node:
     def _convert_header_to_compact_format(self):
         # Used at _update_node_relationships() when load_data() is run from Graph object.
         # Used at save() when we want to save the data from Graph object.
-        return f'[{self.lang}][{self.type}]@[{self.name}({self.lemma})]'
+        return f'[{self.lang}][{self.type}]@[{self.name}({self.lemma}){"*" if self.favorite else ""}]'
 
     #[not-documented]
     def _copy(self):

@@ -48,4 +48,4 @@ class Placeholder():
         # Concatenates the fields into a single string.
         fields_list = '[' + '/'.join(self.fields) + ']'
         # Constructs and returns the final prompt string, incorporating time, node properties, and additional fields.
-        return f"{str_time} ~ [{self.lang}][{self.type}]@[{self.name}({self.lemma or ''})]/{fields_list or ''}: "
+        return f"{str_time} ~ {self.node._convert_header_to_compact_format()}/{fields_list or ''}: "
