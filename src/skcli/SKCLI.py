@@ -18,11 +18,11 @@ from src.skcli.aux_funcs.command_docstrings import *
 # document sktools, search-algorithms
 # document visuals, aux_clis SelectInterface
 
-# lang fr
-# type j
-# name <name>   # if the name already existed, we select one entry to merge (or new lemma)
-# lemma <lemma>  # 
-# fav 
+
+
+# Poder pasar conexions entre nodes, directament
+
+# lo del fav
 
 # Change _as_compact_string_node_format() so that it displays '*' with name if favorite.
 
@@ -66,30 +66,52 @@ class SK_Interface (cmd.Cmd):
         
     def do_term(self, arg):
 
+        import re
+
         print("Python terminal. Access to SKComponents objects and methods.")
         print('Type "Node" or "G" to inspect objects and "exit" to leave.')
 
         # Include self.G as G in the local context
         local_context = {"self": self, "Node": Node, "G": self.G}
 
+        def should_wrap_in_print(command):
+            # Check if the command is explicitly a print statement or seems to be an assignment
+            if command.startswith("print"):
+                return False
+            # A simple regex to catch straightforward assignments; this won't catch everything but improves upon the original
+            if re.search(r'^\s*\w+\s*=', command):
+                return False
+            return True
+
+        # In your loop, modify the command based on this function's return value
         while True:
-            # Get user input
             command = input(">>> ")
 
-            # Check for exit command
             if command in ["exit", "quit", "q"]:
                 print("Exiting terminal...")
                 break
 
-            # Modify the command to print the output if it is not an assignment or already a print statement
-            if not command.startswith("print") and "=" not in command:
-                command = "print(" + command + ")"
+            if command.strip() == "":
+                continue
 
-            # Execute the command
+            # Wrap the command in a try-except to capture execution errors
             try:
-                exec(command, globals(), local_context)
-            except Exception as e:
-                print(f"Error: {e}")
+                # Use compile to prepare a code object from the command
+                code_obj = compile(command, '<string>', 'eval')
+            except SyntaxError:
+                # Fallback to exec for statements that do not return a value
+                try:
+                    exec(command, globals(), local_context)
+                except Exception as e:
+                    print(f"Error: {e}")
+            else:
+                # Execute compiled command that is expected to return a value
+                try:
+                    result = eval(code_obj, globals(), local_context)
+                    if result is not None:
+                        print(result)
+                except Exception as e:
+                    print(f"Error: {e}")
         
     def do_save(self, arg): 
         filename = arg.strip() or 'data.txt'  # Use 'data' as default filename if none is provided
@@ -481,6 +503,50 @@ class SK_Interface (cmd.Cmd):
 
     def default(self, line):
         padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
+
+    def do_edit(self, arg):
+
+        # Checks ---
+
+        # Parse the input arguments
+        args = arg.split()
+        if len(args) < 2:
+            print("Error: Invalid syntax. Use 'edit [attribute] [new_value]'.")
+            return
+
+        attribute, new_value = args[0], ' '.join(args[1:])
+        cn = self.placeholder.node
+
+        # Check if the attribute is valid
+        valid_attributes = ['lang', 'type', 'name', 'lemma']
+        if attribute not in valid_attributes:
+            print(f"Error: Unknown attribute '{attribute}'. Valid attributes are {', '.join(valid_attributes)}.")
+            return
+
+        # Check if the new value is the same as the current value
+        current_value = getattr(cn, attribute)
+        if new_value == current_value:
+            print("The new value must be different from the current.")
+            return
+        
+        # Algorithm ---
+
+        # Prepare the query dynamically based on the attribute being edited
+        query = {attr: getattr(cn, attr) if attr != attribute else new_value for attr in valid_attributes}
+        # {lang: cn.lang, type: cn.type, name: cn.name, lemma: new_value}
+
+        if self.G.find(**query):
+            perfect_match_node = self.G.find(**query)
+            self.G.merge_nodes(cn, perfect_match_node)                        
+            print('The conformed node matched an existing one, and has been merged.')
+        else:
+            # Apply the change
+            print('Change applied successfully.')
+        
+        getattr(cn, 'edit')(**{attribute: new_value})
+
+        self.placeholder.update_node(self.placeholder.node)
+
 
 # los argumentos -> library argparse, action, help 
         

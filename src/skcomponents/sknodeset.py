@@ -102,8 +102,8 @@ class NodeSet(list):
         operator, threshold = ('=', args[0]) if isinstance(args[0], int) else (args[0], args[1])
         fielding = args[2:] if isinstance(args[0], str) else args[1:]
         fielding = ['y','e'] if not fielding else fielding
-        return [node for node in self
-                if self.___compare(len(node.get_neighbors(*fielding)),operator, threshold)]
+        return NodeSet([node for node in self
+                        if self.___compare(len(node.get_neighbors(*fielding)),operator, threshold)])
     
     #######
     # Edit

@@ -76,6 +76,19 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
     mv 50 12 13 14 y0 y1 
 """,
 
+'tf': """\
+| Desc. Transfers the selected contents to the choice fields of an other node.
+| Signature : tf [<*index>] [node_name] [<*field>]
+| Arguments :
+    1. <*index> [opt] : The index(s) representing connections. If none, moves them all.
+    2. <node_name>    : The node where the connections will be set.
+    2. <*field> [opt] : The field(s) where to replicate. If none, selects the current.
+| Usage examples :
+    tf 18 19 25 55 Rodillo de amasar y0 y1
+    tf Vergüenza e1
+    tf Camino
+""",
+
 'cp': """\
 | Desc. Copies bindings to a field.
 | Signature : cp <*index> <*field>
@@ -225,6 +238,19 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Usage examples :
     grab
     grab Augusto César\
+""",
+
+'edit': """\
+| Desc. Edit a hash attribute for the current node.
+| Signature : edit [hash_attr] [new_value]\
+| Arguments :
+    1. Hash Attribute : the attribute we want to edit.
+    2. New Value : the new value the attribute will be assigned.
+| Usage examples :
+    edit lang rs
+    edit type w
+    edit name Tendencia
+    edit lemma NA\
 """,
 
 'term': """\

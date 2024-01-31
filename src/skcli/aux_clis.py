@@ -138,10 +138,71 @@ class LS_Interface(cmd.Cmd):
 
         print('(SYS: Resumed edit-session)')
 
+    # Q1. This function is critical, and my life depends on its behavior. I need you to refactor it intelignetly to occupy less lines, but to keep the original behavior intact. It has to continue running. Please. Refactor it elegantly. Respect all prints too. Everything, except structure, so refactor it.
+    # Q2. Also, how to avoid '>>> tf' from breaking (no arguments) without adding deeper tabs. That is : how to stop the execution of a command because arguments are not as expected, to avoid the app to break.
+
+    def do_tf(self, arg):
+
+        
+        def _parse_command(parts):
+            idxs = [int(part) for part in parts if part.isdigit()]
+            fields = [part for part in parts if part.startswith('y') or part.startswith('e')]
+            name_index = next((i for i, part in enumerate(parts) if not part.isdigit()), len(parts))
+            field_index = next((i for i, part in enumerate(parts) if part in fields), len(parts))
+            node_name = " ".join(parts[name_index:field_index])
+            return idxs, node_name, fields
+        
+        args = arg.split()
+        if len(args)<1:
+            print('Not enough arguments.')
+        
+        idxs, node_name, fields = _parse_command(args)
+
+        if not fields:
+            fields = self.parent_cli.placeholder.fields
+        
+        if not idxs:
+            nodes_to_be_transferred = self.listed_nodes
+        else:
+            if (max(idxs)+1) > len(self.listed_nodes):
+                print('Indexes exceed dimensions.')
+                nodes_to_be_transferred = []
+            else: 
+                nodes_to_be_transferred = [self.listed_nodes[i-1] for i in idxs]
+
+        homologous = self.parent_cli.G.select(name=node_name)
+
+        if nodes_to_be_transferred:
+
+            if len(homologous)==1:
+                match_node = homologous[0]
+            else:
+                statement_1 = f"Found {len(homologous)} homologous."
+                statement_2 = "(Select the node to which to transfer the connections)"
+                formatted_nodes = [node._convert_header_to_compact_format() for node in homologous]
+                SelectInterface(formatted_nodes, self, statement_1, statement_2, '>> ').cmdloop()
+                response = self._get_response()
+                
+                if response.isdigit():
+                    match_node = homologous[response-1]
+                else:
+                    match_node = None
+
+            if match_node:
+                for field in fields:
+                    for node in nodes_to_be_transferred:
+                        self.parent_cli.G.bind(match_node, node, field)
+                print(f"Succesfully transferred {len(nodes_to_be_transferred)} connections to '{node_name}' at {fields} field(s).")
+            else:
+                print('Transfer process aborted.')
+
+
+
+
     def do_cp(self, arg):
 
         args = arg.split()
-        idxs = [int(i) for i in args if i.isdigit()]
+        idxs = [int(i) for i in args.split() if i.isdigit()]
         
         target_nodes = [self.listed_nodes[i-1] for i in idxs]
         target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
@@ -155,7 +216,7 @@ class LS_Interface(cmd.Cmd):
     def do_mv(self, arg):
 
         args = arg.split()
-        idxs = [int(i) for i in args if i.isdigit()]
+        idxs = [int(i) for i in args.split() if i.isdigit()]
         
         target_nodes = [self.listed_nodes[i-1] for i in idxs]
         target_fields = [i for i in args if i.isalnum() and not i.isdigit()]

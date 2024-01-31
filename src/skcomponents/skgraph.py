@@ -137,6 +137,17 @@ class Graph(NodeSet):
                 if target_node in getattr(node, attr):
                     getattr(node, attr).remove(target_node)
 
+    def merge_nodes(self, node_a, node_b):
+
+        # Step 1: Unbinding node_a from all connections (not necessary in all implementations, but shown for clarity)
+        # This step might be skipped depending on the graph implementation, as deleting a node might automatically handle this.
+        for edge_type in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+            for neighbor in node_b.get_neighbors(edge_type):
+                self.unbind(node_b, neighbor, edge_type)
+                self.bind(node_a, neighbor, edge_type)
+        # Step 3: Deleting node_a
+        self.delete_node(node_b)
+
     def bind(self, target_node, append_node, target_edge_type):
         self._update_reciprocal_edges(target_node, append_node, target_edge_type, 'add')
 
