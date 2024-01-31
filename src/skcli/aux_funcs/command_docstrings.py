@@ -41,15 +41,15 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
     cd 47\
 """,
 
-'add': """\
-| Desc. Binds nodes to the current.
-| Signature : add <name>
+'___': """\
+| Desc. Binds a given node to the current.
+| Signature : <name>
 | Arguments :
     1. <name>  The name reference to find for a node to be binded.
     <!> If multiple coincidences are encountered, pops an interface for selection.
     <!> If no matching is encountered, allows for the creation (and binding) of the node.
 | Usage examples :
-    add Sensatez\
+    Sensatez\
 """,
 
 'del': """\
@@ -68,35 +68,43 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 'mv': """\
 | Desc. Moves bindings to a different field.
-| Signature : mv <*index> <*field>
+| Signature : mv <*index> <name> <*field>
 | Arguments :
-    1. <*index>  One or more indexes representing connections to be relocated.
-    2. <*field>  The field(s) to which the connections are intended to be reconnected.
+    1. <*index> [opt]  Index(s) representing connections. If none is entered, all are selected.
+    2. <name>   [opt]  Name of the node to which we want to move. If none, placeholder node is selected.
+    3. <*field> [opt]  The field(s) to which the connections are headed towards. If none, selects placeholder fields.
+    Note. Either <name> or <*fields> need to be specified.
 | Usage examples :
-    mv 50 12 13 14 y0 y1 
-""",
-
-'tf': """\
-| Desc. Transfers the selected contents to the choice fields of an other node.
-| Signature : tf [<*index>] [node_name] [<*field>]
-| Arguments :
-    1. <*index> [opt] : The index(s) representing connections. If none, moves them all.
-    2. <node_name>    : The node where the connections will be set.
-    2. <*field> [opt] : The field(s) where to replicate. If none, selects the current.
-| Usage examples :
-    tf 18 19 25 55 Rodillo de amasar y0 y1
-    tf Vergüenza e1
-    tf Camino
+    mv y1
+    mv 22-28 Liebre
+    mv 48 49 e1
+    mv 50 12-14 Caparazón y0 y1 
 """,
 
 'cp': """\
 | Desc. Copies bindings to a field.
-| Signature : cp <*index> <*field>
+| Signature : cp <*index> <name> <*field>
 | Arguments :
-    1. <*index>  One or more indexes representing connections to be copied.
-    2. <*field>  The field(s) to which the connections are intended to be copied.
+    1. <*index> [opt]  Index(s) representing connections. If none is entered, all are selected.
+    2. <name>   [opt]  Name of the node to which we want to move. If none, placeholder node is selected.
+    3. <*field> [opt]  The field(s) to which the connections are headed towards. If none, selects placeholder fields.
+    Note. Either <name> or <*fields> need to be specified.
 | Usage examples :
-    cp 50 12 13 14 y0 y1 
+    cp y1
+    cp 22-28 Liebre
+    cp 48 49 e1
+    cp 50 12-14 Caparazón y0 y1 
+""",
+
+'cross': """\
+| Desc. Interconnects every node of a subset either via 'y1' or 'e1'.
+| Signature : cross <*index> [y/e]
+| Arguments :
+    1. <*index>  Index(s) representing connections. Mandatory.
+    2. [y/e]     If 'y', the connections will be set through 'synset1'. Otherwise, through 'semset1'.
+| Usage examples :
+    cross 4-12 e
+    cross 4-12 y
 """,
 
 'grab': """\
@@ -175,12 +183,14 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'run': """\
 | Desc. Runs a density search on the grabbed nodes set.
-| Signature : run [-f] [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
+| Signature : run [-f] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 | Arguments :
     -f, --fielding  Restricts the search to results within the placeholder fielding.
+    -l, --lang      Restricts the search to results of the lang.
+    -t, --type      Restricts the search to results of the type.
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
-    -t, --stop      Limit the number of results.
+    -p, --stop      Limit the number of results.
     (*) -w, --width     Max allowed width for column (absolute).
     (*) -a, --abbr      Max allowed character length for names.
     (*) -c, --ncol      Number of columns.
@@ -190,6 +200,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     run -f
     run -d -t 15 -r
     run -w 50 -a 5 -c 1
+    run -l es
 """,
 
 'del': """\
@@ -199,19 +210,24 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
-| Signature : ls [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
+| Signature : ls [<y/e_>] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 | Arguments :
+    <y/e_>      Can automatically switch to a given field.
+    -l, --lang      Restricts the search to results of the lang.
+    -t, --type      Restricts the search to results of the type.
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
-    -t, --stop      Limit the number of results.
+    -p, --stop      Limit the number of results.
     (*) -w, --width     Max allowed width for column (absolute).
     (*) -a, --abbr      Max allowed character length for names.
     (*) -c, --ncol      Number of columns.
     Note : the starred flags (*) only apply if '--details' isn't flagged.
 | Usage examples :
     ls
+    ls y0
     ls -d -t 15 -r
     ls -w 50 -a 5 -c 1
+    ls -l es
 """,
 
 'new': """\

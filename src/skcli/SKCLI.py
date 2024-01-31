@@ -15,24 +15,9 @@ from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
 
-# document sktools, search-algorithms
-# document visuals, aux_clis SelectInterface
-
-
-
-# Poder pasar conexions entre nodes, directament
-
-# lo del fav
-
-# Change _as_compact_string_node_format() so that it displays '*' with name if favorite.
-
-# Check that 'r -f' works as expected
+# adding, editing, inspecting and deleting examples
 
 # do_save well implemented
-
-# What about 'examples'
-# What about 'q' (long)
-  # editing, inspecting, ...
 
 #################################################################################
 
@@ -73,15 +58,6 @@ class SK_Interface (cmd.Cmd):
 
         # Include self.G as G in the local context
         local_context = {"self": self, "Node": Node, "G": self.G}
-
-        def should_wrap_in_print(command):
-            # Check if the command is explicitly a print statement or seems to be an assignment
-            if command.startswith("print"):
-                return False
-            # A simple regex to catch straightforward assignments; this won't catch everything but improves upon the original
-            if re.search(r'^\s*\w+\s*=', command):
-                return False
-            return True
 
         # In your loop, modify the command based on this function's return value
         while True:
@@ -144,10 +120,9 @@ class SK_Interface (cmd.Cmd):
             # If no specific arguments are provided, default to setting all 'y' and 'e' prefixed fields (y0, y1, y2, e0, e1, e2).
             for field in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
                 self.placeholder.update_field('add', field)
+        elif set(self.placeholder.fields).issubset({'e0', 'e1', 'e2', 'y0', 'y1', 'y2'}):
+            self.placeholder.fields = []
         for setting in args:
-            if {'e0', 'e1', 'e2', 'y0', 'y1', 'y2'}.issubset(self.placeholder.fields):
-                self.placeholder.fields = []
-                # DE ENTRADA, Si esta lleno y estamos intentando hacer un 'set', será que queremos borrar y dejar solo ese. Lo entendemos.
             # Check if the argument is a shorthand ('y' or 'e') representing a set of fields.
             if setting in ['y', 'e']:
                 # If shorthand is used, add all related fields (e.g., y0, y1, y2 for 'y') to the placeholder.
@@ -259,7 +234,7 @@ class SK_Interface (cmd.Cmd):
     def do_pin(self, arg):
         self.placeholder.node.edit(favorite=True)
         self._set_node(self.placeholder.node)
-        
+
     def do_unpin(self, arg):
         self.placeholder.node.edit(favorite=False)
         self._set_node(self.placeholder.node)
@@ -331,11 +306,15 @@ class SK_Interface (cmd.Cmd):
         parser.add_argument('k', nargs='?', type=int, help='MSL (Minimum Shared Linkage) as an integer.', default=None)
         parser.add_argument('-f', '--fielding', action='store_true', help='Restricts the search to results within the placeholder fielding.')
         parser.add_argument('-d', '--details', action='store_true', help='Provides a more detailed display.')
-        parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
+        parser.add_argument('-w', '--width', type=int, default=35, help='Width for the column.')
         parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
-        parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
-        parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
+        parser.add_argument('-p', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
+        parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns.')
         parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
+
+        parser.add_argument('-l', '--lang', default=None, help='Shuffles the results.')
+        parser.add_argument('-t', '--type', default=None, help='Shuffles the results.')
+
         ls_args, unknown = parser.parse_known_args(arg.split())
         if unknown:
             print(f'Unrecognized argument(s): {" ".join(unknown)}')
@@ -354,7 +333,12 @@ class SK_Interface (cmd.Cmd):
         fielding = self.placeholder.fields if ls_args.fielding else []
 
         # Perform the density search (excludes original ones)
-        output_nodes = [node for node in density_search(self.grabbed_nodes, k, *fielding) if node not in self.grabbed_nodes]
+        output_nodes = NodeSet([node for node in density_search(self.grabbed_nodes, k, *fielding) if node not in self.grabbed_nodes])
+
+        if ls_args.lang:
+            output_nodes = output_nodes.select(lang=ls_args.lang)
+        if ls_args.type:
+            output_nodes = output_nodes.select(type=ls_args.type)
 
         # Apply the arguments to the nodes
                 
@@ -401,24 +385,37 @@ class SK_Interface (cmd.Cmd):
 
     def do_ls(self, arg):
 
-        # 14:32:18 ~ [en][j][Normal]@[('')]/[y]: ls -f1   #   remember filters can be applied
+        args = arg.split()
+
+        if args and args[0] in ('y0', 'y1', 'y2', 'e0', 'e1', 'e2'):
+            self.placeholder.fields = []
+            self.placeholder.update_field('add', args.pop(0))
 
         parser = argparse.ArgumentParser(description='List information about the current node.')
         parser.add_argument('-d', '--details', action='store_true', default=None, help='Provides a more detailed display.')
-        parser.add_argument('-w', '--width', type=int, default=20, help='Width for the column.')
+        parser.add_argument('-w', '--width', type=int, default=35, help='Width for the column.')
         parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
-        parser.add_argument('-t', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
-        parser.add_argument('-c', '--ncol', type=int, default=3, help='Number of columns.')
+        parser.add_argument('-p', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
+        parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns.')
         parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
 
-        ls_args, unknown = parser.parse_known_args(arg.split())
+        parser.add_argument('-l', '--lang', default=None, help='Shuffles the results.')
+        parser.add_argument('-t', '--type', default=None, help='Shuffles the results.')
+
+        ls_args, unknown = parser.parse_known_args(args)
         
         if unknown:
             padded_print(f'Unrecognized argument(s): {" ".join(unknown)}', tab=0)
 
         if self.placeholder.fields:
 
-            nodes = list(self.placeholder.node.get_neighbors(self.placeholder.fields))
+            nodes = self.placeholder.node.get_neighbors(self.placeholder.fields)
+
+            if ls_args.lang:
+                nodes = nodes.select(lang=ls_args.lang)
+            if ls_args.type:
+                nodes = nodes.select(type=ls_args.type)
+
             nodes = sorted(nodes, key=lambda node: node.name)
 
             if nodes:
@@ -463,7 +460,7 @@ class SK_Interface (cmd.Cmd):
             else:
                 padded_print('The set field for the target node is empty.', tab=0)
 
-            if len(self.placeholder.fields) == 1:
+            if len(self.placeholder.fields) == 1 :
                 LS_Interface(nodes, self, ls_args)
 
         if not self.placeholder.fields:

@@ -1,6 +1,8 @@
 import cmd 
 import datetime
 
+from itertools import combinations
+
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 from src.skcli.aux_funcs.err_mssg import *
@@ -64,7 +66,7 @@ class LS_Interface(cmd.Cmd):
 
         # revisar que tire
 
-        idxs = [int(_) for _ in idxs.split()]
+        idxs = sk.parse_idxs_to_single_idxs(idxs) # accepts ranges as 5-8 (5,6,7,8)
         unbind_cases = []
         for idx in idxs:
             target_node = self.listed_nodes[idx-1]
@@ -79,48 +81,94 @@ class LS_Interface(cmd.Cmd):
         self.do_ls()
     
     def do_grab(self, idxs):
-        idxs = [int(_) for _ in idxs.split()]
+        idxs = sk.parse_idxs_to_single_idxs(idxs) # accepts ranges as 5-8 (5,6,7,8)
+        if not idxs:
+            idxs = list(range(len(self.listed_nodes)))
         for idx in idxs:
             target_node = self.listed_nodes[idx-1]
             if target_node not in self.parent_cli.grabbed_nodes:
                 self.parent_cli.grabbed_nodes.append(target_node)
+
         padded_print(f'Grabbed {len(idxs)} nodes.')
+    
+    def do_cross(self, args):
+        # Divide los argumentos en índices y tipo de relación
+        parts = args.split()
+        idxs = ' '.join(parts[:-1])  # Todos menos el último
+        relation_type = parts[-1]  # Último argumento
 
-    def do_add(self, name):
+        # Verifica si el tipo de relación es válido
+        if relation_type not in ['y', 'e']:
+            print("Invalid relation type. Use 'y' or 'e'.")
+            return
 
-        def capitalize_name(name):
-            return name[0].upper() + name[1:] if name else None
+        # Utiliza la función existente para convertir rangos en índices individuales
+        idxs = sk.parse_idxs_to_single_idxs(idxs)
 
-        def select_node(name):
-            matched_nodes = self.parent_cli.G.select(name=name)
-            if matched_nodes:
+        selected_nodes = [self.listed_nodes[idx - 1] for idx in idxs] if idxs else self.listed_nodes
+
+        # Bindea los nodos seleccionados
+        for node1, node2 in combinations(selected_nodes, 2):
+            # Bindea cada par de nodos
+            self.parent_cli.G.bind(node1, node2, relation_type + '1')
+
+        print(f"Nodes successfully binded with {relation_type + '1'} relationship.")
+
+    def default(self, line):
+
+        line = line.strip()
+        if line[0] in {'y', 'e'} and line[1] in {'0', '1', '2'} and len(line)==2:
+            self.parent_cli.placeholder.fields = []
+            self.parent_cli.placeholder.update_field('add', line)
+            self.do_ls()
+        
+        elif len(line)>2 and (line.isalpha() or line.isalnum()):
+
+            name = line       
+
+            def capitalize_name(name):
+                return name[0].upper() + name[1:] if name else None
+
+            def select_node(name):
+                
                 header_statement = "Did you mean..."
                 tail_statement = "(Press Enter to select none)"
                 formatted_nodes = [node._convert_header_to_compact_format() for node in matched_nodes]
                 SelectInterface(formatted_nodes, self, header_statement, tail_statement).cmdloop()
                 response = self._get_response()
                 return matched_nodes[int(response)-1] if response else None
-            return None
 
-        def create_node():
-            user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
-            if user_input in ['y']:
-                creation_input = input("   | Enter <lang> <type> <lemma> in this format:\n   > ")
-                parts = creation_input.split()
-                if len(parts) >= 2:
-                    return parts[0], parts[1], ' '.join(parts[2:]) or 'NA'
-            return None, None, None
 
-        def bind_node(current_node, selected_node, edge_type):
-            if selected_node and not selected_node in current_node.get_neighbors(edge_type):
-                self.parent_cli.G.bind(current_node, selected_node, edge_type)
-                print(f"| Successfully binded '{selected_node.name}'.")
-            elif selected_node:
-                print('| The node was already present.')
+            def create_node():
+                user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
+                if user_input in ['y']:
+                    creation_input = input("   | Enter <lang> <type> <lemma> in this format:\n   > ")
+                    parts = creation_input.split()
+                    if len(parts) >= 2:
+                        return parts[0], parts[1], ' '.join(parts[2:]) or 'NA'
+                return None, None, None
 
-        while name:
+            def bind_node(current_node, selected_node, edge_type):
+                if selected_node and not selected_node in current_node.get_neighbors(edge_type):
+                    self.parent_cli.G.bind(current_node, selected_node, edge_type)
+                    print(f"| Successfully binded '{selected_node.name}'.")
+                elif selected_node:
+                    print('| The node was already present.')
+
             name = capitalize_name(name)
-            selected_node = select_node(name)
+
+            matched_nodes = self.parent_cli.G.select(name=name)
+
+            if matched_nodes:
+
+                if len(matched_nodes) > 1:
+                    selected_node = select_node(name)
+                else:
+                    selected_node = matched_nodes[0]
+            
+            if not matched_nodes:
+
+                selected_node = None
 
             if not selected_node:
                 lang, type, lemma = create_node()
@@ -136,116 +184,97 @@ class LS_Interface(cmd.Cmd):
 
             if selected_node:
                 bind_node(self.ls_node, selected_node, self.parent_cli.placeholder.fields[0])
-
-            name = input(">> add ")
-
-        print('(SYS: Resumed edit-session)')
-
-    # Q1. This function is critical, and my life depends on its behavior. I need you to refactor it intelignetly to occupy less lines, but to keep the original behavior intact. It has to continue running. Please. Refactor it elegantly. Respect all prints too. Everything, except structure, so refactor it.
-    # Q2. Also, how to avoid '>>> tf' from breaking (no arguments) without adding deeper tabs. That is : how to stop the execution of a command because arguments are not as expected, to avoid the app to break.
-
-    def do_tf(self, arg):
         
-        def _parse_command(parts):
-            idxs = [int(part) for part in parts if part.isdigit()]
-            fields = [part for part in parts if part[0] in 'ye']
-            name_index = next((i for i, part in enumerate(parts) if not part.isdigit()), len(parts))
-            field_index = next((i for i, part in enumerate(parts) if part in fields), len(parts))
-            return idxs, " ".join(parts[name_index:field_index]), fields
-
-        args = arg.split()
-        if not args:
-            return print('Not enough arguments.')
-
-        idxs, node_name, fields = _parse_command(args)
-        fields = fields or self.parent_cli.placeholder.fields
-        nodes_to_be_transferred = [self.listed_nodes[i-1] for i in idxs] if idxs else self.listed_nodes
-        if idxs and max(idxs) >= len(self.listed_nodes):
-            return print('Indexes exceed dimensions.')
-
-        homologous = self.parent_cli.G.select(name=node_name)
-        if not nodes_to_be_transferred:
-            return
-
-        match_node = None
-        if len(homologous) == 1:
-            match_node = homologous[0]
-        elif homologous:
-            SelectInterface([node._convert_header_to_compact_format() for node in homologous], 
-                            self, f"Found {len(homologous)} homologous.",
-                            "(Select the node to which to transfer the connections)", '>> ').cmdloop()
-            response = self._get_response()
-            match_node = homologous[int(response)-1] if response.isdigit() else None
-
-        initialNeighborCount = len(match_node._get_raw_content())
-
-        if match_node:
-            for node in nodes_to_be_transferred:
-                for field in fields:
-                    self.parent_cli.G.bind(match_node, node, field)
-            finalNeighborCount = len(match_node._get_raw_content())
-            N = len(nodes_to_be_transferred) * len(fields)
-            n = finalNeighborCount - initialNeighborCount
-            diff = (finalNeighborCount-initialNeighborCount)/initialNeighborCount*100
-            print(f"Transferred {n}/{N} (+{round(diff,2)}%) connections to '{node_name}' at {fields} field(s).")
         else:
-            print('Transfer process aborted.')
-
-    def do_cp(self, arg):
-
-        args = arg.split()
-        idxs = [int(i) for i in args if i.isdigit()]
-        
-        if not idxs:
-            target_nodes = self.listed_nodes
-        else:
-            target_nodes = [self.listed_nodes[i-1] for i in idxs]
-
-        target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
-
-        initialNeighborCount = len(self.ls_node._get_raw_content())
-
-        for target_field in target_fields:
-            for node in target_nodes:
-                self.parent_cli.G.bind(self.ls_node, node, target_field)
-        
-        finalNeighborCount = len(self.ls_node._get_raw_content())
-
-        N = len(target_nodes)
-        n = finalNeighborCount - initialNeighborCount
-        diff = (finalNeighborCount-initialNeighborCount)/initialNeighborCount*100 
-        print(f"Copied nodes to {target_fields} fields (+{round(diff,2)}%).")
+            padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
 
     def do_mv(self, arg):
 
         args = arg.split()
-        idxs = [int(i) for i in args if i.isdigit()]
+        fields = [arg for arg in args if arg in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']]
+        idxs = [arg for arg in args if set(arg).issubset(set('0123456789-')) and arg not in fields]
+        name = ' '.join([arg for arg in args if arg not in idxs and arg not in fields])
+        
+        numbers_set = set()
+        for part in idxs:
+            numbers_set.update(range(int(part.split('-')[0]), int(part.split('-')[-1]) + 1)) if '-' in part else numbers_set.add(int(part))
+        idxs = sorted(numbers_set)
 
-        if not idxs:
-            target_nodes = self.listed_nodes
+        target_nodes = [self.listed_nodes[i-1] for i in idxs] if idxs else self.listed_nodes
+
+        if name:
+            homologous = self.parent_cli.G.select(name=name)
+            if len(homologous) == 1:
+                node = homologous[0]
+            else:
+                SelectInterface([node._convert_header_to_compact_format() for node in homologous], 
+                            self, f"Found {len(homologous)} homologous.",
+                            "(Select the node to operate)", '>> ').cmdloop()
+                response = self._get_response()
+                node = homologous[int(response)-1] if response.isdigit() else None
+            if node:
+                if not fields:
+                    fields = self.parent_cli.placeholder.fields
+
+                for field in fields:
+                    for target_node in target_nodes:
+                        self.parent_cli.G.bind(node, target_node, field)
+                        self.parent_cli.G.unbind(self.ls_node, target_node, field)
+            else:
+                print('Aborted process.')
         else:
-            target_nodes = [self.listed_nodes[i-1] for i in idxs]
-            
-        target_fields = [i for i in args if i.isalnum() and not i.isdigit()]
+            if fields:
 
-        for target_field in target_fields:
-            for node in target_nodes:
-                self.parent_cli.G.bind(self.ls_node, node, target_field)
+                for field in fields:
+                    for target_node in target_nodes:
+                        self.parent_cli.G.bind(self.ls_node, target_node, field)
+                        self.parent_cli.G.unbind(self.ls_node, target_node, self.parent_cli.placeholder.fields[0])
+            else:
+                print('Not enough arguments provided.')
+    
+    def do_cp(self, arg):
 
-                field_to_remove_from = self.parent_cli.placeholder.fields[0]
-                self.parent_cli.G.unbind(self.ls_node, node, field_to_remove_from)
+        args = arg.split()
+        fields = [arg for arg in args if arg in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']]
+        idxs = [arg for arg in args if set(arg).issubset(set('0123456789-')) and arg not in fields]
+        name = ' '.join([arg for arg in args if arg not in idxs and arg not in fields])
+        
+        numbers_set = set()
+        for part in idxs:
+            numbers_set.update(range(int(part.split('-')[0]), int(part.split('-')[-1]) + 1)) if '-' in part else numbers_set.add(int(part))
+        idxs = sorted(numbers_set)
 
-        print(f"Moved {len(target_nodes)} nodes to {target_fields} fields.")
+        target_nodes = [self.listed_nodes[i-1] for i in idxs] if idxs else self.listed_nodes
 
-    def default(self, line):
-        line = line.strip()
-        if line[0] in {'y', 'e'} and line[1] in {'0', '1', '2'} and len(line)==2:
-            self.parent_cli.placeholder.fields = []
-            self.parent_cli.placeholder.update_field('add', line)
-            self.do_ls()
+        if name:
+            homologous = self.parent_cli.G.select(name=name)
+            if len(homologous) == 1:
+                node = homologous[0]
+            else:
+                SelectInterface([node._convert_header_to_compact_format() for node in homologous], 
+                            self, f"Found {len(homologous)} homologous.",
+                            "(Select the node to operate)", '>> ').cmdloop()
+                response = self._get_response()
+                node = homologous[int(response)-1] if response.isdigit() else None
+            if node:
+                if not fields:
+                    fields = self.parent_cli.placeholder.fields
+
+                for field in fields:
+                    for target_node in target_nodes:
+                        self.parent_cli.G.bind(node, target_node, field)
+
+            else:
+                print('Aborted process.')
         else:
-            padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER)
+            if fields:
 
+                for field in fields:
+                    for target_node in target_nodes:
+                        self.parent_cli.G.bind(self.ls_node, target_node, field)
+            else:
+                print('Not enough arguments provided.')
+        
     def do_help(self, arg=None):
         """Provide help for a specified command or list all commands if none is specified."""
         if arg:
@@ -406,7 +435,7 @@ class GB_Interface(cmd.Cmd):
             sep = ':'
 
             if represent_bars:
-                contents = [f'{content} | {"█" * round(float(content) * 20)}' for content in contents]
+                contents = [f'{content} | {"█" * round(float(content) * 35)}' for content in contents]
             padded_print(get_label_aligned_lines(formatted_nodes, sep, contents), tab=1)
 
     def do_help(self, arg):
@@ -425,7 +454,7 @@ class GB_Interface(cmd.Cmd):
     
     def do_rm(self, idxs):
         target_nodes = []
-        idxs = [int(_) for _ in idxs.split()]
+        idxs = sk.parse_idxs_to_single_idxs(idxs)
         for idx in idxs:
             if idx > 0:
                 target_nodes.append(self.parent_cli.grabbed_nodes[idx-1])

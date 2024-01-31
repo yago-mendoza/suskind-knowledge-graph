@@ -1,5 +1,15 @@
 import difflib
 
+def parse_idxs_to_single_idxs (string):
+    numbers_set = set()
+    for part in string.split():
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            numbers_set.update(range(start, end + 1))
+        else:
+            numbers_set.add(int(part))
+    return sorted(numbers_set)
+
 def find_similars(graph, target_name, k=1):
     scores = [(difflib.SequenceMatcher(None, target_name.lower(), node.name.lower()).ratio(), node) for node in graph]
     top_scores = sorted(scores, key=lambda x: x[0], reverse=True)[:k]
