@@ -1,15 +1,5 @@
 from typing import Dict
 
-# I HAVE TO CREATE 4 DICTIONNARIES, EACH FOR CLI 
-# - one for SCKLI
-# 3 others for CreateNode, SelectNode, LS_on_node jajaja ok¿?
-# Para que siempre puede implementarse el do_help de una forma u otra.
-# Ya sea en comandos o en general para devolver un mensaje informativo.
-# Y al dividir los comandos en diccionarios me aseguro de que no se pisan
-# algunas definiciones, que hay comandos de mismo nombre pero con behaviors
-# distintas entre CLIs.
-
-
 COMMAND_DOCSTRINGS_GB : Dict[str, str] = {
 'grab': """\
 | Desc. Adds a new node.
@@ -71,6 +61,11 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
     del 1 62 6 95\
 """,
 
+'clear': """\
+| Desc. Fully unbinds all nodes from the field.
+| Signature : clear\
+""",
+
 'mv': """\
 | Desc. Moves bindings to a different field.
 | Signature : mv <*index> <*field>
@@ -89,6 +84,15 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
     2. <*field>  The field(s) to which the connections are intended to be copied.
 | Usage examples :
     cp 50 12 13 14 y0 y1 
+""",
+
+'grab': """\
+| Desc. Grabs the given nodes(s).
+| Signature : grab <*index>
+| Arguments :
+    1. <*index>  As many indexes as connections to be grabbed.
+| Usage examples :
+    grab 1 22 13 55\
 """,
 
 'ls': """\
@@ -175,6 +179,11 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     run -w 50 -a 5 -c 1
 """,
 
+'del': """\
+| Desc. Removes the current node from the graph (will ask first).
+| Signature : del\
+""",
+
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
 | Signature : ls [-d] [-r] [-t <lim>] [-w <width=20>] [-a <lim>] [-c <ncol=3>]
@@ -216,6 +225,11 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Usage examples :
     grab
     grab Augusto César\
+""",
+
+'term': """\
+| Desc. Starts a terminal within the SKCLI terminal.
+| Signature : term\
 """,
 
 'save': """\

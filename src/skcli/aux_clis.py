@@ -22,7 +22,8 @@ class LS_Interface(cmd.Cmd):
         self.cmdloop()
     
     def do_cd(self, index): # finisehd
-        self.parent_cli._set_node(self.listed_nodes[int(index)-1])
+        new_current_node = self.listed_nodes[int(index)-1]
+        self.parent_cli._set_node(new_current_node)
         return True
     
     def do_ls(self, arg=None):
@@ -41,6 +42,21 @@ class LS_Interface(cmd.Cmd):
         for line in formatted_lines:
             print(line)
 
+    def do_clear(self, arg):
+
+        field_symb = self.parent_cli.placeholder.fields[0]
+        field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
+
+        ch = input(f'SYS: Are you sure you want to clear this field? [Y/N]\n>> ')
+        if ch in {'Y','y'}:
+            for node in self.listed_nodes:
+                self.parent_cli.G.unbind(self.ls_node, node, field)
+            print('Field succesfully cleared.')
+            return True
+        else:
+            print('Cleansing process aborted.')
+            
+
     def do_del(self, idxs):
 
         # revisar que tire
@@ -58,6 +74,14 @@ class LS_Interface(cmd.Cmd):
         padded_print(f"Deleted {len(idxs)} nodes.")
 
         self.do_ls()
+    
+    def do_grab(self, idxs):
+        idxs = [int(_) for _ in idxs.split()]
+        for idx in idxs:
+            target_node = self.listed_nodes[idx-1]
+            if target_node not in self.parent_cli.grabbed_nodes:
+                self.parent_cli.grabbed_nodes.append(target_node)
+        padded_print(f'Grabbed {len(idxs)} nodes.')
 
     def do_add(self, name):
 

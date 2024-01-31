@@ -14,77 +14,24 @@ from src.skcli.aux_funcs.err_mssg import *
 from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
-# be able to use grab on LS command
 
-# how to clear whole fields even nodes
+# lang fr
+# type j
+# name <name>   # if the name already existed, we select one entry to merge (or new lemma)
+# lemma <lemma>  # 
+# fav 
 
-# for the 'r' random method -------------------------------------------------
-    
-# a parameter -s like size that lets know how many nodes arep ossible of geting (in function of filter)
+# Change _as_compact_string_node_format() so that it displays '*' with name if favorite.
 
-# 1. Add additional flags at 'r' 
-# r --summary (que active el summary cada vez que se ejecute)
-# r -f (not working as expected)
+# Check that 'r -f' works as expected
 
-# do_new (creates a new node being able to set new language (-l) or lemma (-l), because if already existing, cannot create unless a lemma is set)
-# do_save (save the graph to a file)
+# do_save well implemented
 
-# 4. Editing node properties ------------------------------------
-
-# name -e
-# >> Banco # y aquí editamos
-#     >> Banco
-#     | Warning. There's already 2 entries called 'Banco'. Select one to merge.
-#     |  1. [es][n][Banco]@[('institución')]
-#     |  2. [es][n][Banco]@[('mobiliario')]
-#     |  3. <new_lemma>
-
-# lemma -e
-# | Other lemmas for this entry are ...
-# |  1. Institución
-# |  2. Mobiliario
-# |  <new_lemma>
-# >> Grupo
-# -e or lang -e or type -e
-
-# 5. Deleting a node ---------------------------------------------
-
-# 14:32:18 ~ [en][j][Banco]@[('Grupo')]/[y0/y1/y2]: rm
-# | Warning. Are you sure you want to remove this node (1159 edges)? [Y/N]
-# >> Y
-
-
-
-# 7. TERMINAL ---------------------------------------
-
-# 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]: term
-# Python. Granted a pathway to SKComponents objects and methods.
-# Type "Node" or "Graph" to inspect objects and "exit" to leave.
-# >>> Node.compress.expand('synset').compress('synset2')
-# >>> G.view_names()
-# >>> n = G.random()
-# >>> G.disable('semset')    # implementar que podamos ahorrarnos comillas
-# >>> ndst = G.filter_
-# Exiting terminal...
-# 14:32:18 ~ [en][j][Tall]@[('')]/[y0/y1/y2]:
-
-# 8. NESTED_HISTORY ------------------------------------
-
-# | Showing nested history:
-# | root: [0] Andar(/7)
-# |       └── [1] Cercenar (<6th> of 7)
-# |            ├── [2] Elegía (<7th> of 7)
-# |            └── [3] Esperanza (<42th> of 102)
-# cd ..
-# | Warning: this action will delete the nested search history. Are you sure? [Y/N]
+# What about 'examples'
+# What about 'q' (long)
+  # editing, inspecting, ...
 
 #################################################################################
-
-# # 98. Undo and Go back to previous node
-# via 'undo' and 'cd ..'
-
-# # 99. Autocomplete via 'tab' key
-# prompt_toolkit for autocomplete
 
 # ¿Useful symbols?
 #     <, >
@@ -93,13 +40,8 @@ from src.skcli.aux_funcs.command_docstrings import *
 #     commit, push, autosave 
 # ¿Very future steps?
 #     min_path
-#     reduce a set
-#     search method
-#     decide where to use 'rich' colors
-#     I dont need a hist of every single action done. So hist will be just for visited nodes.
 #     status (already set, to do)
 #     suggestions
-#     and changing words from category within a same node
 #     traduccion con filter, no con funcion explicita
 #     (same for merging synset1's, just a way to merge nodes and them also)
 
@@ -113,10 +55,39 @@ class SK_Interface (cmd.Cmd):
         self.response = None
         self.grabbed_nodes = []
 
+        self.nodes_hist = []
+
         self._set_random_node()
 
     # Public Methods -----
-    
+        
+    def do_term(self, arg):
+
+        print("Python terminal. Access to SKComponents objects and methods.")
+        print('Type "Node" or "G" to inspect objects and "exit" to leave.')
+
+        # Include self.G as G in the local context
+        local_context = {"self": self, "Node": Node, "G": self.G}
+
+        while True:
+            # Get user input
+            command = input(">>> ")
+
+            # Check for exit command
+            if command in ["exit", "quit", "q"]:
+                print("Exiting terminal...")
+                break
+
+            # Modify the command to print the output if it is not an assignment or already a print statement
+            if not command.startswith("print") and "=" not in command:
+                command = "print(" + command + ")"
+
+            # Execute the command
+            try:
+                exec(command, globals(), local_context)
+            except Exception as e:
+                print(f"Error: {e}")
+        
     def do_save(self, arg): 
         filename = arg.strip() or 'data.txt'  # Use 'data' as default filename if none is provided
         try:
@@ -225,30 +196,51 @@ class SK_Interface (cmd.Cmd):
             # Intercepting SystemExit here prevents the entire CLI from shutting down due to a malformed command.
             padded_print("Invalid command or arguments. Type 'help cd' for more information.", tab=0)
             return
-
-        nodes = self.G.select(name=parsed_name)
-
-        # Processes the search results based on the number of nodes found.
-        if len(nodes) == 1:
-            # If exactly one matching node is found, it's automatically set as the current context.
-            self._set_node(nodes[0])
-
-        else:
-            
-            # If multiple matching nodes are found, indicates a future feature for user selection.
-            if nodes:
-                options = [node._convert_header_to_compact_format() for node in nodes]
+        
+        if parsed_name == '..':
+            if len(self.nodes_hist)>1:
+                last_node = self.nodes_hist.pop(-1)
+                if self.placeholder.node == last_node:
+                    last_node = self.nodes_hist.pop(-1)
+                self._set_node(last_node)
             else:
-                number_of_guesses = 4
-                nodes = sk.find_similars(graph=self.G, target_name=parsed_name, k=number_of_guesses)
-                options = [node._convert_header_to_compact_format() for node in nodes]
+                print('Reached base state.')
+        
+        else:
+            nodes = self.G.select(name=parsed_name)
 
-            header_statement = "Do you mean ..."
-            tail_statement = "(Press Enter without any input to exit)"
-            SelectInterface(options, self, header_statement, tail_statement).cmdloop()
-            response = self._get_response()
-            if response:
-                self._set_node(nodes[int(response)-1])
+            # Processes the search results based on the number of nodes found.
+            if len(nodes) == 1:
+                # If exactly one matching node is found, it's automatically set as the current context.
+                self._set_node(nodes[0])
+
+            else:
+                
+                # If multiple matching nodes are found, indicates a future feature for user selection.
+                if nodes:
+                    options = [node._convert_header_to_compact_format() for node in nodes]
+                else:
+                    number_of_guesses = 4
+                    nodes = sk.find_similars(graph=self.G, target_name=parsed_name, k=number_of_guesses)
+                    options = [node._convert_header_to_compact_format() for node in nodes]
+
+                header_statement = "Do you mean ..."
+                tail_statement = "(Press Enter without any input to exit)"
+                SelectInterface(options, self, header_statement, tail_statement).cmdloop()
+                response = self._get_response()
+                if response:
+                    self._set_node(nodes[int(response)-1])
+
+    def do_del(self, arg):
+
+        current_node = self.placeholder.node
+        ch = input(f'SYS: Are you sure you want to remove this node ({len(current_node.get_neighbors())} edges)? [Y/N]\n>> ')
+        if ch in {'Y','y'}:
+            self.G.remove(current_node)
+            self._set_random_node()
+            print('Node succesfully removed.')
+        else:
+            print('Deletion process aborted.')
 
     def do_grab(self, arg):
 
@@ -288,6 +280,15 @@ class SK_Interface (cmd.Cmd):
     
     def do_grabbed(self, arg):
         GB_Interface(self)
+    
+    def do_details(self, arg):
+
+        node = self.placeholder.node
+        sizes = node.get_sizes()
+        synset_sizes = ', '.join([f'y{i} = {size}' for i, size in enumerate(node.get_sizes()[:3])])
+        semset_sizes = ', '.join([f'e{i} = {size}' for i, size in enumerate(node.get_sizes()[3:])])
+        padded_print(f'Synset sizes ({synset_sizes})')
+        padded_print(f'Semset sizes ({semset_sizes})')
     
     def do_run(self, arg):
 
@@ -439,10 +440,12 @@ class SK_Interface (cmd.Cmd):
         NW_Interface(self)
 
     # Internal Methods  --------------------
-            
+        
     def _set_node(self, new_node):
         if new_node:
             self.placeholder.update_node(new_node)
+            if not self.nodes_hist or new_node != self.nodes_hist[-1]:
+                self.nodes_hist.append(new_node)
 
     def _set_random_node(self, **kwargs):
         new_node = self.G.random(**kwargs)
