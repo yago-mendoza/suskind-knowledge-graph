@@ -5,6 +5,9 @@ import datetime
 # Flags below decide what snippet to run.
 # > py -i main.py to run
 
+# [!] Si decides deployearlo y camibar direcotrios y cosas recuerda que el comando 'term' se alimenta de 
+# los objetos G y Node, asegurate de que siga pudiendo tener acceso a ellos (que a lo mejor va implicito
+# con el hecho de estar en ese fichero ya, claro)
 
 
 # Tienes que poner bien el código, ver qué funciona, qué 

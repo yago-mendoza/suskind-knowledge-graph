@@ -19,20 +19,6 @@ from src.skcli.aux_funcs.command_docstrings import *
 
 # do_save well implemented
 
-#################################################################################
-
-# ¿Useful symbols?
-#     <, >
-#     clear, copy, paste
-#     extract / export, min
-#     commit, push, autosave 
-# ¿Very future steps?
-#     min_path
-#     status (already set, to do)
-#     suggestions
-#     traduccion con filter, no con funcion explicita
-#     (same for merging synset1's, just a way to merge nodes and them also)
-
 
 class SK_Interface (cmd.Cmd):
     
@@ -88,6 +74,43 @@ class SK_Interface (cmd.Cmd):
                         print(result)
                 except Exception as e:
                     print(f"Error: {e}")
+    
+    def do_vg(self, arg):
+        examples = self.placeholder.node.examples
+        if examples not in [[],['']]:
+            print(f"(SYS: Started vg-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+            padded_print(f'Showing {len(examples)} example(s):')
+            for i, example in enumerate(examples):
+                padded_print(f"{i}) {example}", tab=1)
+        else:
+            padded_print('There are no examples.')
+        action = input('>> ').split()
+        while action:
+            if action[0] == 'del':
+                action.pop(0)
+                idxs = sk.parse_idxs_to_single_idxs(' '.join(action))
+                exs = [ex for i, ex in enumerate(self.placeholder.node.examples) if i in idxs]
+                for ex in exs:
+                    self.placeholder.node.examples.remove(ex)
+                    padded_print(f'Removed {len(exs)} example(s).')
+            elif action[0] == '?':
+                action.pop(0)
+                if len(action)!=0:
+                    arg = action.pop(0)
+                    help_text = COMMAND_DOCSTRINGS_VG.get(arg)
+                    print(help_text)
+                else:
+                    padded_print('Available commands:')
+                    padded_print('___ : Adds an example for the node.')
+                    padded_print('del : Deletes the given examples')
+            else:
+                new_example = ' '.join(action)
+                if new_example not in self.placeholder.node.examples:
+                    self.placeholder.node.examples.append(new_example)
+                    padded_print('Added the last example.')
+            action = input('>> ').split()
+        print(f"(SYS: Ended vg-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+        
         
     def do_save(self, arg): 
         filename = arg.strip() or 'data.txt'  # Use 'data' as default filename if none is provided
@@ -552,66 +575,3 @@ class SK_Interface (cmd.Cmd):
 
         self.placeholder.update_node(self.placeholder.node)
 
-
-# los argumentos -> library argparse, action, help 
-        
-# class CLIFilter(cmd.Cmd):
-#     prompt = '>'
-#     def __init__(self, filter_manager):
-#         super().__init__()
-#         self.filter_manager = filter_manager
-
-#     def do_filter(self, line):
-#         args = line.split()
-#         if "-e" in args:
-#             editor = CLIFilter(self.filter_manager)
-#             editor.cmdloop("Entered editor mode on filters:")
-#         else:
-#             self.show_filters()
-
-    # def do_filter(self, arg):
-
-    #     parser = argparse.ArgumentParser(prog='filter', add_help=False)
-    #     parser.add_argument('-e', '--edit', action='store_true', help='Enter filter editing mode')
-    #     args = parser.parse_args(arg.split())
-    
-    #     if args.edit:
-    #         self._enter_filter_editor()
-    #     else:
-    #         if self.filters:
-    #             for idx, filter in enumerate(self.filters, 1):
-    #                 padded_print(f"f{idx}/{filter}")
-    #         else:
-    #             print("No filters set.")
-
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter -e
-    # # | Entered editor mode on filters:
-    # # | f1/type('w').lang('es')
-    # # | f2/starts('clar')
-    # # >> rm f1
-    # # >> add contains('esonate').lang('en')
-    # # >> ''
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/:
-
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-    # # | Showing filters:
-    # # | f1/lang('es').contains('trent')
-    # # | f2/starts('clar')
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/:
-
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: set f1
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset ls f1
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: set ls f2
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-    # # | Showing filters:
-    # # | [ls, cd, r] f1/lang('es')
-    # # | [ls] f2/lang('en')
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter ls
-    # # | Showing filters:
-    # # | f1/lang('es')
-    # # | [>] f2/lang('en')
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: unset f1
-    # # 14:32:04 ~ [es][n][concept]@[(lemma)]/: filter
-    # # | Showing filters:
-    # # | f1/lang('es')
-    # # | [ls] f2/lang('en')

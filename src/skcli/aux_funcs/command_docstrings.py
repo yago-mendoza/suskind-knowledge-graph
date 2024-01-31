@@ -10,6 +10,11 @@ COMMAND_DOCSTRINGS_GB : Dict[str, str] = {
     grab Augusto César\
 """,
 
+'ls': """\
+| Desc. Refreshes the grabbed nodes list in screen.
+| Signature : grabbed\
+""",
+
 'rm': """\
 | Desc. Removes the given nodes(s).
 | Signature : rm <*index>
@@ -24,10 +29,6 @@ COMMAND_DOCSTRINGS_GB : Dict[str, str] = {
 | Signature : clear\
 """,
 
-'ls': """\
-| Desc. Refreshes the grabbed nodes list in screen.
-| Signature : grabbed\
-""",
 
 }
 
@@ -41,7 +42,7 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
     cd 47\
 """,
 
-'___': """\
+'<name>': """\
 | Desc. Binds a given node to the current.
 | Signature : <name>
 | Arguments :
@@ -130,6 +131,25 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 }
 
+COMMAND_DOCSTRINGS_VG : Dict[str, str] = {
+
+'___': """\
+| Desc. Adds an example for the node.
+| Signature : ___\
+""",
+
+'del': """\
+| Desc. Deletes the given examples.
+| Signature : del <*index>
+| Arguments :
+    1. <*index>  Index(s) representing connections. Mandatory.
+| Usage examples :
+    del 1 3\
+""",
+
+
+}
+
 COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 'set': """\
 | Desc. Sets or adds properties to the current node or environment.
@@ -181,38 +201,11 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     r -l en -t n\
 """,
 
-'run': """\
-| Desc. Runs a density search on the grabbed nodes set.
-| Signature : run [-f] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
-| Arguments :
-    -f, --fielding  Restricts the search to results within the placeholder fielding.
-    -l, --lang      Restricts the search to results of the lang.
-    -t, --type      Restricts the search to results of the type.
-    -d, --details   Single-column data & field sizes.
-    -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
-    -p, --stop      Limit the number of results.
-    (*) -w, --width     Max allowed width for column (absolute).
-    (*) -a, --abbr      Max allowed character length for names.
-    (*) -c, --ncol      Number of columns.
-    Note : the starred flags (*) only apply if '--details' isn't flagged.
-| Usage examples :
-    run
-    run -f
-    run -d -t 15 -r
-    run -w 50 -a 5 -c 1
-    run -l es
-""",
-
-'del': """\
-| Desc. Removes the current node from the graph (will ask first).
-| Signature : del\
-""",
-
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
 | Signature : ls [<y/e_>] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 | Arguments :
-    <y/e_>      Can automatically switch to a given field.
+    <y/e_>   Can automatically switch to a given field.
     -l, --lang      Restricts the search to results of the lang.
     -t, --type      Restricts the search to results of the type.
     -d, --details   Single-column data & field sizes.
@@ -228,32 +221,6 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     ls -d -t 15 -r
     ls -w 50 -a 5 -c 1
     ls -l es
-""",
-
-'new': """\
-| Desc. Enters a session for introducing new entries.
-| Signature : new
-| Arguments : None
-| Usage examples :
-    new\
-""",
-
-'grabbed': """\
-| Desc. Enters a session for editing the grabbed nodes.
-| Signature : grabbed
-| Arguments : None
-| Usage examples :
-    grabbed\
-""",
-
-'grab': """\
-| Desc. Grabs the current node or a given one.
-| Signature : grab [name]
-| Arguments :
-    1. name [opt] : name of the node the function will try to grasp.
-| Usage examples :
-    grab
-    grab Augusto César\
 """,
 
 'edit': """\
@@ -277,6 +244,64 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 'unpin': """\
 | Desc. Unpins a node, which means it sets 'favorite' attr to False.
 | Signature : unpin\
+""",
+
+'vg': """\
+| Desc. Shows the examples for the node, hence accessing the VG pseudo-CLI.
+| Signature : vg\
+""",
+
+'del': """\
+| Desc. Removes the current node from the graph (will ask first).
+| Signature : del\
+""",
+
+'new': """\
+| Desc. Enters a session for introducing new entries.
+| Signature : new
+| Arguments : None
+| Usage examples :
+    new\
+""",
+
+'grab': """\
+| Desc. Grabs the current node or a given one.
+| Signature : grab [name]
+| Arguments :
+    1. name [opt] : name of the node the function will try to grasp.
+| Usage examples :
+    grab
+    grab Augusto César\
+""",
+
+'grabbed': """\
+| Desc. Enters a session for editing the grabbed nodes.
+| Signature : grabbed
+| Arguments : None
+| Usage examples :
+    grabbed\
+""",
+
+'run': """\
+| Desc. Runs a density search on the grabbed nodes set.
+| Signature : run [-f] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
+| Arguments :
+    -f, --fielding  Restricts the search to results within the placeholder fielding.
+    -l, --lang      Restricts the search to results of the lang.
+    -t, --type      Restricts the search to results of the type.
+    -d, --details   Single-column data & field sizes.
+    -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
+    -p, --stop      Limit the number of results.
+    (*) -w, --width     Max allowed width for column (absolute).
+    (*) -a, --abbr      Max allowed character length for names.
+    (*) -c, --ncol      Number of columns.
+    Note : the starred flags (*) only apply if '--details' isn't flagged.
+| Usage examples :
+    run
+    run -f
+    run -d -t 15 -r
+    run -w 50 -a 5 -c 1
+    run -l es
 """,
 
 'term': """\
