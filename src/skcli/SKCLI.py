@@ -15,6 +15,9 @@ from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
 
+# document sktools, search-algorithms
+# document visuals, aux_clis SelectInterface
+
 # lang fr
 # type j
 # name <name>   # if the name already existed, we select one entry to merge (or new lemma)
