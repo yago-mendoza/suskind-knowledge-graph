@@ -10,63 +10,77 @@ import src.sktools as sk
 def centrality(nodes, *fielding,
                depth=2, soiling_weight=0.1,
                rel_decay=0.50):
-
-    # Initialize dictionary to store frequency of each neighbor
-    neighbor_frequency = {}
     
-    # Retrieve neighbors for each node for performance optimization
+    # Pre-fetch neighbors for each node to optimize performance. 
+    # Access pattern: "node_neighbors[node]"
     node_neighbors = {node: node.get_neighbors(*fielding) for node in nodes}
 
-    # Compute frequency of first-level neighbors
+    # Initialize dictionary to count occurrences of each neighbor across all nodes.
+    # This serves as a preliminary measure of a neighbor's relevance.
+    neighbor_frequency = {}
     for neighbors in node_neighbors.values():
         for neighbor in neighbors:
             neighbor_frequency[neighbor] = neighbor_frequency.get(neighbor, 0) + 1
-    
-    neighbor_frequency = {key: value**2 for key, value in neighbor_frequency.items()}
+    # Adjust frequency to emphasize distant nodes by squaring counts. 
+    neighbor_frequency = {n: count**2 for n, count in neighbor_frequency.items()}
 
-    # Filter neighbors shared by more than one node (akka intersections)
-    shared_neighbors_frequencies = {key: value for key, value in neighbor_frequency.items() if value > 1}
+    # Isolate neighbors that are shared (intersect) between nodes, discarding unique links.
+    shared_neighbors_frequencies = {n: count for n, count in neighbor_frequency.items() if count > 1}
 
+    # Aggregate adjusted frequencies of shared neighbors for each node. This forms the "standard score,"
+    # a proxy for node centrality based on direct neighborhood overlap.
     standard_scoring = {node: sum(shared_neighbors_frequencies.get(neighbor, 0) for neighbor in neighbors) for node, neighbors in node_neighbors.items()}
-    
-    # Initialize dictionary for additional scores based on depth
-    soil_scoring = {node: 0 for node in nodes}
 
+    # Initiate depth-based scoring, augmenting centrality with distant neighbor influence.
+    soil_scoring = {node: 0 for node in nodes}
     if depth > 1:
-        # Traverse nodes to a specified depth, excluding the first two levels
+        # Deep dive beyond immediate neighbors, excluding the superficial layer.
         neighbors_by_depth = _traverse_nodes(nodes, max_depth=depth)
         del neighbors_by_depth[0], neighbors_by_depth[1]
 
         standard_weight = 1
-        # Update neighbor frequencies for deeper levels
+        # Gradually diminish the influence of deeper neighbors to reflect decreasing relevance.
         for neighbors in neighbors_by_depth.values():
             standard_weight *= rel_decay
             for node in nodes:
                 soil_scoring[node] += standard_weight * neighbors.count(node)
 
-    
+    # Benchmarks for depth influence scaling.
     max_score = max(standard_scoring.values())
     max_soil_score = max(soil_scoring.values())
-
+ 
+    # Harmonize soil scoring with standard scoring, ensuring comparable magnitudes.
     rf = max_score/max_soil_score if max_soil_score != 0 else 1
     rescaled_soil_scoring = {node: score*rf for node, score in soil_scoring.items()}
 
-    # Calculate and normalize centrality scores
-    centralities = {}
-    for node, neighbors in node_neighbors.items():
-        # Calculate score based on shared neighbors and depth score
-        score = standard_scoring[node] + soiling_weight * rescaled_soil_scoring[node]
+    # Initialize dictionaries for node centrality and neighbor ratings.
+    centralities, neighbor_ratings = {}, {}
 
-        # Normalize score by the number of neighbors
+    for node, neighbors in node_neighbors.items():
+        # Calculate a composite score for each node. This score combines the significance of shared neighbors 
+        # (reflected by 'standard_scoring') and the influence of network depth (through 'rescaled_soil_scoring'), 
+        # normalized by the count of neighbors to ensure fairness across nodes with varying degrees of connectivity.
+        score = standard_scoring[node] + soiling_weight * rescaled_soil_scoring[node]
         centralities[node] = score / len(neighbors) if neighbors else 0
 
-    # Scale the values so that the maximum is 1.0
-    max_centrality = max(centralities.values(), default=1)  # Use default=1 to handle empty centralities
+        # Aggregate centrality contributions for each neighbor. This step cumulatively assesses the importance of each neighbor
+        # based on the centrality scores of the nodes they connect to, providing a measure of their network influence.
+        for neighbor in neighbors:
+            neighbor_ratings[neighbor] = neighbor_ratings.setdefault(neighbor, 0) + centralities[node]
+
+    # Normalize centrality scores to a [0, 1] scale, where 1 represents the highest centrality.
+    max_centrality = max(centralities.values(), default=1) # Fallback to 1 for empty sets.
     if max_centrality != 0:
         for node in centralities:
             centralities[node] /= max_centrality
+    
+    # Similarly, normalize neighbor ratings
+    max_neighbor_rating = max(neighbor_ratings.values(), default=1) # Ensures a non-zero divisor; defaults to 1.
+    if max_neighbor_rating != 0:
+        for neighbor in neighbor_ratings:
+            neighbor_ratings[neighbor] /= max_neighbor_rating
 
-    return centralities
+    return centralities, neighbor_ratings
 
 def _traverse_nodes(nodes, max_depth=5, depth=0, depth_dict=None):
 

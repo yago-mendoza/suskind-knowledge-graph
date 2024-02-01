@@ -334,7 +334,7 @@ class GB_Interface(cmd.Cmd):
             print("No nodes grabbed yet.")
         else:
             padded_print(f'Grabbed {len(self.parent_cli.grabbed_nodes)} nodes:')
-            algorithm_output = centrality(self.parent_cli.grabbed_nodes)
+            algorithm_output = centrality(self.parent_cli.grabbed_nodes)[0]
             sorted_output = dict(sorted(algorithm_output.items(), key=lambda item: item[1], reverse=True))
 
             self.parent_cli.grabbed_nodes = list(sorted_output.keys()) # to match indexes when accesed via 'rm'

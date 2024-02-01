@@ -39,7 +39,7 @@ class SK_Interface (cmd.Cmd):
 
         import re
 
-        print("Python terminal. Access to SKComponents objects and methods.")
+        print("Python SKTerminal. Access to SKComponents objects and methods.")
         print('Type "Node" or "G" to inspect objects and "exit" to leave.')
 
         # Include self.G as G in the local context
@@ -50,7 +50,7 @@ class SK_Interface (cmd.Cmd):
             command = input(">>> ")
 
             if command in ["exit", "quit", "q"]:
-                print("Exiting terminal...")
+                print("Exiting SKTerminal...")
                 break
 
             if command.strip() == "":
@@ -77,21 +77,23 @@ class SK_Interface (cmd.Cmd):
     
     def do_sug(self, arg):
 
-        # if self.suggestions == None:
-
+        # Define a helper function to flatten a list of lists into a single list.
         def flatten(lst):
             return [item for subset in lst for item in subset]
         
+        # Check if there is exactly one field in the placeholder; proceed only if true.
         if len(self.placeholder.fields) == 1:
 
-            cn = self.placeholder.node
-            cf = self.placeholder.fields[0]
-            
-            if cf == 'y0':
-                y1 = cn.get_neighbors('y1')
-                y1_y0 = flatten([neighbor.get_neighbors('y0') for neighbor in y1])
+            cn = self.placeholder.node  # Current node being considered for suggestions.
+            cf = self.placeholder.fields[0]  # Current field being considered for suggestions.
+        
+            # Suggestion logic for different singular fields.
 
-                suggestions = y1_y0
+            if cf == 'y0':
+                y1 = cn.get_neighbors('y1')  # Retrieve neighbors connected via 'y1'.
+                y1_y0 = flatten([neighbor.get_neighbors('y0') for neighbor in y1])  # Flatten list of neighbors' neighbors connected via 'y0'.
+                
+                suggestions = y1_y0  # Compile suggestions list.
 
             if cf == 'y1':
                 y1 = cn.get_neighbors('y1')
@@ -101,7 +103,14 @@ class SK_Interface (cmd.Cmd):
                 y2 = cn.get_neighbors('y1')
                 y2_y1 = flatten([neighbor.get_neighbors('y1') for neighbor in y2])
 
-                suggestions = y1_y1 + y1_y1_y1 + y2_y1
+                e = cn.get_neighbors('e')
+                e_y = flatten([neighbor.get_neighbors('y') for neighbor in e])
+
+                intersection = centrality(list(set(e+e_y)), 'e')[1]
+                e_y_ie = [neighbor for neighbor, rating in intersection.items() if rating > 0.35]
+                e_y_ie = NodeSet(e_y_ie).select(type=cn.type)
+
+                suggestions = y1_y1 + y1_y1_y1 + y2_y1 + e_y_ie
             
             if cf == 'y2':
                 y1 = cn.get_neighbors('y1')
@@ -136,33 +145,59 @@ class SK_Interface (cmd.Cmd):
                 
                 suggestions = y1_e2 + e_e
             
+            # Ensure the current node is not included in its own suggestions.
+            if cn in suggestions:
+                suggestions.remove(cn)
+            # Also remove any direct neighbors connected via the current field.
+            for n in cn.get_neighbors(cf):
+                if n in suggestions:
+                    suggestions.remove(n)
+            
+            # Finalize the suggestions by removing duplicates and any direct neighbors.
             suggestions = NodeSet(list(set([n for n in suggestions if n not in cn.get_neighbors()])))
 
             ch = None
 
-            print(f"(SYS: Started sug-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+            # Inform the user that the suggestion session has started.
+            print(f"(SYS: Started sug-session at {datetime.datetime.now().strftime('%H:%M:%S')}. Type 'q' to leave.)")
 
+            randomize = True # Flag to control random suggestion selection.
             while ch not in ['q','exit']:
- 
-                rn = suggestions.random()
+                if randomize:
+                    rn = suggestions.random() # Select a random suggestion if flag is set.
 
                 if rn:
-
+                    # Prompt user for input regarding the current suggestion.
                     ch = input(f"| {rn._convert_header_to_compact_format()} [Y/N] >> ")
-                    
+                    randomize = True # Reset randomization flag for next loop iteration.
+
                     if ch in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']:
+                        # If the user inputs a specific field, bind the current node to the suggested node with that field.
                         self.G.bind(cn, rn, ch)
                         padded_print(f"Succesfully binded node to '{ch}' field.")
-
-                    elif ch not in ['N', 'n', '', 'q', 'exit']:
+                    elif ch in ['Y','y']:
+                        # If the user confirms the suggestion without specifying a field, use the current field for binding.
                         self.G.bind(cn, rn, cf)
                         padded_print(f"Succesfully binded node to '{cf}' field.")
-                
+                    elif ch in ['N','n','']:
+                        # If the user rejects the suggestion or inputs an empty response, do nothing and loop for a new suggestion.
+                        pass
+                    elif ch in ['q','exit']:
+                        # If the user wants to exit, set the loop control variable to quit.
+                        pass
+                    else:
+                        # If the input is invalid, prompt the user again without changing the suggestion.
+                        randomize = False
+                        padded_print('Please, enter a valid input.')
                 else:
+                    # If no suggestions are available, exit the loop.
                     ch = 'q'
                     padded_print('No suggestions found.')
 
             print(f"(SYS: Ended sug-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+        
+        else:
+            padded_print('Select one and only field.')
 
     
     def do_vg(self, arg):
