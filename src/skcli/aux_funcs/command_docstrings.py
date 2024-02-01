@@ -218,6 +218,12 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Note : this is usually faster than the 'ls' approach.\
 """,
 
+'sug': """\
+| Desc. Initiates a sugestor feature.
+| Signature : sug
+| Note : Instead of [Y/N], we can directly specify the field through which we want to connect the suggestion.\
+""",
+
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
 | Signature : ls [<y/e_>] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
