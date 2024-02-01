@@ -226,11 +226,13 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
-| Signature : ls [<y/e_>] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
+| Signature : ls [<y/e_>] [-d] [-r]
+|                         [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
+|                         [-l <lang>] [-t <type>]
 | Arguments :
     <y/e_>   Can automatically switch to a given field.
-    -l, --lang      Restricts the search to results of the lang.
-    -t, --type      Restricts the search to results of the type.
+    -l, --lang      Restricts the search to results of the lang (persistent across comands).
+    -t, --type      Restricts the search to results of the type (persistent across comands).
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
     -p, --stop      Limit the number of results.
@@ -311,8 +313,8 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Signature : run [-f] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 | Arguments :
     -f, --fielding  Restricts the search to results within the placeholder fielding.
-    -l, --lang      Restricts the search to results of the lang.
-    -t, --type      Restricts the search to results of the type.
+    -l, --lang      Restricts the search to results of the lang (non-persistent).
+    -t, --type      Restricts the search to results of the type (non-persistent).
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
     -p, --stop      Limit the number of results.

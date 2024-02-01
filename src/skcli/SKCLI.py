@@ -488,8 +488,8 @@ class SK_Interface (cmd.Cmd):
         parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns.')
         parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
 
-        parser.add_argument('-l', '--lang', default=None, help='Shuffles the results.')
-        parser.add_argument('-t', '--type', default=None, help='Shuffles the results.')
+        parser.add_argument('-l', '--lang', default=None, help='Restricts the results to the given lang.')
+        parser.add_argument('-t', '--type', default=None, help='Restricts the results to the given type.')
 
         ls_args, unknown = parser.parse_known_args(arg.split())
         if unknown:
