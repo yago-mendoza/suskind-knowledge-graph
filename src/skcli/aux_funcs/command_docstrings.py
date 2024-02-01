@@ -12,7 +12,7 @@ COMMAND_DOCSTRINGS_GB : Dict[str, str] = {
 
 'ls': """\
 | Desc. Refreshes the grabbed nodes list in screen.
-| Signature : grabbed\
+| Signature : ls\
 """,
 
 'rm': """\
@@ -35,7 +35,7 @@ COMMAND_DOCSTRINGS_GB : Dict[str, str] = {
 COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 'cd': """\
 | Desc. Enters a given node within the results.
-| Signature : ls <index>
+| Signature : cd <index>
 | Arguments : 
     1. <index>  A single index representing the target node to access as current
 | Usage examples :
@@ -69,7 +69,7 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 'mv': """\
 | Desc. Moves bindings to a different field.
-| Signature : mv <*index> <name> <*field>
+| Signature : mv <*index> [<name>] [<*field>]
 | Arguments :
     1. <*index> [opt]  Index(s) representing connections. If none is entered, all are selected.
     2. <name>   [opt]  Name of the node to which we want to move. If none, placeholder node is selected.
@@ -84,7 +84,7 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 'cp': """\
 | Desc. Copies bindings to a field.
-| Signature : cp <*index> <name> <*field>
+| Signature : cp <*index> [<name>] [<*field>]
 | Arguments :
     1. <*index> [opt]  Index(s) representing connections. If none is entered, all are selected.
     2. <name>   [opt]  Name of the node to which we want to move. If none, placeholder node is selected.
@@ -99,9 +99,9 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 'cross': """\
 | Desc. Interconnects every node of a subset either via 'y1' or 'e1'.
-| Signature : cross <*index> [y/e]
+| Signature : cross <*index> [<y/e>]
 | Arguments :
-    1. <*index>  Index(s) representing connections. Mandatory.
+    1. <*index>  Index(s) representing connections.
     2. [y/e]     If 'y', the connections will be set through 'synset1'. Otherwise, through 'semset1'.
 | Usage examples :
     cross 4-12 e
@@ -110,9 +110,9 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 'align': """\
 | Desc. Aligns the content from the given nodes.
-| Signature : align <*index> <*field>[opt]
+| Signature : align <*index> [<*field>]
 | Arguments :
-    1. <*index>        Index(s) representing connections. Mandatory.
+    1. <*index>        Index(s) representing connections (if only 1 is inserted, will align it with the placeholder node).
     2. <*field>[opt]   If 'y', the connections will be set through 'synset1'. Otherwise, through 'semset1'.
 | Usage examples :
     align 13
@@ -123,10 +123,11 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
 
 'grab': """\
 | Desc. Grabs the given nodes(s).
-| Signature : grab <*index>
+| Signature : grab [<*index>]
 | Arguments :
-    1. <*index>  As many indexes as connections to be grabbed.
+    1. <*index>  As many indexes as connections to be grabbed. If none, grabs them all.
 | Usage examples :
+    grab
     grab 1 22 13 55\
 """,
 
@@ -160,7 +161,6 @@ COMMAND_DOCSTRINGS_VG : Dict[str, str] = {
     del 1 3\
 """,
 
-
 }
 
 COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
@@ -192,7 +192,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'unset': """\
 | Desc. Removes properties or settings from the current node or environment.
-| Signature : unset <*settings>
+| Signature : unset [<*setting>]
 | Arguments :
   <!> Supports shorthand for groups and individual settings.
     1. <*settings>
@@ -216,8 +216,9 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Desc. Freely performs a random node search with optional language and type constraints.
 | Signature : r [-l <lang>] [-t <type>] [-s <lim>] [-f]
 | Arguments :
-    -l, --lang  Specify the language to narrow down the search.
-    -t, --type  Specify the type to narrow down the search.
+    -l, --lang  Specify the language to narrow down the search (persistent across commands).
+    -t, --type  Specify the type to narrow down the search (persistent across commands).
+     |
     -s, --sos   Specify the max number of connections a node can have to be considered.
     -f, --fav   Specify wether the output must be favorite or not.
 | Usage examples :
@@ -239,13 +240,15 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'ls': """\
 | Desc. Lists the current node's neighbors within the field scope, allowing for edit if single.
-| Signature : ls [<y/e_>] [-d] [-r]
+| Signature : ls [<y_/e_>] [-d] [-r]
 |                         [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 |                         [-l <lang>] [-t <type>]
 | Arguments :
     <y/e_>   Can automatically switch to a given field.
+     |
     -l, --lang      Restricts the search to results of the lang (persistent across comands).
     -t, --type      Restricts the search to results of the type (persistent across comands).
+     |
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
     -p, --stop      Limit the number of results.
@@ -263,7 +266,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'edit': """\
 | Desc. Edit a hash attribute for the current node.
-| Signature : edit [hash_attr] [new_value]\
+| Signature : edit <hash_attr> <new_value>\
 | Arguments :
     1. Hash Attribute : the attribute we want to edit.
     2. New Value : the new value the attribute will be assigned.
@@ -296,7 +299,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'new': """\
 | Desc. Enters a new node to the graph..
-| Signature : new [name]
+| Signature : new <name>
 | Arguments :
     1. Name : The complete name of the new entry.
 | Usage examples :
@@ -305,7 +308,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'grab': """\
 | Desc. Grabs the current node or a given one.
-| Signature : grab [name]
+| Signature : grab [<name>]
 | Arguments :
     1. name [opt] : name of the node the function will try to grasp.
 | Usage examples :
@@ -323,11 +326,13 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'run': """\
 | Desc. Runs a density search on the grabbed nodes set.
-| Signature : run [-f] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
+| Signature : run [-f] [-l <lang>] [-t <lang>] [-d] [-r] [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 | Arguments :
-    -f, --fielding  Restricts the search to results within the placeholder fielding.
-    -l, --lang      Restricts the search to results of the lang (non-persistent).
-    -t, --type      Restricts the search to results of the type (non-persistent).
+    -f, --fielding  Runs the search only traversing edges matching the current placeholder fielding.
+     |
+    -l, --lang      Restricts the search to results of the <lang> (non-persistent).
+    -t, --type      Restricts the search to results of the <type> (non-persistent).
+     |
     -d, --details   Single-column data & field sizes.
     -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
     -p, --stop      Limit the number of results.
@@ -350,7 +355,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'save': """\
 | Desc. Saves the actual version of the Graph in the current directory.
-| Signature : save [filename='data.txt']
+| Signature : save [<filename='data.txt'>]
 | Arguments :
     1. filename : file to where the graph will be saved (terminated with .txt)
 | Usage examples :

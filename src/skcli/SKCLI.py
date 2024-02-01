@@ -36,6 +36,9 @@ class SK_Interface (cmd.Cmd):
         self.ls_default_lang = None
         self.ls_default_type = None
 
+        self.r_default_lang = None
+        self.r_default_type = None
+
     # Public Methods -----
         
     def do_term(self, arg):
@@ -267,6 +270,9 @@ class SK_Interface (cmd.Cmd):
 
         args = arg.split()
 
+        if not args:
+            args = ['y', 'e']
+
         # Set is a multi-purpose function.
         y_fields, e_fields = {'y0', 'y1', 'y2'}, {'e0', 'e1', 'e2'}
         all_fields = y_fields | e_fields
@@ -285,15 +291,19 @@ class SK_Interface (cmd.Cmd):
         # Process each arg for adding fields.
         for setting in args:
             if setting == 'e':
-                self.placeholder.fields.extend(e_fields - current_set)
+                if len(self.placeholder.fields) == 6:
+                    self.placeholder.fields = []
+                    self.placeholder.fields.extend(['e2', 'e1', 'e0'])
+                else:
+                    self.placeholder.fields.extend(e_fields - current_set)
             elif setting == 'y':
-                self.placeholder.fields.extend(y_fields - current_set)
+                if len(self.placeholder.fields) == 6:
+                    self.placeholder.fields = []
+                    self.placeholder.fields.extend(['y2', 'y1', 'y0'])
+                else:
+                    self.placeholder.fields.extend(y_fields - current_set)
             elif setting in all_fields:
                 self.placeholder.fields.append(setting)
-
-        # Handle no args by adding all 'y' and 'e' fields.
-        if not args:
-            self.placeholder.fields = list(y_fields | e_fields)
 
         # Deduplicate placeholder.fields while preserving order.
         self.placeholder.fields = list(dict.fromkeys(self.placeholder.fields))        
@@ -542,17 +552,36 @@ class SK_Interface (cmd.Cmd):
         print(f"(SYS: Ended search-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
 
     def do_r(self, args):
-
         parser = argparse.ArgumentParser(description="Perform a random node search")
-        parser.add_argument('-l', '--lang', type=str, help='Specify the language')
-        parser.add_argument('-t', '--type', type=str, help='Specify the type')
-        parser.add_argument('-s', '--sos', type=str, help='Sets a bias for low-connected nodes.')  # Notice the action change.
-        parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')  # Notice the action change.
+        parser.add_argument('-l', '--lang', type=str, nargs='?', const='', default=None, help='Specify the language or reset')
+        parser.add_argument('-t', '--type', type=str, nargs='?', const='', default=None, help='Specify the type or reset')
+        parser.add_argument('-s', '--sos', type=str, help='Sets a bias for low-connected nodes.')
+        parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')
         args = parser.parse_args(args.split())
 
-        # Retrieves the language and type constraints from the parsed arguments, if provided.
-        type_constraint = args.type if args.type else None
-        lang_constraint = args.lang if args.lang else None
+
+        # Actualiza o elimina las restricciones globales basándose en los argumentos
+        if args.lang is not None:
+            if args.lang == '':
+                print(f"([!] Succesfully unset `r` global filter '{self.r_default_lang}')")
+                self.r_default_lang = None  # Elimina la restricción si el argumento es una cadena vacía
+            else:
+                if args.lang != self.r_default_lang:
+                    self.r_default_lang = args.lang  # Actualiza la restricción global
+                    print(f"([!] Global filter set for `r` at '{self.r_default_lang}'; 'r -l' to unset)")
+
+        if args.type is not None:
+            if args.type == '':
+                print(f"([!] Succesfully unset `r` global filter '{self.r_default_type}')")
+                self.r_default_type = None  # Elimina la restricción si el argumento es una cadena vacía
+            else:
+                if args.type != self.r_default_type:
+                    self.r_default_type = args.type  # Actualiza la restricción global
+                    print(f"([!] Global filter set for `r` at '{self.r_default_type}'; 'r -t' to unset)")
+
+        # Aplica las restricciones globales para el filtrado
+        lang_constraint = self.r_default_lang
+        type_constraint = self.r_default_type
 
         candidates = self.G.edge_count('<=', int(args.sos)) if args.sos else self.G
         new_node = candidates.random(lang=lang_constraint, type=type_constraint, favorite=args.fav)
@@ -592,10 +621,10 @@ class SK_Interface (cmd.Cmd):
 
             # Reset language filter if '-l' is used without an argument.
             if ls_args.lang == '':
-                print(f"([!] Succesfully unset global filter '{self.ls_default_lang}')")
+                print(f"([!] Succesfully unset `ls` global filter '{self.ls_default_lang}')")
                 self.ls_default_lang = None
             elif ls_args.lang is not None:
-                print(f"([!] Succesfully unset global filter '{self.ls_default_lang}')")
+                print(f"([!] Succesfully unset `ls` global filter '{self.ls_default_lang}')")
                 self.ls_default_lang = ls_args.lang
 
             if ls_args.type == '':
@@ -604,10 +633,10 @@ class SK_Interface (cmd.Cmd):
                 self.ls_default_type = ls_args.type
                 
             if self.ls_default_lang:
-                print(f"([!] Global filter set at '{self.ls_default_lang}'; 'ls -l' to unset)")
+                print(f"([!] Global filter set for `ls` at '{self.ls_default_lang}'; 'ls -l' to unset)")
                 nodes = nodes.select(lang=self.ls_default_lang)
             if self.ls_default_type:
-                print(f"([!] Global filter set at '{self.ls_default_type}'; 'ls -t' to unset)")
+                print(f"([!] Global filter set for `ls` at '{self.ls_default_type}'; 'ls -t' to unset)")
                 nodes = nodes.select(type=self.ls_default_type)
 
             nodes = sorted(nodes, key=lambda node: node.name)
