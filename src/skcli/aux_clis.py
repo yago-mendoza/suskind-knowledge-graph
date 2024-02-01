@@ -278,7 +278,57 @@ class LS_Interface(cmd.Cmd):
                         self.parent_cli.G.bind(self.ls_node, target_node, field)
             else:
                 print('Not enough arguments provided.')
+    
+    def do_align(self, arg):
+        args = arg.split()
+
+        fields = [arg for arg in args if arg in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2','e','y']]
+        if fields:
+            fields = sk.parse_field(fields)
+        else:
+            fields = sk.parse_field()
+
+        idxs = [arg for arg in args if set(arg).issubset(set('0123456789-')) and arg not in fields]
         
+        numbers_set = set()
+        for part in idxs:
+            numbers_set.update(range(int(part.split('-')[0]), int(part.split('-')[-1]) + 1)) if '-' in part else numbers_set.add(int(part))
+        idxs = sorted(numbers_set)
+
+        # Determine the target nodes based on the specified indices
+        target_nodes = [self.listed_nodes[i-1] for i in idxs] if idxs else self.listed_nodes
+
+        if len(target_nodes)==1:
+            # If we selected only one idx, we will align the current placeholder node with it.
+            # We place it here to be able to collect also the connections of it.
+            target_nodes.append(self.parent_cli.placeholder.node)
+
+        # Initialize a dictionary to hold neighbors for each field
+        d = {field: [] for field in fields}
+
+        # Collect neighbors for each field from each target node
+        for node in target_nodes:
+            for field in fields:
+                d[field].extend(node.get_neighbors(field))
+
+        # Ensure all nodes in each field share the same bindings
+        labels, contents = [], []
+        for node in target_nodes:
+            n_conn_o = len(node._get_raw_content())
+            for field, neighbors in d.items():
+                for neighbor in neighbors:
+                    # Bind the target node to each neighbor in the current field
+                    self.parent_cli.G.bind(node, neighbor, field)
+            n_conn_f = len(node._get_raw_content())
+            diff = n_conn_f-n_conn_o
+
+            labels.append(node._convert_header_to_compact_format())
+            contents.append(f"{n_conn_o} + {diff} conn. (+{round(100*diff/n_conn_o,2)}%)")
+
+        formatted_lines = get_label_aligned_lines(labels, ' : ', contents)
+        for line in formatted_lines:
+            padded_print(line)
+
     def do_help(self, arg=None):
         """Provide help for a specified command or list all commands if none is specified."""
         if arg:

@@ -785,6 +785,7 @@ class SK_Interface (cmd.Cmd):
             if len(self.placeholder.fields)==1:
                 # Attempt to match or create node based on extended input.
                 matches = self.G.select(name=line)
+                selected_node = None
                 if matches:
                     # Handle multiple matches through selection or direct assignment.
                     if len(matches) > 1:
@@ -803,11 +804,9 @@ class SK_Interface (cmd.Cmd):
                             print("| Node created.")
                             selected_node = self.G.select(lang=lang, type=type, name=line, lemma=lemma)[0]
                         else:
-                            selected_node = None
                             print('| The specified set of characteristics already exists.')
                     elif lang or type or lemma:
                         # Fail if any validation for the new node attributes fails.
-                        selected_node = None
                         print('Failed to validate hash attributes.')
                         
                 # Binding or linking logic if a selected or created node is available.

@@ -108,6 +108,19 @@ COMMAND_DOCSTRINGS_LS : Dict[str, str] = {
     cross 4-12 y
 """,
 
+'align': """\
+| Desc. Aligns the content from the given nodes.
+| Signature : align <*index> <*field>[opt]
+| Arguments :
+    1. <*index>        Index(s) representing connections. Mandatory.
+    2. <*field>[opt]   If 'y', the connections will be set through 'synset1'. Otherwise, through 'semset1'.
+| Usage examples :
+    align 13
+    align 13 y0
+    align 1 2 5
+    align 1 2 5 y
+""",
+
 'grab': """\
 | Desc. Grabs the given nodes(s).
 | Signature : grab <*index>
