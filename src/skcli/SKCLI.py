@@ -173,7 +173,7 @@ class SK_Interface (cmd.Cmd):
 
                 if rn:
                     # Prompt user for input regarding the current suggestion.
-                    ch = input(f"| {rn._convert_header_to_compact_format()} [Y/N] >> ")
+                    ch = input(f"| {rn._convert_header_to_compact_format()} [Y/N (/e_/y_)] >> ")
                     randomize = True # Reset randomization flag for next loop iteration.
 
                     if ch in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']:
@@ -562,19 +562,19 @@ class SK_Interface (cmd.Cmd):
 
         # Actualiza o elimina las restricciones globales basándose en los argumentos
         if args.lang is not None:
-            if args.lang == '':
+            if args.lang == '' and self.r_default_lang:
                 print(f"([!] Succesfully unset `r` global filter '{self.r_default_lang}')")
                 self.r_default_lang = None  # Elimina la restricción si el argumento es una cadena vacía
-            else:
+            elif args.lang != '':
                 if args.lang != self.r_default_lang:
                     self.r_default_lang = args.lang  # Actualiza la restricción global
                     print(f"([!] Global filter set for `r` at '{self.r_default_lang}'; 'r -l' to unset)")
 
         if args.type is not None:
-            if args.type == '':
+            if args.type == '' and self.r_default_type:
                 print(f"([!] Succesfully unset `r` global filter '{self.r_default_type}')")
                 self.r_default_type = None  # Elimina la restricción si el argumento es una cadena vacía
-            else:
+            elif args.type != '':
                 if args.type != self.r_default_type:
                     self.r_default_type = args.type  # Actualiza la restricción global
                     print(f"([!] Global filter set for `r` at '{self.r_default_type}'; 'r -t' to unset)")
