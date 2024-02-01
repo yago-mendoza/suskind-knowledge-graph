@@ -36,7 +36,11 @@ def centrality(nodes, *fielding,
     if depth > 1:
         # Deep dive beyond immediate neighbors, excluding the superficial layer.
         neighbors_by_depth = _traverse_nodes(nodes, max_depth=depth)
-        del neighbors_by_depth[0], neighbors_by_depth[1]
+
+        if 0 in neighbors_by_depth:
+            del neighbors_by_depth[0]
+        elif 1 in neighbors_by_depth:
+            del neighbors_by_depth[1]
 
         standard_weight = 1
         # Gradually diminish the influence of deeper neighbors to reflect decreasing relevance.
@@ -46,11 +50,11 @@ def centrality(nodes, *fielding,
                 soil_scoring[node] += standard_weight * neighbors.count(node)
 
     # Benchmarks for depth influence scaling.
-    max_score = max(standard_scoring.values())
-    max_soil_score = max(soil_scoring.values())
+    max_score = max(standard_scoring.values()) if standard_scoring else 0
+    max_soil_score = max(soil_scoring.values()) if soil_scoring else 0
  
     # Harmonize soil scoring with standard scoring, ensuring comparable magnitudes.
-    rf = max_score/max_soil_score if max_soil_score != 0 else 1
+    rf = max_score/max_soil_score if max_soil_score else 1
     rescaled_soil_scoring = {node: score*rf for node, score in soil_scoring.items()}
 
     # Initialize dictionaries for node centrality and neighbor ratings.

@@ -33,6 +33,9 @@ class SK_Interface (cmd.Cmd):
 
         self._set_random_node()
 
+        self.ls_default_lang = None
+        self.ls_default_type = None
+
     # Public Methods -----
         
     def do_term(self, arg):
@@ -145,6 +148,9 @@ class SK_Interface (cmd.Cmd):
                 
                 suggestions = y1_e2 + e_e
             
+            # Finalize the suggestions by removing duplicates and any direct neighbors.
+            suggestions = NodeSet(list(set([n for n in suggestions if n not in cn.get_neighbors()])))
+
             # Ensure the current node is not included in its own suggestions.
             if cn in suggestions:
                 suggestions.remove(cn)
@@ -152,15 +158,11 @@ class SK_Interface (cmd.Cmd):
             for n in cn.get_neighbors(cf):
                 if n in suggestions:
                     suggestions.remove(n)
-            
-            # Finalize the suggestions by removing duplicates and any direct neighbors.
-            suggestions = NodeSet(list(set([n for n in suggestions if n not in cn.get_neighbors()])))
-
-            ch = None
 
             # Inform the user that the suggestion session has started.
             print(f"(SYS: Started sug-session at {datetime.datetime.now().strftime('%H:%M:%S')}. Type 'q' to leave.)")
-
+            
+            ch = None
             randomize = True # Flag to control random suggestion selection.
             while ch not in ['q','exit']:
                 if randomize:
@@ -262,14 +264,40 @@ class SK_Interface (cmd.Cmd):
             padded_print("Available commands:", formatted_lines, tab=0)
         
     def do_set(self, arg):
-        # Set is a multi-purpose function.
+
         args = arg.split()
+
+        # Set is a multi-purpose function.
+        y_fields, e_fields = {'y0', 'y1', 'y2'}, {'e0', 'e1', 'e2'}
+        all_fields = y_fields | e_fields
+        current_set = set(self.placeholder.fields)
+
+        # Determine if the args are exclusively related to 'y', 'e', or their specific fields.
+        args_related_to_ye = any(arg in {'y', 'e'} or arg in all_fields for arg in args)
+
+        # Clear fields only if args are related to 'y', 'e', or their specific fields,
+        # and not in the case of adding 'e' to all 'y' or 'y' to all 'e'.
+        if args and args_related_to_ye:
+            if not (set(args) == {'e'} and y_fields.issubset(current_set) or 
+                    set(args) == {'y'} and e_fields.issubset(current_set)):
+                self.placeholder.fields = []
+
+        # Process each arg for adding fields.
+        for setting in args:
+            if setting == 'e':
+                self.placeholder.fields.extend(e_fields - current_set)
+            elif setting == 'y':
+                self.placeholder.fields.extend(y_fields - current_set)
+            elif setting in all_fields:
+                self.placeholder.fields.append(setting)
+
+        # Handle no args by adding all 'y' and 'e' fields.
         if not args:
-            # If no specific arguments are provided, default to setting all 'y' and 'e' prefixed fields (y0, y1, y2, e0, e1, e2).
-            for field in [f'{setting}{i}' for i in range(3) for setting in ['e','y']]:
-                self.placeholder.update_field('add', field)
-        elif set(self.placeholder.fields).issubset({'e0', 'e1', 'e2', 'y0', 'y1', 'y2'}):
-            self.placeholder.fields = []
+            self.placeholder.fields = list(y_fields | e_fields)
+
+        # Deduplicate placeholder.fields while preserving order.
+        self.placeholder.fields = list(dict.fromkeys(self.placeholder.fields))        
+
         for setting in args:
             # Check if the argument is a shorthand ('y' or 'e') representing a set of fields.
             if setting in ['y', 'e']:
@@ -550,9 +578,9 @@ class SK_Interface (cmd.Cmd):
         parser.add_argument('-c', '--ncol', type=int, default=4, help='Number of columns.')
         parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
 
-        parser.add_argument('-l', '--lang', default=None, help='Shuffles the results.')
-        parser.add_argument('-t', '--type', default=None, help='Shuffles the results.')
-
+        parser.add_argument('-l', '--lang', nargs='?', const='', default=None, help='Filter by language and sets it as default for following "ls". No argument resets to default.')
+        parser.add_argument('-t', '--type', nargs='?', const='', default=None, help='Filter by type and sets it as default for following "ls". No argument resets to default.')
+        
         ls_args, unknown = parser.parse_known_args(args)
         
         if unknown:
@@ -562,10 +590,25 @@ class SK_Interface (cmd.Cmd):
 
             nodes = self.placeholder.node.get_neighbors(self.placeholder.fields)
 
-            if ls_args.lang:
-                nodes = nodes.select(lang=ls_args.lang)
-            if ls_args.type:
-                nodes = nodes.select(type=ls_args.type)
+            # Reset language filter if '-l' is used without an argument.
+            if ls_args.lang == '':
+                print(f"([!] Succesfully unset global filter '{self.ls_default_lang}')")
+                self.ls_default_lang = None
+            elif ls_args.lang is not None:
+                print(f"([!] Succesfully unset global filter '{self.ls_default_lang}')")
+                self.ls_default_lang = ls_args.lang
+
+            if ls_args.type == '':
+                self.ls_default_type = None
+            elif ls_args.type is not None:
+                self.ls_default_type = ls_args.type
+                
+            if self.ls_default_lang:
+                print(f"([!] Global filter set at '{self.ls_default_lang}'; 'ls -l' to unset)")
+                nodes = nodes.select(lang=self.ls_default_lang)
+            if self.ls_default_type:
+                print(f"([!] Global filter set at '{self.ls_default_type}'; 'ls -t' to unset)")
+                nodes = nodes.select(type=self.ls_default_type)
 
             nodes = sorted(nodes, key=lambda node: node.name)
 
@@ -679,18 +722,28 @@ class SK_Interface (cmd.Cmd):
 
     def default(self, line):
 
+        # Function to select a node from a list of matched nodes.
         def select_node(matched_nodes):
                 
             header_statement = "Did you mean..."
             tail_statement = "(Press Enter to select none)"
+
+            # Convert each node to a compact format suitable for display.
             formatted_nodes = [node._convert_header_to_compact_format() for node in matched_nodes]
+            
+            # Display the selection interface with formatted nodes and get user response.
             SelectInterface(formatted_nodes, self, header_statement, tail_statement).cmdloop()
             response = self._get_response()
+            
+            # Return the selected node based on user input or None if no selection was made.
             return matched_nodes[int(response)-1] if response else None
-
+        
+        # Function to prompt user for creating a new node.
         def create_node():
+            # Prompt user decision for node creation.
             user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
 
+            # Gather necessary attributes for the node if creation is confirmed.
             if user_input in ['Y','y']:
 
                 lang =  input('> lang  : ').strip()
@@ -698,22 +751,29 @@ class SK_Interface (cmd.Cmd):
                 lemma = input('> lemma : ').strip()
                 lemma = 'NA' if not lemma else lemma
 
+                # Return collected attributes.
                 return lang, type, lemma
-
+            # Return None for all attributes if creation is not confirmed.
             return None, None, None
-
+        
+        # Function to bind a node to the current node with a specified edge type.
         def bind_node(current_node, selected_node, edge_type):
+            # Check if the selected node is not already a neighbor with the specified edge type.
             if selected_node and not selected_node in current_node.get_neighbors(edge_type):
+                # If not, bind the nodes together with the specified edge type.
                 self.G.bind(current_node, selected_node, edge_type)
                 print(f"| Successfully binded '{selected_node.name}'.")
             elif selected_node:
+                # Inform if the node was already present and thus not added again.
                 print('| The node was already present.')
 
-
+        # Handling command line input for node manipulation.
         if (line.startswith('y') or line.startswith('e')) and len(line)==2:
+            # Clear existing fields for placeholder if the line matches specific fields.
             self.placeholder.fields = []
             self.placeholder.update_field('add', line)
         elif (line.startswith('y') or line.startswith('e')) and len(line)==1:
+            # Reset fields and expand command shorthand for further processing.
             self.placeholder.fields = []
             if line == 'e':
                 line = ['e0', 'e1', 'e2']
@@ -721,34 +781,43 @@ class SK_Interface (cmd.Cmd):
                 line = ['y0', 'y1', 'y2']
             for _ in line:
                 self.placeholder.update_field('add', _)
-        elif len(line)>2 and len(self.placeholder.fields)==1:
-            matches = self.G.select(name=line)
-            if matches:
-                if len(matches) > 1:
-                    selected_node = select_node(matches)
-                else:
-                    selected_node = matches[0]
-            
-            else:
-                lang, type, lemma = create_node()
-                if lang and type and len(lang) == 2 and len(type) == 1:
-                    if not self.G.select(lang=lang, type=type, name=line, lemma=lemma):
-                        self.G.create_node(lang, type, line, lemma)
-                        print("| Node created.")
-                        selected_node = self.G.select(lang=lang, type=type, name=line, lemma=lemma)[0]
+        elif len(line)>2:
+            if len(self.placeholder.fields)==1:
+                # Attempt to match or create node based on extended input.
+                matches = self.G.select(name=line)
+                if matches:
+                    # Handle multiple matches through selection or direct assignment.
+                    if len(matches) > 1:
+                        selected_node = select_node(matches)
                     else:
+                        selected_node = matches[0]
+                
+                else:
+                    # If no matches, prompt for node creation.
+                    lang, type, lemma = create_node()
+                    # Validate inputs for new node creation.
+                    if lang and type and len(lang) == 2 and len(type) == 1:
+                        # Check if a node with specified characteristics exists, create if not.
+                        if not self.G.select(lang=lang, type=type, name=line, lemma=lemma):
+                            self.G.create_node(lang, type, line, lemma)
+                            print("| Node created.")
+                            selected_node = self.G.select(lang=lang, type=type, name=line, lemma=lemma)[0]
+                        else:
+                            selected_node = None
+                            print('| The specified set of characteristics already exists.')
+                    elif lang or type or lemma:
+                        # Fail if any validation for the new node attributes fails.
                         selected_node = None
-                        print('| The specified set of characteristics already exists.')
-                elif lang or type or lemma:
-                    selected_node = None
-                    print('Failed to validate hash attributes.')
+                        print('Failed to validate hash attributes.')
+                        
+                # Binding or linking logic if a selected or created node is available.
+                cn = self.placeholder.node
+                cf = self.placeholder.fields[0]
 
-            cn = self.placeholder.node
-            cf = self.placeholder.fields[0]
-
-            if selected_node:
-                bind_node(cn, selected_node, cf)
-
+                if selected_node:
+                    bind_node(cn, selected_node, cf)
+            else:
+                padded_print("Select a single valid fielding.")
         else:
             padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
 
