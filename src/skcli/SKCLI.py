@@ -393,6 +393,7 @@ class SK_Interface (cmd.Cmd):
         parser = argparse.ArgumentParser(description="Perform a random node search")
         parser.add_argument('-l', '--lang', type=str, help='Specify the language')
         parser.add_argument('-t', '--type', type=str, help='Specify the type')
+        parser.add_argument('-s', '--sos', type=str, help='Sets a bias for low-connected nodes.')  # Notice the action change.
         parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')  # Notice the action change.
         args = parser.parse_args(args.split())
 
@@ -400,11 +401,13 @@ class SK_Interface (cmd.Cmd):
         type_constraint = args.type if args.type else None
         lang_constraint = args.lang if args.lang else None
 
-        # Calls the _set_random_node method with the provided language and type constraints.
-        # This allows users to narrow down the search to a specific subset of nodes.
-        self._set_random_node(lang=lang_constraint,
-                              type=type_constraint,
-                              favorite=args.fav)
+        candidates = self.G.edge_count('<=', int(args.sos)) if args.sos else self.G
+        new_node = candidates.random(lang=lang_constraint, type=type_constraint, favorite=args.fav)
+
+        if new_node:
+            self._set_node(new_node)
+        else:
+            padded_print('No nodes met the criteria.', tab=0)
 
     def do_ls(self, arg):
 
@@ -488,9 +491,29 @@ class SK_Interface (cmd.Cmd):
 
         if not self.placeholder.fields:
             padded_print("Error. Search field is needed", tab=0)
+            
+    def do_new(self, name):
 
-    def do_new(self, arg):
-        NW_Interface(self)
+        if name:
+        
+            lang =  input('> lang  : ')
+            type =  input('> type  : ')
+            lemma = input('> lemma : ')
+
+            lemma = 'NA' if not lemma else lemma
+            
+            matches = self.G.find(lang=lang, type=type, name=name, lemma=lemma)
+            if not matches:
+                self.G.create_node(lang, type, name, lemma)
+                padded_print('Succesfully created.')
+            else:
+                padded_print('Already existed.')
+
+            self._set_node(self.G.find(lang=lang, type=type, name=name, lemma=lemma))
+        
+        else:
+
+            padded_print('You need to insert the name as argument.')
 
     # Internal Methods  --------------------
         

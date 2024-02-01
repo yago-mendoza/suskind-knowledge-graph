@@ -191,10 +191,11 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 
 'r': """\
 | Desc. Freely performs a random node search with optional language and type constraints.
-| Signature : r [-l <lang>] [-t <type>] [-f]
+| Signature : r [-l <lang>] [-t <type>] [-s <lim>] [-f]
 | Arguments :
     -l, --lang  Specify the language to narrow down the search.
     -t, --type  Specify the type to narrow down the search.
+    -s, --sos   Specify the max number of connections a node can have to be considered.
     -f, --fav   Specify wether the output must be favorite or not.
 | Usage examples :
     r
@@ -257,11 +258,12 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 """,
 
 'new': """\
-| Desc. Enters a session for introducing new entries.
-| Signature : new
-| Arguments : None
+| Desc. Enters a new node to the graph..
+| Signature : new [name]
+| Arguments :
+    1. Name : The complete name of the new entry.
 | Usage examples :
-    new\
+    new Carlo Magno\
 """,
 
 'grab': """\

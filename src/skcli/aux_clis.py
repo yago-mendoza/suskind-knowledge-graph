@@ -122,7 +122,7 @@ class LS_Interface(cmd.Cmd):
             self.parent_cli.placeholder.update_field('add', line)
             self.do_ls()
         
-        elif len(line)>2 and (line.isalpha() or line.isalnum()):
+        elif len(line)>2:
 
             name = line       
 
@@ -313,101 +313,6 @@ class LS_Interface(cmd.Cmd):
         # We update internal object self.listed_nodes to reflect changes that might have been made during the session
         self.listed_nodes = sorted(self.listed_nodes, key=lambda node: node.name)
         # We sort these nodes for readibility (by name)    
-    
-class NW_Interface(cmd.Cmd):
-
-    prompt = '<Name> : '
-    def __init__(self, parent_cli):
-        super().__init__()
-        self.parent_cli = parent_cli
-        self.default_lang = 'es'
-        self.default_type = 'n'
-        self.response = None
-        self.update_prompt()
-        self.display()
-        self.cmdloop()
-
-    def update_prompt(self):
-        self.prompt = f"[{self.default_lang}][{self.default_type}][<name>] : "
-    
-    def cmdloop(self, intro=None):
-        super().cmdloop(intro)
-
-    def display(self):
-        print(f"(SYS: Started create-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
-
-    def do_help(self, arg):
-        # estaria bien trasladar esto a command_docstrings.py
-        padded_print("Desc. This sub-session allows for the interactive creation of new entries.")
-        padded_print("Actions.")
-        padded_print("  1. Name")
-        padded_print("     Write the intended <name> in the input prompt.")
-        padded_print("  2. Target Switch")
-        padded_print("     Enter 2-char <lang> or 1-char <type> in the input prompt.")
-        padded_print("Circumstance : Homologous Search")
-        padded_print("  Upon entering <name>, the system checks for homologous matches (that is,")
-        padded_print("  nodes with the same name yet different lang, type or lemma).")
-        padded_print("     If found, a menu shows existing nodes, helping users decide whether to")
-        padded_print("  add a new one or not (allowing for lemma definition).")
-        padded_print("     Otherwise, it will automatically create the node with default lemma 'NA'.")
-
-    def default(self, line):
-
-        def is_valid_language_code(code):
-            return len(code) == 2 and code.isalpha() and code.islower()
-
-        def is_valid_type_code(code):
-            return len(code) == 1 and code.isalpha() and code.islower()
-
-        def capitalize_name(name):
-            return name[0].upper() + name[1:] if name else None
-
-        def find_homologous(name):
-            return self.parent_cli.G.select(name=name, lang=self.default_lang, type=self.default_type)
-
-        def handle_homologous_response(homologous, name):
-            statement_1 = f"Found {len(homologous)} homologous."
-            statement_2 = "(Enter 'lemma' to create a new meaning or press Enter to move on.)"
-            formatted_nodes = [node._convert_header_to_compact_format() for node in homologous]
-            SelectInterface(formatted_nodes, self, statement_1, statement_2, 'Lemma: ').cmdloop()
-            response = self._get_response()
-            
-            if isinstance(response, str) and not response.isdigit():
-                if response not in [node.lemma for node in homologous]:
-                    self.parent_cli.G.create_node(lang=self.default_lang, type=self.default_type, name=name, lemma=response)
-                    print(f"| Created [{self.default_lang}][{self.default_type}][{name}]@[{response}]")
-                else:
-                    print("Already existing. Did nothing.")
-
-        def create_node_with_default_lemma(name):
-            lemma = "NA"
-            self.parent_cli.G.create_node(lang=self.default_lang, type=self.default_type, name=name, lemma=lemma)
-            print(f"| OK : [{self.default_lang}][{self.default_type}][{name}]@[{lemma}]")
-
-        self.response = None
-        if is_valid_language_code(line):
-            self.default_lang = line
-        elif is_valid_type_code(line):
-            self.default_type = line
-        else:
-            name = capitalize_name(line)
-            homologous = find_homologous(name)
-            if homologous:
-                handle_homologous_response(homologous, name)
-            else:
-                create_node_with_default_lemma(name)
-        
-        self.update_prompt()
-
-    def emptyline(self):
-        # To exit with an empty Enter key press
-        print(f"(SYS: Ended edit-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
-        return True
-
-    def _get_response(self, reset_response=True):
-        # Gets and decides wether it resets the response or not (by default, it does)
-        res, self.response = self.response, None if reset_response else self.response
-        return res
 
 class GB_Interface(cmd.Cmd):
 
