@@ -75,6 +75,96 @@ class SK_Interface (cmd.Cmd):
                 except Exception as e:
                     print(f"Error: {e}")
     
+    def do_sug(self, arg):
+
+        # if self.suggestions == None:
+
+        def flatten(lst):
+            return [item for subset in lst for item in subset]
+        
+        if len(self.placeholder.fields) == 1:
+
+            cn = self.placeholder.node
+            cf = self.placeholder.fields[0]
+            
+            if cf == 'y0':
+                y1 = cn.get_neighbors('y1')
+                y1_y0 = flatten([neighbor.get_neighbors('y0') for neighbor in y1])
+
+                suggestions = y1_y0
+
+            if cf == 'y1':
+                y1 = cn.get_neighbors('y1')
+                y1_y1 = flatten([neighbor.get_neighbors('y1') for neighbor in y1])
+                y1_y1_y1 = flatten([neighbor.get_neighbors('y1') for neighbor in y1_y1])
+
+                y2 = cn.get_neighbors('y1')
+                y2_y1 = flatten([neighbor.get_neighbors('y1') for neighbor in y2])
+
+                suggestions = y1_y1 + y1_y1_y1 + y2_y1
+            
+            if cf == 'y2':
+                y1 = cn.get_neighbors('y1')
+                y1_y2 = flatten([neighbor.get_neighbors('y2') for neighbor in y1])
+
+                suggestions = y1_y2
+            
+            if cf == 'e0':
+                y1 = cn.get_neighbors('y1')
+                y1_e0 = flatten([neighbor.get_neighbors('e0') for neighbor in y1])
+
+                e = cn.get_neighbors('e')
+                e_e = flatten([neighbor.get_neighbors('e') for neighbor in e])
+
+                suggestions = y1_e0 + e_e
+
+            if cf == 'e1':
+                y1 = cn.get_neighbors('y1')
+                y1_e1 = flatten([neighbor.get_neighbors('e1') for neighbor in y1])
+
+                e = cn.get_neighbors('e')
+                e_e = flatten([neighbor.get_neighbors('e') for neighbor in e])
+                
+                suggestions = y1_e1 + e_e
+            
+            if cf == 'e2':
+                y1 = cn.get_neighbors('y1')
+                y1_e2 = flatten([neighbor.get_neighbors('e2') for neighbor in y1])
+
+                e = cn.get_neighbors('e')
+                e_e = flatten([neighbor.get_neighbors('e') for neighbor in e])
+                
+                suggestions = y1_e2 + e_e
+            
+            suggestions = NodeSet(list(set([n for n in suggestions if n not in cn.get_neighbors()])))
+
+            ch = None
+
+            print(f"(SYS: Started sug-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+
+            while ch not in ['q','exit']:
+ 
+                rn = suggestions.random()
+
+                if rn:
+
+                    ch = input(f"| {rn._convert_header_to_compact_format()} [Y/N] >> ")
+                    
+                    if ch in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']:
+                        self.G.bind(cn, rn, ch)
+                        padded_print(f"Succesfully binded node to '{ch}' field.")
+
+                    elif ch not in ['N', 'n', '', 'q', 'exit']:
+                        self.G.bind(cn, rn, cf)
+                        padded_print(f"Succesfully binded node to '{cf}' field.")
+                
+                else:
+                    ch = 'q'
+                    padded_print('No suggestions found.')
+
+            print(f"(SYS: Ended sug-session at {datetime.datetime.now().strftime('%H:%M:%S')})")
+
+    
     def do_vg(self, arg):
         examples = self.placeholder.node.examples
         if examples not in [[],['']]:
@@ -491,14 +581,14 @@ class SK_Interface (cmd.Cmd):
 
         if not self.placeholder.fields:
             padded_print("Error. Search field is needed", tab=0)
-            
+
     def do_new(self, name):
 
         if name:
         
-            lang =  input('> lang  : ')
-            type =  input('> type  : ')
-            lemma = input('> lemma : ')
+            lang =  input('> lang  : ').strip()
+            type =  input('> type  : ').strip()
+            lemma = input('> lemma : ').strip()
 
             lemma = 'NA' if not lemma else lemma
             
@@ -553,7 +643,79 @@ class SK_Interface (cmd.Cmd):
         print('-'*47)
 
     def default(self, line):
-        padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
+
+        def select_node(matched_nodes):
+                
+            header_statement = "Did you mean..."
+            tail_statement = "(Press Enter to select none)"
+            formatted_nodes = [node._convert_header_to_compact_format() for node in matched_nodes]
+            SelectInterface(formatted_nodes, self, header_statement, tail_statement).cmdloop()
+            response = self._get_response()
+            return matched_nodes[int(response)-1] if response else None
+
+        def create_node():
+            user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
+
+            if user_input in ['Y','y']:
+
+                lang =  input('> lang  : ').strip()
+                type =  input('> type  : ').strip()
+                lemma = input('> lemma : ').strip()
+                lemma = 'NA' if not lemma else lemma
+
+                return lang, type, lemma
+
+            return None, None, None
+
+        def bind_node(current_node, selected_node, edge_type):
+            if selected_node and not selected_node in current_node.get_neighbors(edge_type):
+                self.G.bind(current_node, selected_node, edge_type)
+                print(f"| Successfully binded '{selected_node.name}'.")
+            elif selected_node:
+                print('| The node was already present.')
+
+
+        if (line.startswith('y') or line.startswith('e')) and len(line)==2:
+            self.placeholder.fields = []
+            self.placeholder.update_field('add', line)
+        elif (line.startswith('y') or line.startswith('e')) and len(line)==1:
+            self.placeholder.fields = []
+            if line == 'e':
+                line = ['e0', 'e1', 'e2']
+            elif line == 'y':
+                line = ['y0', 'y1', 'y2']
+            for _ in line:
+                self.placeholder.update_field('add', _)
+        elif len(line)>2 and len(self.placeholder.fields)==1:
+            matches = self.G.select(name=line)
+            if matches:
+                if len(matches) > 1:
+                    selected_node = select_node(matches)
+                else:
+                    selected_node = matches[0]
+            
+            else:
+                lang, type, lemma = create_node()
+                if lang and type and len(lang) == 2 and len(type) == 1:
+                    if not self.G.select(lang=lang, type=type, name=line, lemma=lemma):
+                        self.G.create_node(lang, type, line, lemma)
+                        print("| Node created.")
+                        selected_node = self.G.select(lang=lang, type=type, name=line, lemma=lemma)[0]
+                    else:
+                        selected_node = None
+                        print('| The specified set of characteristics already exists.')
+                elif lang or type or lemma:
+                    selected_node = None
+                    print('Failed to validate hash attributes.')
+
+            cn = self.placeholder.node
+            cf = self.placeholder.fields[0]
+
+            if selected_node:
+                bind_node(cn, selected_node, cf)
+
+        else:
+            padded_print(f"Unknown '{line[:4].strip()+'...' if len(line)>5 else line}' command.", CONTEXTUAL_DISCLAIMER, tab=0)
 
     def do_edit(self, arg):
 
@@ -597,4 +759,9 @@ class SK_Interface (cmd.Cmd):
         getattr(cn, 'edit')(**{attribute: new_value})
 
         self.placeholder.update_node(self.placeholder.node)
-
+    
+    def do_q(self, arg):
+        return True
+    
+    def do_exit(self, arg):
+        return True

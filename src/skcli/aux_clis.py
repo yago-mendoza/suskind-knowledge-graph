@@ -129,7 +129,7 @@ class LS_Interface(cmd.Cmd):
             def capitalize_name(name):
                 return name[0].upper() + name[1:] if name else None
 
-            def select_node(name):
+            def select_node(matched_nodes):
                 
                 header_statement = "Did you mean..."
                 tail_statement = "(Press Enter to select none)"
@@ -138,14 +138,18 @@ class LS_Interface(cmd.Cmd):
                 response = self._get_response()
                 return matched_nodes[int(response)-1] if response else None
 
-
             def create_node():
                 user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
-                if user_input in ['y']:
-                    creation_input = input("   | Enter <lang> <type> <lemma> in this format:\n   > ")
-                    parts = creation_input.split()
-                    if len(parts) >= 2:
-                        return parts[0], parts[1], ' '.join(parts[2:]) or 'NA'
+
+                if user_input in ['Y','y']:
+
+                    lang =  input('> lang  : ').strip()
+                    type =  input('> type  : ').strip()
+                    lemma = input('> lemma : ').strip()
+                    lemma = 'NA' if not lemma else lemma
+
+                    return lang, type, lemma
+
                 return None, None, None
 
             def bind_node(current_node, selected_node, edge_type):
@@ -162,7 +166,7 @@ class LS_Interface(cmd.Cmd):
             if matched_nodes:
 
                 if len(matched_nodes) > 1:
-                    selected_node = select_node(name)
+                    selected_node = select_node(matched_nodes)
                 else:
                     selected_node = matched_nodes[0]
             

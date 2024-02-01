@@ -167,6 +167,16 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     set en j y0 e2\
 """,
 
+'<field>': """\
+| Desc. Shorter field setting.
+| Signature : <field>
+| Arguments :
+    <field> : Single-short format representation of a field.
+| Usage examples :
+    y0
+    y1\
+""",
+
 'unset': """\
 | Desc. Removes properties or settings from the current node or environment.
 | Signature : unset <*settings>
@@ -200,6 +210,12 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 | Usage examples :
     r
     r -l en -t n\
+""",
+
+'<name>': """\
+| Desc. Makes a connection through the placeholder parameters.
+| Signature : <name>
+| Note : this is usually faster than the 'ls' approach.\
 """,
 
 'ls': """\
