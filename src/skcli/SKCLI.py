@@ -695,9 +695,7 @@ class SK_Interface (cmd.Cmd):
         
             lang =  input('> lang  : ').strip()
             type =  input('> type  : ').strip()
-            lemma = input('> lemma : ').strip()
-
-            lemma = 'NA' if not lemma else lemma
+            lemma = 'NA' 
             
             matches = self.G.find(lang=lang, type=type, name=name, lemma=lemma)
             if not matches:
