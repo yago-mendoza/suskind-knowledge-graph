@@ -5,6 +5,7 @@ import src.sktools as sk
 
 import difflib
 import os
+import re
 
 class Graph(NodeSet):
 
@@ -23,17 +24,27 @@ class Graph(NodeSet):
     def _load_data(self, filename):
 
         def _parse_line_to_node(line):
+
             parts = line.strip().split('|')
             lang, type_ = parts[0].split(':')[0].split('-')[0], parts[0].split(':')[0].split('-')[1]
-            name, lemma = parts[0][:-1].split(':')[1].split('(')
-            favorite = True if parts[1] == 'T' else False
-            sections = [part.split('/') for part in parts[2:]]
-            synset0, synset1, synset2, semset0, semset1, semset2, examples = sections
-            return Node(lang=lang, type=type_, name=name, lemma=lemma,
-                        favorite=favorite,
-                        synset0=synset0, synset1=synset1, synset2=synset2,
-                        semset0=semset0, semset1=semset1, semset2=semset2,
-                        examples=examples)
+            
+            _ = parts[0][:-1].split(':') # in case the name contains a ':' itself
+            _ = ''.join(_[1:]) if len(_) > 2 else _[1]
+  
+            try:
+                name, lemma = _.split('(')
+
+                favorite = True if parts[1] == 'T' else False
+                sections = [part.split('/') for part in parts[2:]]
+
+                synset0, synset1, synset2, semset0, semset1, semset2, examples = sections
+                return Node(lang=lang, type=type_, name=name, lemma=lemma,
+                            favorite=favorite,
+                            synset0=synset0, synset1=synset1, synset2=synset2,
+                            semset0=semset0, semset1=semset1, semset2=semset2,
+                            examples=examples)
+            except:
+                print(f'Error occured with line : "{line}"')
         
         def _update_node_relationships(nodes):
             """Update each string edge referential attributes to reference other nodes in the graph instead."""
@@ -121,11 +132,13 @@ class Graph(NodeSet):
 
     def create_node(self, lang, type, name, lemma):
         # Check if a node with the given attributes already exists
-        if not self.find(lang=lang, type=type, name=name, lemma=lemma):
+        node = self.find(lang=lang, type=type, name=name, lemma=lemma)
+        if not node:
             # If not, create a new Node instance with the provided attributes
             node = Node(lang, type, name, lemma)
             # Append the new node to the graph
             self.append(node) # sets node.graph=graph
+        return node
 
     def delete_node(self, target_node):
         # Remove the target node from the graph

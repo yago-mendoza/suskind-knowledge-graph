@@ -15,9 +15,7 @@ from src.skcli.aux_funcs.visuals import *
 from src.skcli.aux_funcs.command_docstrings import *
 
 
-# adding, editing, inspecting and deleting examples
-
-# do_save well implemented
+# >> en sets 'en' as field (WRONG)
 
 
 class SK_Interface (cmd.Cmd):
@@ -430,7 +428,7 @@ class SK_Interface (cmd.Cmd):
         current_node = self.placeholder.node
         ch = input(f'SYS: Are you sure you want to remove this node ({len(current_node.get_neighbors())} edges)? [Y/N]\n>> ')
         if ch in {'Y','y'}:
-            self.G.remove(current_node)
+            self.G.delete_node(current_node)
             self._set_random_node()
             print('Node succesfully removed.')
         else:
@@ -555,10 +553,12 @@ class SK_Interface (cmd.Cmd):
         parser = argparse.ArgumentParser(description="Perform a random node search")
         parser.add_argument('-l', '--lang', type=str, nargs='?', const='', default=None, help='Specify the language or reset')
         parser.add_argument('-t', '--type', type=str, nargs='?', const='', default=None, help='Specify the type or reset')
-        parser.add_argument('-s', '--sos', type=str, help='Sets a bias for low-connected nodes.')
+        parser.add_argument('-s', '--sos', type=str, default=None, help='Sets a bias for low-connected nodes.')
         parser.add_argument('-f', '--fav', action='store_true', help='Toggle favorite switch')
-        args = parser.parse_args(args.split())
-
+        try:
+            args = parser.parse_args(args.split())
+        except SystemExit:
+            return 
 
         # Actualiza o elimina las restricciones globales basándose en los argumentos
         if args.lang is not None:
@@ -583,7 +583,16 @@ class SK_Interface (cmd.Cmd):
         lang_constraint = self.r_default_lang
         type_constraint = self.r_default_type
 
-        candidates = self.G.edge_count('<=', int(args.sos)) if args.sos else self.G
+        if args.sos is not None:
+            try:
+                sos_value = int(args.sos)  # Try to convert args.sos to an integer
+                candidates = self.G.edge_count('<=', sos_value)
+            except ValueError:
+                print("Error: 'sos' argument must be an integer.")
+                return  # Exit the function or handle the error as appropriate
+        else:
+            candidates = self.G  # No 'sos' filter applied
+    
         new_node = candidates.random(lang=lang_constraint, type=type_constraint, favorite=args.fav)
 
         if new_node:
@@ -692,22 +701,23 @@ class SK_Interface (cmd.Cmd):
     def do_new(self, name):
 
         if name:
-        
+
             lang =  input('> lang  : ').strip()
             type =  input('> type  : ').strip()
             lemma = 'NA' 
             
             matches = self.G.find(lang=lang, type=type, name=name, lemma=lemma)
             if not matches:
-                self.G.create_node(lang, type, name, lemma)
-                padded_print('Succesfully created.')
+                if lang and type and len(lang) == 2 and len(type) == 1:
+                    self.G.create_node(lang, type, name, lemma)
+                    print("| Node created.")
+                    self._set_node(self.G.find(lang=lang, type=type, name=name, lemma=lemma))
+                else:
+                    print('Failed to validate hash attributes.')
             else:
-                padded_print('Already existed.')
-
-            self._set_node(self.G.find(lang=lang, type=type, name=name, lemma=lemma))
-        
+                print('| The specified set of characteristics already exists.')
+                self._set_node(self.G.find(lang=lang, type=type, name=name, lemma=lemma))
         else:
-
             padded_print('You need to insert the name as argument.')
 
     # Internal Methods  --------------------
@@ -765,24 +775,6 @@ class SK_Interface (cmd.Cmd):
             # Return the selected node based on user input or None if no selection was made.
             return matched_nodes[int(response)-1] if response else None
         
-        # Function to prompt user for creating a new node.
-        def create_node():
-            # Prompt user decision for node creation.
-            user_input = input("| Do you want to create this node? [Y/N] : ").strip().lower()
-
-            # Gather necessary attributes for the node if creation is confirmed.
-            if user_input in ['Y','y']:
-
-                lang =  input('> lang  : ').strip()
-                type =  input('> type  : ').strip()
-                lemma = input('> lemma : ').strip()
-                lemma = 'NA' if not lemma else lemma
-
-                # Return collected attributes.
-                return lang, type, lemma
-            # Return None for all attributes if creation is not confirmed.
-            return None, None, None
-        
         # Function to bind a node to the current node with a specified edge type.
         def bind_node(current_node, selected_node, edge_type):
             # Check if the selected node is not already a neighbor with the specified edge type.
@@ -822,7 +814,10 @@ class SK_Interface (cmd.Cmd):
                 
                 else:
                     # If no matches, prompt for node creation.
-                    lang, type, lemma = create_node()
+                    print('(SYS: Name does not match any node. Fill to create it.)')
+                    lang =  input('> lang  : ').strip()
+                    type =  input('> type  : ').strip()
+                    lemma = 'NA' 
                     # Validate inputs for new node creation.
                     if lang and type and len(lang) == 2 and len(type) == 1:
                         # Check if a node with specified characteristics exists, create if not.
@@ -841,7 +836,10 @@ class SK_Interface (cmd.Cmd):
                 cf = self.placeholder.fields[0]
 
                 if selected_node:
-                    bind_node(cn, selected_node, cf)
+                    if selected_node!=self.placeholder.node:
+                        bind_node(cn, selected_node, cf)
+                    else:
+                        padded_print("Can't bind node to itself.")
             else:
                 padded_print("Select a single valid fielding.")
         else:

@@ -45,8 +45,180 @@ def run(G):
         cli = SK_Interface(G)
         cli.cmdloop() # executes cmdqueue and leaves terminal ready
     if test_skcomponents:
-        Node.compress()
-       
+        pass
+
+        # size_o = len(G)
+        # n_conn_o = sum([len(n._get_raw_content()) for n in G])
+        # print(size_o, n_conn_o)
+
+        # G_names = [n.name for n in G]
+        # c = 0
+        # for line in s.split('\n'):
+        #     c +=1
+        #     if c%400==0:
+        #         G.save(f'data_{c}.txt')
+
+        #     parts = line.split('|')
+        #     name = parts[0]
+
+        #     print(name)
+
+        #     n = None
+
+        #     if name not in G_names:
+        #         # Si no está creado
+        #         n = G.create_node('es', 'k', name, 'NA')
+        #         print('¡¡¡¡¡Created new!!!!')
+        #     elif name in G_names:
+        #         ns = G.select(lang='es', name=name)
+        #         if len(ns)==1:
+        #             n = ns[0]
+        #         else:
+        #             continue
+            
+        #     if n:
+        #         syns = parts[6].split('/')
+        #         if syns not in [[],['']]:
+        #             for syn in syns:
+        #                 syn = G.select(lang='es', name=syn)
+        #                 if len(syn)==1:
+        #                     syn = syn[0]
+        #                 else:
+        #                     continue
+        #                 G.bind(n, syn, 'y1')
+     
+                
+        #         sems = parts[9].split('/')
+        #         if sems not in [[],['']]:
+        #             for sem in sems:
+        #                 sem = G.select(lang='es', name=sem)
+        #                 if len(sem)==1:
+        #                     sem = sem[0]
+        #                 else:
+        #                     continue
+        #                 G.bind(n, sem, 'e1')
+        
+        # file.close()
+
+        # for line in s.split('\n'):
+        #     bs = line.split('|')
+
+        #     for i in range(len(bs)):
+        #         for j in range(len(bs)):
+        #             if j <= i:
+        #                 continue
+        #             name_a = bs[i]
+        #             name_b = bs[j]
+        #             na = G.create_node('es', 'b', name_a, 'NA')
+        #             nb = G.create_node('es', 'b', name_b, 'NA')
+
+        #             G.bind(na, nb, 'y1')
+
+        # pairs = []
+        # cache = []
+        # for line in s.split('\n'):
+        #     line = line.strip()
+        #     if line:
+        #         pos_space = line.find(' ')
+        #         line = line[pos_space+1:]
+        #         cache.append(line)
+        #         if len(cache)==2:
+        #             pairs.append((cache[0], cache[1]))
+        #             cache = []
+        # for pair in pairs:
+
+        #     na_name, nb_name = pair # if does not exist, creates it (and gets it)
+
+        #     na = G.create_node('es', 'r', na_name, 'NA') # if does not exist, creates it (and gets it)
+        #     nb = G.create_node('es', 'r', nb_name, 'NA') # if does not exist, creates it (and gets it)
+
+        #     G.bind(na, nb, 'y1')
+        
+        # class entry:
+        #     def __init__(self, string):
+        #         self.name = string[:-3]
+        #         self.type = string[-3:]
+
+        # for line in s.split('\n'):
+
+        #     line = line.split('|')
+        #     if line != ['']:
+        #         id = entry(line[0])
+        #         syns = [entry(n) for n in line[1].split('/')]
+        #         sems = [entry(n) for n in line[2].split('/')]
+        #         exs = line[3].split('/')   
+
+        #         #print()
+        #         #print(f'@id.name={id.name}|n_syns={len(syns)};n_sems={len(sems)}')
+            
+        #         matches = G.select(name=id.name)
+        #         if len(matches)==0:
+        #             G.create_node('es', id.type, id.name, 'NA')
+        #             print('Created '+id.name)
+        #             na = G.find(name=id.name)
+        #         elif len(matches)==1:
+        #             na = matches[0]
+
+        #         for ex in exs:
+        #             if ex not in na.examples and ex.strip() != '':
+        #                 na.examples.append(ex)
+        #                 print(f'Added {ex} to {na}')
+   
+        #         for syn in syns:
+        #             nb = G.select(name=syn.name)
+        #             #print(f"¿Is '{nb}' True or False? Lets see it...")
+        #             if nb:
+        #                 nb = nb[0]
+        #                 if nb not in na.get_neighbors('y'):
+        #                     G.bind(na, nb, 'y1')
+        #                     print(f'Binded {na._convert_header_to_compact_format()} to {nb._convert_header_to_compact_format()}.')
+        #                 else:
+        #                     a = 0
+        #                     #print(f"{nb} was already in {na}.")
+        #             else:
+        #                 a = 0
+        #                 #print(f'{syn.name} arised no results at G :(')
+
+        #         for sem in sems:
+        #             nb = G.select(name=sem.name)
+        #             if nb:
+        #                 nb = nb[0]
+        #                 if nb not in na.get_neighbors('e'):
+        #                     G.bind(na, nb, 'e1')
+        #                     print(f'Binded {na._convert_header_to_compact_format()} to {nb._convert_header_to_compact_format()}.')
+        #                 else:
+        #                     a = 0
+        #                     #print(f"{nb} was already in {na}.")
+        #             else:
+        #                 a = 0
+        #                 #print(f'{syn.name} arised no results at G :(')   
+
+
+
+
+        # for line in s.split('\n'):
+        #     line = line[8:]
+        #     parts = line.split('|')
+        #     name = parts[0]
+        #     sems = parts[-1].split('/')
+        #     if sems != ['']:
+
+        #         G.create_node('es', 'r', name, 'NA')
+        #         na = G.find(lang='es', type='r', name=name, lemma='NA')
+        #         for sem in sems:
+        #             try:
+        #                 matches = G.select(name=sem)
+        #                 if len(matches)==1:
+        #                     nb = matches[0]
+        #                     G.bind(na, nb, 'e1')
+        #             except:
+        #                 print(name, sem)
+
+        # size_f = len(G)
+        # n_conn_f = sum([len(n._get_raw_content()) for n in G])
+        # print(size_f, n_conn_f)
+
+        # G.save('data_f.txt')
 
 #########################################################
 
@@ -70,4 +242,3 @@ if __name__ == '__main__':
     from src.skcli.aux_funcs.command_docstrings import *
     G = create_graph()
     run(G)
-

@@ -112,7 +112,9 @@ class LS_Interface(cmd.Cmd):
             # Bindea cada par de nodos
             self.parent_cli.G.bind(node1, node2, relation_type + '1')
 
-        print(f"Nodes successfully binded with {relation_type + '1'} relationship.")
+        n_conn = len(selected_nodes)
+
+        print(f"Nodes successfully binded ({(n_conn*(n_conn-1))/2} conn.) through '{relation_type + '1'}' field.")
 
     def default(self, line):
 
@@ -145,8 +147,7 @@ class LS_Interface(cmd.Cmd):
 
                     lang =  input('> lang  : ').strip()
                     type =  input('> type  : ').strip()
-                    lemma = input('> lemma : ').strip()
-                    lemma = 'NA' if not lemma else lemma
+                    lemma = 'NA'
 
                     return lang, type, lemma
 
