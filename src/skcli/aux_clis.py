@@ -71,8 +71,6 @@ class LS_Interface(cmd.Cmd):
             field_symb = self.parent_cli.placeholder.fields[0]
             field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
             unbind_cases.append((target_node, field))
-        print(unbind_cases)
-        print()
         for unbind_case in unbind_cases:
             print(self.ls_node, unbind_case[0], unbind_case[1])
             self.parent_cli.G.unbind(self.ls_node, unbind_case[0], unbind_case[1])
@@ -114,7 +112,7 @@ class LS_Interface(cmd.Cmd):
 
         n_conn = len(selected_nodes)
 
-        print(f"Nodes successfully binded ({(n_conn*(n_conn-1))/2} conn.) through '{relation_type + '1'}' field.")
+        print(f"Nodes successfully binded ({int((n_conn*(n_conn-1))/2)} conn.) through '{relation_type + '1'}' field.")
 
     def default(self, line):
 
@@ -238,6 +236,8 @@ class LS_Interface(cmd.Cmd):
                 print(f'Succesfully re-binded {len(target_nodes)} edges.')
             else:
                 print('Not enough arguments provided.')
+
+        self.do_ls()
     
     def do_cp(self, arg):
 
@@ -283,6 +283,8 @@ class LS_Interface(cmd.Cmd):
                 print(f'Succesfully binded {len(target_nodes)} edges.')
             else:
                 print('Not enough arguments provided.')
+
+        self.do_ls()
     
     def do_align(self, arg):
         args = arg.split()

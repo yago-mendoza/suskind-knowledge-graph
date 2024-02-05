@@ -83,26 +83,23 @@ class Graph(NodeSet):
         if integrity_check:
             
             found_error = False
-            print('| Spurious edges check ...', end = ' ')
-
+            print('| : Spurious edges check ...')
             existing_nodes = set(self)
             for node in self:
                 for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                     new_attrs = []
                     for neighbor in getattr(node, attr, []):
                         if neighbor not in existing_nodes:
-                            print(f"Removed {neighbor.name} from {node.name}")
                             found_error = True
+                            print(f"Removed {neighbor.name} from {node.name}")
                         else:
                             new_attrs.append(neighbor)
                     setattr(node, attr, new_attrs)
-            
             if not found_error:
                 print('OK')
 
             found_error = False
-            print('| Edge mutuality check...', end = ' ')
-
+            print('| : Edge mutuality check...')
             opposed_field = {
                 'synset0': 'synset2', 'synset1': 'synset1', 'synset2': 'synset0',
                 'semset0': 'semset2', 'semset1': 'semset1', 'semset2': 'semset0',
@@ -115,24 +112,23 @@ class Graph(NodeSet):
                             non_mutual.append((node, neighbor,))
                             self.bind(node, neighbor, field)
                             self.bind(neighbor, node, opposed) # redundant yet unharmful
+                            found_error=True
                             print(f"Fixed dis-mutuality on {node.name} -> {neighbor.name}.")
                         else:
                             pass
-            
             if not found_error:
                 print('OK')
 
             found_error = False
-            print('| Redundant containment check...', end = ' ')
-
+            print('| : Redundant containment check...')
             for node in self:
                 for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
                     attrs = getattr(node, attr, [])
                     set_attrs = list(set(attrs))
                     if len(attrs) != len(set_attrs):
+                        found_error=True
                         setattr(node, attr, set_attrs)
                         print(f"Had to set attrs at {node.name} due to redundancy.")
-            
             if not found_error:
                 print('OK')
         
