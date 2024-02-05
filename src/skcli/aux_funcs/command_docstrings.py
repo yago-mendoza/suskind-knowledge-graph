@@ -223,7 +223,9 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     -f, --fav   Specify wether the output must be favorite or not.
 | Usage examples :
     r
-    r -l en -t n\
+    r -l en -t n
+    r -l # to unset
+    r -t # to unset\
 """,
 
 '<name>': """\
@@ -261,7 +263,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     ls y0
     ls -d -t 15 -r
     ls -w 50 -a 5 -c 1
-    ls -l es
+    ls -l es\
 """,
 
 'edit': """\

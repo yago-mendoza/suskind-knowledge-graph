@@ -9,8 +9,6 @@ from src.skcli.aux_funcs.err_mssg import *
 
 from src.skcomponents.search_algorithms import *
 
-
-
 class LS_Interface(cmd.Cmd):
 
     prompt = '>> '
@@ -73,9 +71,11 @@ class LS_Interface(cmd.Cmd):
             field_symb = self.parent_cli.placeholder.fields[0]
             field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
             unbind_cases.append((target_node, field))
+        print(unbind_cases)
+        print()
         for unbind_case in unbind_cases:
+            print(self.ls_node, unbind_case[0], unbind_case[1])
             self.parent_cli.G.unbind(self.ls_node, unbind_case[0], unbind_case[1])
-
         padded_print(f"Deleted {len(idxs)} nodes.")
 
         self.do_ls()
@@ -225,15 +225,17 @@ class LS_Interface(cmd.Cmd):
                     for target_node in target_nodes:
                         self.parent_cli.G.bind(node, target_node, field)
                         self.parent_cli.G.unbind(self.ls_node, target_node, field)
+                print(f'Succesfully re-binded {len(target_nodes)} edges.')
             else:
                 print('Aborted process.')
         else:
+            node = self.ls_node
             if fields:
-
                 for field in fields:
                     for target_node in target_nodes:
-                        self.parent_cli.G.bind(self.ls_node, target_node, field)
-                        self.parent_cli.G.unbind(self.ls_node, target_node, self.parent_cli.placeholder.fields[0])
+                        self.parent_cli.G.bind(node, target_node, field)
+                        self.parent_cli.G.unbind(node, target_node, self.parent_cli.placeholder.fields[0])
+                print(f'Succesfully re-binded {len(target_nodes)} edges.')
             else:
                 print('Not enough arguments provided.')
     
@@ -268,6 +270,7 @@ class LS_Interface(cmd.Cmd):
                 for field in fields:
                     for target_node in target_nodes:
                         self.parent_cli.G.bind(node, target_node, field)
+                print(f'Succesfully binded {len(target_nodes)} edges.')
 
             else:
                 print('Aborted process.')
@@ -277,6 +280,7 @@ class LS_Interface(cmd.Cmd):
                 for field in fields:
                     for target_node in target_nodes:
                         self.parent_cli.G.bind(self.ls_node, target_node, field)
+                print(f'Succesfully binded {len(target_nodes)} edges.')
             else:
                 print('Not enough arguments provided.')
     

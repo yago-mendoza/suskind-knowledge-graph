@@ -177,11 +177,11 @@ class SK_Interface (cmd.Cmd):
                     if ch in ['y0', 'y1', 'y2', 'e0', 'e1', 'e2']:
                         # If the user inputs a specific field, bind the current node to the suggested node with that field.
                         self.G.bind(cn, rn, ch)
-                        padded_print(f"Succesfully binded node to '{ch}' field.")
+                        padded_print(f"Successfully binded node to '{ch}' field.")
                     elif ch in ['Y','y']:
                         # If the user confirms the suggestion without specifying a field, use the current field for binding.
                         self.G.bind(cn, rn, cf)
-                        padded_print(f"Succesfully binded node to '{cf}' field.")
+                        padded_print(f"Successfully binded node to '{cf}' field.")
                     elif ch in ['N','n','']:
                         # If the user rejects the suggestion or inputs an empty response, do nothing and loop for a new suggestion.
                         pass
@@ -410,10 +410,14 @@ class SK_Interface (cmd.Cmd):
 
                 header_statement = "Do you mean ..."
                 tail_statement = "(Press Enter without any input to exit)"
+
                 SelectInterface(options, self, header_statement, tail_statement).cmdloop()
                 response = self._get_response()
                 if response:
-                    self._set_node(nodes[int(response)-1])
+                    if response.isdigit():
+                        self._set_node(nodes[int(response)-1])
+                    else:
+                        padded_print('Could not identify index.')
 
     def do_pin(self, arg):
         self.placeholder.node.edit(favorite=True)
@@ -630,14 +634,14 @@ class SK_Interface (cmd.Cmd):
 
             # Reset language filter if '-l' is used without an argument.
             if ls_args.lang == '':
-                print(f"([!] Succesfully unset `ls` global filter '{self.ls_default_lang}')")
+                print(f"([!] Successfully unset `ls` global filter '{self.ls_default_lang}')")
                 self.ls_default_lang = None
             elif ls_args.lang is not None:
-                print(f"([!] Succesfully unset `ls` global filter '{self.ls_default_lang}')")
                 self.ls_default_lang = ls_args.lang
 
             if ls_args.type == '':
                 self.ls_default_type = None
+                print(f"([!] Successfully unset `ls` global filter '{self.ls_default_type}')")
             elif ls_args.type is not None:
                 self.ls_default_type = ls_args.type
                 

@@ -77,16 +77,66 @@ class Graph(NodeSet):
         for node in self:
             node.graph = self
 
-    def save(self, custom_filename, directory_path=None, integrity_check=False):
+    def save(self, custom_filename, directory_path=None, integrity_check=True):
 
-        # Integrity check
 
         if integrity_check:
-            errors = [msg for msg, check in [("non-mutual connections found", self._validate_mutual_connections()),
-            ("spurious connections found", self._validate_spurious_connections())] if check]
-            if errors:
-                raise ValueError("Error: " + " and ".join(errors) + ". Save operation aborted.")
+            
+            found_error = False
+            print('| Spurious edges check ...', end = ' ')
 
+            existing_nodes = set(self)
+            for node in self:
+                for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+                    new_attrs = []
+                    for neighbor in getattr(node, attr, []):
+                        if neighbor not in existing_nodes:
+                            print(f"Removed {neighbor.name} from {node.name}")
+                            found_error = True
+                        else:
+                            new_attrs.append(neighbor)
+                    setattr(node, attr, new_attrs)
+            
+            if not found_error:
+                print('OK')
+
+            found_error = False
+            print('| Edge mutuality check...', end = ' ')
+
+            opposed_field = {
+                'synset0': 'synset2', 'synset1': 'synset1', 'synset2': 'synset0',
+                'semset0': 'semset2', 'semset1': 'semset1', 'semset2': 'semset0',
+            }
+            non_mutual = []
+            for node in self:
+                for field, opposed in opposed_field.items():
+                    for neighbor in getattr(node, field, []):
+                        if node not in getattr(neighbor, opposed, []):
+                            non_mutual.append((node, neighbor,))
+                            self.bind(node, neighbor, field)
+                            self.bind(neighbor, node, opposed) # redundant yet unharmful
+                            print(f"Fixed dis-mutuality on {node.name} -> {neighbor.name}.")
+                        else:
+                            pass
+            
+            if not found_error:
+                print('OK')
+
+            found_error = False
+            print('| Redundant containment check...', end = ' ')
+
+            for node in self:
+                for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+                    attrs = getattr(node, attr, [])
+                    set_attrs = list(set(attrs))
+                    if len(attrs) != len(set_attrs):
+                        setattr(node, attr, set_attrs)
+                        print(f"Had to set attrs at {node.name} due to redundancy.")
+            
+            if not found_error:
+                print('OK')
+        
+        # Save itself
 
         filename = os.path.basename(custom_filename)
         file_path = os.path.join(directory_path, filename) if directory_path else filename
@@ -97,34 +147,14 @@ class Graph(NodeSet):
 
         with open(file_path, 'w') as file:
             for node in self:
-                line = f"{node.lang}-{node.type}:{node.name}({node.lemma})|{'F' if not node.favorite else 'T'}"
-                for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
-                    line += '|' + '/'.join([string_ids[node] for node in getattr(node, attr)])
-                line += '|' + '/'.join(node.examples)
-                file.write(line + '\n')  
-
-    def _validate_spurious_connections(self):
-        existing_nodes = set(self)
-        spurious_connections = []
-        for node in self:
-            for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
-                for neighbor in getattr(node, attr, []):
-                    if neighbor not in existing_nodes:
-                        spurious_connections.append((node, neighbor,))
-        return spurious_connections
-    
-    def _validate_mutual_connections(self):
-        opposed_field = {
-            'synset0': 'synset2', 'synset1': 'synset1', 'synset2': 'synset0',
-            'semset0': 'semset2', 'semset1': 'semset1', 'semset2': 'semset0',
-        }
-        non_mutual = []
-        for node in self:
-            for field, opposed in opposed_field.items():
-                for neighbor in getattr(node, field, []):
-                    if node not in getattr(neighbor, opposed, []):
-                        non_mutual.append((node, neighbor,))
-        return non_mutual    
+                try:
+                    line = f"{node.lang}-{node.type}:{node.name}({node.lemma})|{'F' if not node.favorite else 'T'}"
+                    for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+                        line += '|' + '/'.join([string_ids[node] for node in getattr(node, attr)])
+                    line += '|' + '/'.join(node.examples)
+                    file.write(line + '\n')  
+                except:
+                    print(node)
 
     # ---------------------
     # Editing Methods
@@ -162,7 +192,7 @@ class Graph(NodeSet):
         self.delete_node(node_b)
 
     def bind(self, target_node, append_node, target_edge_type):
-        if target_node != append_node:
+        if target_node != append_node and target_node not in getattr(append_node, target_edge_type, []):
             self._update_reciprocal_edges(target_node, append_node, target_edge_type, 'add')
 
     def unbind(self, target_node, remove_node, target_edge_type):
