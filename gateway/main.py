@@ -1,10 +1,5 @@
 import datetime
 
-
-
-
-
-
 directory = 'data'
 filename = 'data.txt'
 
