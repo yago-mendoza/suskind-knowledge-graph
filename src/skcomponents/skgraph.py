@@ -99,6 +99,23 @@ class Graph(NodeSet):
                 print('OK')
 
             found_error = False
+            print('| : Self-connections check ...')
+            existing_nodes = set(self)
+            for node in self:
+                for attr in ['synset0', 'synset1', 'synset2', 'semset0', 'semset1', 'semset2']:
+                    content = getattr(node, attr, [])
+                    new_neighbors = []
+                    for neighbor in content:
+                        if neighbor == node:
+                            found_error = True
+                            print(f"Removed a self-connection at {neighbor.name} from '{attr}'.")
+                        else:
+                            new_neighbors.append(neighbor)
+                    setattr(node, attr, new_neighbors)
+            if not found_error:
+                print('OK')
+
+            found_error = False
             print('| : Edge mutuality check...')
             opposed_field = {
                 'synset0': 'synset2', 'synset1': 'synset1', 'synset2': 'synset0',

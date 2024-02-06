@@ -72,7 +72,6 @@ class LS_Interface(cmd.Cmd):
             field = ('synset' if field_symb[0] == 'y' else 'semset') + field_symb[1]
             unbind_cases.append((target_node, field))
         for unbind_case in unbind_cases:
-            print(self.ls_node, unbind_case[0], unbind_case[1])
             self.parent_cli.G.unbind(self.ls_node, unbind_case[0], unbind_case[1])
         padded_print(f"Deleted {len(idxs)} nodes.")
 
@@ -222,7 +221,7 @@ class LS_Interface(cmd.Cmd):
                 for field in fields:
                     for target_node in target_nodes:
                         self.parent_cli.G.bind(node, target_node, field)
-                        self.parent_cli.G.unbind(self.ls_node, target_node, field)
+                        self.parent_cli.G.unbind(self.ls_node, target_node, self.parent_cli.placeholder.fields[0])
                 print(f'Succesfully re-binded {len(target_nodes)} edges.')
             else:
                 print('Aborted process.')

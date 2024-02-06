@@ -1,5 +1,13 @@
 import datetime
 
+
+
+
+
+
+directory = 'data'
+filename = 'data.txt'
+
 # Little explanation
 # The code run is the one in RUN(G) function.
 # Flags below decide what snippet to run.
@@ -19,7 +27,33 @@ def run(G):
         SK_Interface(G).cmdloop()
     if database_expansion_mode:
 
-        G.save('testing_save_from_term.txt')
+        print(sum([len(n._get_raw_content()) for n in G]))
+
+        # Empellón 9   12
+        # Tripa 22   51
+        # Rojo 60 70
+        # Arañazo 11 28
+        # Cagar sangre 13 15
+        # Carne cruda 78 92
+        # Diástole 33 34
+
+        # Elimina el contenido 'e1' de los neighbors de 'target'
+        target = 'Sangre'
+        sangre = G.find(name=target)
+        L1 = sangre.semset1
+        L2 = {}
+        for n in L1:
+            L2[n] = n.semset1
+        
+        print([n.name for n in L1])
+
+        for i in L1:
+            for j in L2[i]:
+                G.unbind(i, j, 'semset1')
+        G.save(f'data_without_{target}_neighbors_content.txt')
+
+
+        print(sum([len(n._get_raw_content()) for n in G]))
             
 
         # Para eliminar conexiones repetidas
@@ -131,7 +165,7 @@ def run(G):
 #########################################################
 
 def create_graph():
-    data_file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'data.txt')
+    data_file_path = os.path.join(os.path.dirname(__file__), '..', directory, filename)
     data_file_path = os.path.normpath(data_file_path)
     return Graph(data_file_path)
     
