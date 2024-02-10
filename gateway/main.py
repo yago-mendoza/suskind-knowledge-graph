@@ -24,28 +24,28 @@ def run(G):
 
         print(sum([len(n._get_raw_content()) for n in G]))
 
-        # Empellón 9   12
-        # Tripa 22   51
-        # Rojo 60 70
-        # Arañazo 11 28
-        # Cagar sangre 13 15
-        # Carne cruda 78 92
-        # Diástole 33 34
+        # # Empellón 9   12
+        # # Tripa 22   51
+        # # Rojo 60 70
+        # # Arañazo 11 28
+        # # Cagar sangre 13 15
+        # # Carne cruda 78 92
+        # # Diástole 33 34
 
-        # Elimina el contenido 'e1' de los neighbors de 'target'
-        target = 'Sangre'
-        sangre = G.find(name=target)
-        L1 = sangre.semset1
-        L2 = {}
-        for n in L1:
-            L2[n] = n.semset1
+        # # Elimina el contenido 'e1' de los neighbors de 'target'
+        # target = 'Sangre'
+        # sangre = G.find(name=target)
+        # L1 = sangre.semset1
+        # L2 = {}
+        # for n in L1:
+        #     L2[n] = n.semset1
         
-        print([n.name for n in L1])
+        # print([n.name for n in L1])
 
-        for i in L1:
-            for j in L2[i]:
-                G.unbind(i, j, 'semset1')
-        G.save(f'data_without_{target}_neighbors_content.txt')
+        # for i in L1:
+        #     for j in L2[i]:
+        #         G.unbind(i, j, 'semset1')
+        # G.save(f'data_without_{target}_neighbors_content.txt')
 
 
         print(sum([len(n._get_raw_content()) for n in G]))
