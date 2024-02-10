@@ -23,28 +23,48 @@ class Graph(NodeSet):
     
     def _load_data(self, filename):
 
-        def _parse_line_to_node(line):
+        def _parse_line_to_node(line, i):
 
             parts = line.strip().split('|')
-            lang, type_ = parts[0].split(':')[0].split('-')[0], parts[0].split(':')[0].split('-')[1]
-            
-            _ = parts[0][:-1].split(':') # in case the name contains a ':' itself
-            _ = ''.join(_[1:]) if len(_) > 2 else _[1]
-  
+
             try:
-                name, lemma = _.split('(')
+                # Extract the identifier, name, and lemma
+                identifier_part = parts[0].split(':')[0]  
 
-                favorite = True if parts[1] == 'T' else False
-                sections = [part.split('/') for part in parts[2:]]
+                # Extract the identifier, name, and lemma
+                identifier_part = parts[0].split(':')[0]
+                lang, type_ = identifier_part.split('-')         
+            
+                # Extract name and lemma by removing the identifier and splitting by '('
+                name_lemma_part = parts[0][len(identifier_part) + 1:].rsplit(':', 1)[-1] # Handles cases where name contains ':'
+                name, lemma = name_lemma_part.split('(')
+                lemma = lemma[:-1]  # Remove the trailing ')'
 
-                synset0, synset1, synset2, semset0, semset1, semset2, examples = sections
+                # Determine if it's marked as favorite
+                favorite = parts[1] == 'T'
+
+                # Process synsets and semsets
+                synsets = [parts[2].split('/'), parts[3].split('/'), parts[4].split('/')]
+                semsets = [parts[5].split('/'), parts[6].split('/'), parts[7].split('/')]
+
+                # Extract examples
+                examples = parts[8].split('/')
+
+                # Return the Node object with all the extracted information
                 return Node(lang=lang, type=type_, name=name, lemma=lemma,
                             favorite=favorite,
-                            synset0=synset0, synset1=synset1, synset2=synset2,
-                            semset0=semset0, semset1=semset1, semset2=semset2,
+                            synset0=synsets[0], synset1=synsets[1], synset2=synsets[2],
+                            semset0=semsets[0], semset1=semsets[1], semset2=semsets[2],
                             examples=examples)
             except:
-                print(f'Error occured with line : "{line}"')
+                print(f"\nThere has been an error parsing line {i+1}:\n")
+                print(f"{line}")
+                print(f"\nThe segmented parts are the following:\n")
+                print(f"{parts}")
+                print('\nRecommended actions:\n')
+                print('- Manually copy and re-paste the whole line at data.txt.')
+
+                
         
         def _update_node_relationships(nodes):
             """Update each string edge referential attributes to reference other nodes in the graph instead."""
@@ -63,8 +83,8 @@ class Graph(NodeSet):
         nodes_loaded_from_txt = []
         try:
             with open(filename, 'r', encoding='latin1') as file:
-                for line in file:
-                    node = _parse_line_to_node(line.strip())
+                for i, line in enumerate(file):
+                    node = _parse_line_to_node(line.strip(), i)
                     nodes_loaded_from_txt.append(node)
             updated_nodes_from_txt = _update_node_relationships(nodes_loaded_from_txt)
             return updated_nodes_from_txt
