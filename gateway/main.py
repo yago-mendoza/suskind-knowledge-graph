@@ -8,7 +8,7 @@ filename = 'data.txt'
 # Flags below decide what snippet to run.
 # > py -i main.py to run
 
-test_CLI = True # True for CLI interaction
+test_CLI = False # True for CLI interaction
                 # False for inserting nodes in batch from TXT/instructions(str) (line 24)
 
 # [!] Saving DOES save at /gateway, but data.txt used to init SKCLI is that from /data.
@@ -22,7 +22,60 @@ def run(G):
         SK_Interface(G).cmdloop()
     if database_expansion_mode:
 
-        print(sum([len(n._get_raw_content()) for n in G]))
+        # print(sum([len(n._get_raw_content()) for n in G]))
+
+        nodes = []
+
+        already_visited = []
+        c = 0
+        for node in G:
+            c+=1
+            if c%300 == 0:
+                print(c)
+            if node not in already_visited:
+                nodes.append('')
+                nodes.append(node.name)
+                already_visited.append(node)
+                neighbors = node.get_neighbors('y')
+
+                if node.examples:
+                    for ex in node.examples:
+                        if ex:
+                            nodes.append('>>> '+ex)
+
+                for neighbor in neighbors:
+                    if neighbor not in already_visited:
+                        nodes.append('    y: '+neighbor.name)
+
+                        if neighbor.examples:
+                            for ex in neighbor.examples:
+                                if ex:
+                                    nodes.append('    >>> '+ex)
+
+                        already_visited.append(neighbor)
+                neighbors = node.get_neighbors('e')
+                for neighbor in neighbors:
+                    if neighbor not in already_visited:
+                        nodes.append('        e: '+neighbor.name)
+                        already_visited.append(neighbor)
+
+                        if neighbor.examples:
+                            for ex in neighbor.examples:
+                                if ex:
+                                    nodes.append('        >>> '+ex)
+
+        with open('amalgama.txt', 'w') as file:
+            for node in G:
+                file.write(node+'\n')
+
+                
+
+
+                
+
+
+
+
 
         # # Empellón 9   12
         # # Tripa 22   51
@@ -48,7 +101,7 @@ def run(G):
         # G.save(f'data_without_{target}_neighbors_content.txt')
 
 
-        print(sum([len(n._get_raw_content()) for n in G]))
+        # print(sum([len(n._get_raw_content()) for n in G]))
             
 
         # Para eliminar conexiones repetidas
@@ -169,7 +222,7 @@ if __name__ == '__main__':
     # para evitar poner la línea de modificación del path
     # en cada archivo.
     import sys, os
-    sys.path.append(r'G:\Mi unidad\GATEWAY\[01] Dev\[01] Python\[01] Suskind\suskind-knowledge-graph')
+    sys.path.append(r'G:\Mi unidad\[01] Dev\[01] Python\[01] Suskind\suskind-knowledge-graph')
     from src.skcomponents.sknode import Node
     from src.skcomponents.sknodeset import NodeSet
     from src.skcomponents.skgraph import Graph
