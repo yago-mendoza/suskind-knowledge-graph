@@ -48,12 +48,6 @@ The following [documentation](https://yago-mendoza.gitbook.io/suskind_knowledge_
 - **CLI Integration**
   - Dessign a pipeline that connects AI generative capabilities with a gateway on CLI.
   - Test success rate with updated tooling.
-
-## Execution
-
-```bash
-  py -i main.py
-```
     
 ## License
 
