@@ -1,0 +1,185 @@
+es-t:Se pasó la lengua por los labios resecos antes de responder.(NA)|F|||||||
+es-t:Echó los hombros hacia atrás, preparándose para defender su posición.(NA)|F|||||||
+es-t:Una ceja se arqueó escépticamente ante la explicación.(NA)|F|||||||
+es-t:Una sombra de preocupación cruzó por su rostro.(NA)|F|||||||
+es-t:Echó los hombros hacia atrás, irguiéndose en toda su estatura.(NA)|F|||||||
+es-t:Apretó los labios, formando una línea fina y determinada.(NA)|F|||||||
+es-t:Se humedeció los labios resecos antes de hablar.(NA)|F|||||||
+es-t:Apretó los puños a sus costados, conteniendo su frustración.(NA)|F|||||||
+es-t:Sus dedos trazaban patrones invisibles sobre la superficie de la mesa.(NA)|F|||||||
+es-t:Pasó la lengua por sus labios resecos, un gesto inconsciente de ansiedad.(NA)|F|||||||
+es-t:Su mirada se perdió en el horizonte mientras hablaba.(NA)|F|||||||
+es-t:Su mirada se perdió en la distancia, como recordando algo lejano.(NA)|F|||||||
+es-t:Inclinó la cabeza, sopesando cuidadosamente sus opciones.(NA)|F|||||||
+es-t:Apretó los labios, formando una delgada línea blanca.(NA)|F|||||||
+es-t:Pasó la mano por su cabello, desordenándolo aún más.(NA)|F|||||||
+es-t:Torció el gesto en una mueca de desagrado apenas perceptible.(NA)|F|||||||
+es-t:Su rostro permaneció impasible, pero un músculo se tensó en su cuello.(NA)|F|||||||
+es-t:Jugueteaba nerviosamente con el dobladillo de su camisa.(NA)|F|||||||
+es-t:Se pasó la mano por la barba incipiente, pensativo.(NA)|F|||||||
+es-t:Se pellizcó el puente de la nariz, como intentando disipar un dolor de cabeza.(NA)|F|||||||
+es-t:Sus labios se movían en silencio, repitiendo las palabras para sí mismo.(NA)|F|||||||
+es-t:Una sonrisa fugaz cruzó por su rostro, desapareciendo al instante.(NA)|F|||||||
+es-t:Inclinó la cabeza, mostrando un interés repentino en la conversación.(NA)|F|||||||
+es-t:Sus dedos tamborileaban un ritmo irregular sobre la superficie de la mesa.(NA)|F|||||||
+es-t:Cruzó y descruzó las piernas, incapaz de encontrar una posición cómoda.(NA)|F|||||||
+es-t:Sus hombros se tensaron visiblemente ante la pregunta inesperada.(NA)|F|||||||
+es-t:Sus dedos se cerraron alrededor del colgante en su cuello, buscando consuelo.(NA)|F|||||||
+es-t:Frunció el ceño, creando surcos profundos en su frente.(NA)|F|||||||
+es-t:Inclinó la cabeza hacia un lado, considerando cuidadosamente sus palabras.(NA)|F|||||||
+es-t:Sus dedos se cerraron con fuerza alrededor del vaso que sostenía.(NA)|F|||||||
+es-t:Sus ojos brillaron con un destello de astucia apenas contenida.(NA)|F|||||||
+es-t:Inclinó la cabeza, ocultando parcialmente su rostro en las sombras.(NA)|F|||||||
+es-t:Su mirada saltaba de un rostro a otro, buscando aliados.(NA)|F|||||||
+es-t:Un brillo de determinación iluminó sus ojos.(NA)|F|||||||
+es-t:Una ceja se arqueó con escepticismo ante la explicación.(NA)|F|||||||
+es-t:Inclinó la cabeza, escuchando atentamente cada palabra.(NA)|F|||||||
+es-t:Enderezó la espalda, adoptando una postura más formal.(NA)|F|||||||
+es-t:Lanzó una mirada furtiva hacia la puerta, considerando la huida.(NA)|F|||||||
+es-t:Sus dedos jugueteaban nerviosamente con el anillo en su mano.(NA)|F|||||||
+es-t:Se mordió el labio inferior, conteniendo una sonrisa.(NA)|F|||||||
+es-t:Un rubor tenue coloreó sus mejillas ante el cumplido inesperado.(NA)|F|||||||
+es-t:Sus labios se curvaron en una sonrisa irónica.(NA)|F|||||||
+es-t:Cruzó y descruzó los brazos, inseguro de cómo posicionarse.(NA)|F|||||||
+es-t:Sus dedos se cerraron en un puño, blanqueando los nudillos.(NA)|F|||||||
+es-t:Echó los hombros hacia atrás, irguiéndose con renovada confianza.(NA)|F|||||||
+es-t:Pasó una mano temblorosa por su rostro, tratando de recomponerse.(NA)|F|||||||
+es-t:Alzó las cejas con sorpresa fingida, pero sus ojos permanecieron fríos.(NA)|F|||||||
+es-t:Sus labios se curvaron en una sonrisa apenas perceptible.(NA)|F|||||||
+es-t:Sus dedos se cerraron con fuerza alrededor del brazo del sillón.(NA)|F|||||||
+es-t:Echó la cabeza hacia atrás, soltando una carcajada ronca.(NA)|F|||||||
+es-t:Sus labios se curvaron en una sonrisa sardónica.(NA)|F|||||||
+es-t:Sus ojos se abrieron de par en par, incapaces de ocultar su sorpresa.(NA)|F|||||||
+es-t:Un tic nervioso hacía temblar la comisura de su ojo izquierdo.(NA)|F|||||||
+es-t:Un escalofrío visible recorrió su espalda al escuchar aquellas palabras.(NA)|F|||||||
+es-t:Se frotó la nuca, visiblemente incómodo con la situación.(NA)|F|||||||
+es-t:Sus labios se curvaron en una sonrisa enigmática.(NA)|F|||||||
+es-t:Su mano se movió instintivamente hacia la empuñadura de la espada.(NA)|F|||||||
+es-t:Apretó los puños inconscientemente al escuchar aquellas palabras.(NA)|F|||||||
+es-t:Una sonrisa lenta y depredadora se extendió por su rostro.(NA)|F|||||||
+es-t:Frunció el ceño, creando profundas arrugas entre sus cejas.(NA)|F|||||||
+es-t:Sus dedos se movían nerviosamente, doblando y desdoblando un trozo de papel.(NA)|F|||||||
+es-t:Se frotó la barbilla pensativamente, considerando la propuesta.(NA)|F|||||||
+es-t:Jugueteaba distraídamente con el collar mientras escuchaba.(NA)|F|||||||
+es-t:Echó la cabeza hacia atrás, soltando una carcajada genuina.(NA)|F|||||||
+es-t:Sus dedos jugueteaban con el anillo en su dedo, girándolo ansiosamente.(NA)|F|||||||
+es-t:Se pellizcó el puente de la nariz, como intentando ahuyentar un dolor de cabeza.(NA)|F|||||||
+es-t:Sus dedos se enredaban nerviosamente en un mechón de pelo.(NA)|F|||||||
+es-t:Inclinó la cabeza, dejando que su cabello ocultara parcialmente su rostro.(NA)|F|||||||
+es-t:Una ceja se arqueó con curiosidad ante la inesperada revelación.(NA)|F|||||||
+es-t:Tragó saliva con dificultad, tratando de deshacer el nudo en su garganta.(NA)|F|||||||
+es-t:Pasó la lengua por sus labios resecos, ganando tiempo antes de responder.(NA)|F|||||||
+es-t:Se pasó la mano por la nuca, en un gesto de incomodidad evidente.(NA)|F|||||||
+es-t:Apretó los dientes, conteniendo una réplica ácida.(NA)|F|||||||
+es-t:Sus ojos se movían rápidamente, siguiendo los gestos del hablante.(NA)|F|||||||
+es-t:Se mordió el interior de la mejilla, reprimiendo una sonrisa.(NA)|F|||||||
+es-t:Sus dedos tamborileaban un ritmo impaciente sobre el brazo del sillón.(NA)|F|||||||
+es-t:Su pie golpeaba el suelo con un ritmo nervioso e irregular.(NA)|F|||||||
+es-t:Su mirada vagaba por la habitación, buscando una vía de escape.(NA)|F|||||||
+es-t:Un destello de comprensión iluminó su mirada.(NA)|F|||||||
+es-t:Jugueteaba distraídamente con el borde de su manga mientras hablaba.(NA)|F|||||||
+es-t:Sus labios se fruncieron en una fina línea de desaprobación.(NA)|F|||||||
+es-t:Un tic en la comisura de sus labios revelaba su irritación creciente.(NA)|F|||||||
+es-t:Desvió la mirada, incapaz de mantener el contacto visual por más tiempo.(NA)|F|||||||
+es-t:Arrugó la nariz en un gesto de disgusto apenas perceptible.(NA)|F|||||||
+es-t:Enderezó la espalda, irguiéndose en toda su estatura.(NA)|F|||||||
+es-t:Un tic nervioso hacía temblar su párpado izquierdo.(NA)|F|||||||
+es-t:Parpadeó rápidamente, tratando de contener las lágrimas que amenazaban con brotar.(NA)|F|||||||
+es-t:Frotó sus manos ansiosamente mientras esperaba una respuesta.(NA)|F|||||||
+es-t:Una arruga de preocupación se formó entre sus cejas.(NA)|F|||||||
+es-t:Una sonrisa sardónica se dibujó lentamente en su rostro.(NA)|F|||||||
+es-t:Un destello de comprensión iluminó su mirada cansada.(NA)|F|||||||
+es-t:Se pellizcó el puente de la nariz, como intentando aclarar sus pensamientos.(NA)|F|||||||
+es-t:Apretó la mandíbula, conteniendo una respuesta airada.(NA)|F|||||||
+es-t:Una sombra de duda cruzó por su rostro, desapareciendo tan rápido como llegó.(NA)|F|||||||
+es-t:Echó la cabeza hacia atrás, soltando una carcajada amarga.(NA)|F|||||||
+es-t:Su respiración se volvió superficial y rápida, traicionando su ansiedad.(NA)|F|||||||
+es-t:Pasó la lengua por sus labios, un gesto inconsciente de nerviosismo.(NA)|F|||||||
+es-t:Parpadeó rápidamente, tratando de procesar la información.(NA)|F|||||||
+es-t:Una vena palpitaba visiblemente en su sien, delatando su tensión.(NA)|F|||||||
+es-t:Sus ojos se iluminaron con un brillo de astucia.(NA)|F|||||||
+es-t:Una chispa de reconocimiento iluminó su mirada.(NA)|F|||||||
+es-t:Sus dedos se movían inquietos, como si ansiaran tener algo entre ellos.(NA)|F|||||||
+es-t:Sus dedos tamborileaban nerviosamente sobre la mesa durante la conversación.(NA)|F|||||||
+es-t:Jugueteaba distraídamente con un mechón de pelo mientras escuchaba.(NA)|F|||||||
+es-t:Un tic nervioso hacía temblar su pierna derecha bajo la mesa.(NA)|F|||||||
+es-t:Sus ojos brillaron con un destello de comprensión.(NA)|F|||||||
+es-t:Tragó saliva audiblemente, revelando su nerviosismo.(NA)|F|||||||
+es-t:Inclinó la cabeza, dejando que las sombras ocultaran su expresión.(NA)|F|||||||
+es-t:Pasó la mano por su nuca, en un gesto de incomodidad.(NA)|F|||||||
+es-t:Una gota de sudor resbaló por su sien, traicionando su nerviosismo.(NA)|F|||||||
+es-t:Sus dedos se enredaban ansiosamente en los pliegues de su ropa.(NA)|F|||||||
+es-t:Su mirada vagaba por la habitación, evitando el contacto visual directo.(NA)|F|||||||
+es-t:Sus dedos se cerraron instintivamente alrededor de la empuñadura de la daga.(NA)|F|||||||
+es-t:Sus dedos se cerraron con fuerza alrededor del medallón que llevaba.(NA)|F|||||||
+es-t:Un escalofrío visible recorrió su cuerpo al escuchar aquellas palabras.(NA)|F|||||||
+es-t:Inclinó la cabeza, exponiendo la vulnerable línea de su garganta.(NA)|F|||||||
+es-t:Se mordisqueaba el labio inferior, sumido en sus pensamientos.(NA)|F|||||||
+es-t:Entornó los ojos, tratando de discernir la verdad en aquellas palabras.(NA)|F|||||||
+es-t:Su mirada saltaba nerviosamente entre los presentes en la sala.(NA)|F|||||||
+es-t:Inclinó la cabeza, ocultando su expresión en las sombras.(NA)|F|||||||
+es-t:Una sonrisa enigmática jugaba en las comisuras de sus labios.(NA)|F|||||||
+es-t:Una sonrisa forzada se dibujó en sus labios, sin llegar a sus ojos.(NA)|F|||||||
+es-t:Su cuerpo se tensó visiblemente, como un animal preparándose para saltar.(NA)|F|||||||
+es-t:Su pie golpeaba rítmicamente el suelo, traicionando su impaciencia.(NA)|F|||||||
+es-t:Una sonrisa torcida se dibujó en sus labios ante la respuesta.(NA)|F|||||||
+es-t:Sus dedos se cerraron instintivamente alrededor del amuleto en su cuello.(NA)|F|||||||
+es-t:Echó la cabeza hacia atrás, soltando un suspiro exasperado.(NA)|F|||||||
+es-t:Sus ojos se estrecharon, evaluando la veracidad de las palabras.(NA)|F|||||||
+es-t:Una ceja se arqueó con escepticismo ante la improbable historia.(NA)|F|||||||
+es-t:Su mano se movió instintivamente hacia la cicatriz en su cuello.(NA)|F|||||||
+es-t:Pasó una mano temblorosa por su cabello despeinado mientras respondía.(NA)|F|||||||
+es-t:Sus labios se fruncieron en una mueca de desaprobación.(NA)|F|||||||
+es-t:Su mano se movió inconscientemente hacia la empuñadura de la espada.(NA)|F|||||||
+es-t:Su mirada saltaba de un lado a otro, evitando fijarse en un punto.(NA)|F|||||||
+es-t:Su mirada se perdió en la lejanía, como buscando una respuesta en el horizonte.(NA)|F|||||||
+es-t:Un escalofrío visible recorrió su cuerpo ante aquellas palabras.(NA)|F|||||||
+es-t:Se humedeció los labios nerviosamente antes de hablar.(NA)|F|||||||
+es-t:Una sonrisa torcida se dibujó lentamente en su rostro.(NA)|F|||||||
+es-t:Sus dedos se enredaban nerviosamente en los flecos de su chal.(NA)|F|||||||
+es-t:Su cuerpo se tensó visiblemente ante la inesperada pregunta.(NA)|F|||||||
+es-t:Sus hombros se cuadraron, preparándose para el enfrentamiento.(NA)|F|||||||
+es-t:Sus labios se curvaron en una mueca de disgusto apenas perceptible.(NA)|F|||||||
+es-t:Sus dedos tamborileaban impacientes sobre la empuñadura de la daga.(NA)|F|||||||
+es-t:Apretó los puños a sus costados, conteniendo su ira.(NA)|F|||||||
+es-t:Su mirada se suavizó, perdiendo el filo de desconfianza.(NA)|F|||||||
+es-t:Pasó una mano temblorosa por su cabello despeinado.(NA)|F|||||||
+es-t:Sus ojos se oscurecieron, nublados por una emoción indescifrable.(NA)|F|||||||
+es-t:Sus dedos jugueteaban con el borde de la manga, un tic nervioso revelador.(NA)|F|||||||
+es-t:Sus dedos tamborileaban un ritmo nervioso sobre la empuñadura de su espada.(NA)|F|||||||
+es-t:Apretó los dientes, conteniendo una réplica mordaz.(NA)|F|||||||
+es-t:Una risa seca y sin humor escapó de sus labios.(NA)|F|||||||
+es-t:Se pasó la mano por el cabello, desordenándolo en un gesto de frustración.(NA)|F|||||||
+es-t:Cuadró los hombros, preparándose para defender su posición.(NA)|F|||||||
+es-t:Pasó la mano por su barba descuidada, pensativo.(NA)|F|||||||
+es-t:Apretó la mandíbula, conteniendo una réplica mordaz.(NA)|F|||||||
+es-t:Su mirada se endureció, volviéndose fría y calculadora.(NA)|F|||||||
+es-t:Sus dedos acariciaban distraídamente el borde de la copa.(NA)|F|||||||
+es-t:Inclinó la cabeza, ocultando parcialmente su expresión.(NA)|F|||||||
+es-t:Alzó una ceja inquisitivamente, esperando una explicación.(NA)|F|||||||
+es-t:Su mirada se suavizó, perdiendo el filo de hostilidad.(NA)|F|||||||
+es-t:Inclinó la cabeza, exponiendo la vulnerable curva de su cuello.(NA)|F|||||||
+es-t:Se pasó la lengua por los dientes, ganando tiempo para responder.(NA)|F|||||||
+es-t:Un destello de reconocimiento iluminó sus ojos.(NA)|F|||||||
+es-t:Inclinó la cabeza, considerando cuidadosamente sus siguientes palabras.(NA)|F|||||||
+es-t:Un rubor intenso se extendió por sus mejillas ante el comentario.(NA)|F|||||||
+es-t:Una sombra de duda cruzó por su rostro fugazmente.(NA)|F|||||||
+es-t:Una sombra de preocupación oscureció su rostro momentáneamente.(NA)|F|||||||
+es-t:Su pie golpeaba el suelo con un ritmo impaciente y nervioso.(NA)|F|||||||
+es-t:Enderezó la espalda, irguiéndose en toda su altura.(NA)|F|||||||
+es-t:Sus dedos se enredaban nerviosamente en los pliegues de su capa.(NA)|F|||||||
+es-t:Su cuerpo se tensó visiblemente, preparándose para la confrontación.(NA)|F|||||||
+es-t:Un rubor intenso se extendió desde su cuello hasta sus mejillas.(NA)|F|||||||
+es-t:Sus dedos se deslizaron inconscientemente hacia la cicatriz en su muñeca.(NA)|F|||||||
+es-t:Una sombra de duda cruzó por su rostro momentáneamente.(NA)|F|||||||
+es-t:Su cuerpo se tensó, como un resorte a punto de ser liberado.(NA)|F|||||||
+es-t:Su postura se relajó visiblemente al escuchar aquellas palabras.(NA)|F|||||||
+es-t:Frunció el ceño, creando profundas arrugas en su frente.(NA)|F|||||||
+es-t:Sus ojos se entrecerraron, evaluando la sinceridad de las palabras.(NA)|F|||||||
+es-t:Una sonrisa torcida se dibujó en la comisura de sus labios.(NA)|F|||||||
+es-t:Alzó las cejas con sorpresa genuina ante la revelación.(NA)|F|||||||
+es-t:Sus hombros se hundieron visiblemente ante la noticia.(NA)|F|||||||
+es-t:Un tic nervioso hacía temblar su párpado derecho.(NA)|F|||||||
+es-t:Frunció el ceño, creando arrugas profundas entre sus cejas.(NA)|F|||||||
+es-t:Apretó los labios, formando una línea fina y pálida.(NA)|F|||||||
+es-t:Tener(NA)|F|||||||

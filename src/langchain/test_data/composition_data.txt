@@ -1,2 +1,0 @@
-Wheel,Car,s0
-San Francisco,EEUU,s0
