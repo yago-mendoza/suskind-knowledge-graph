@@ -153,7 +153,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     tag Dedos\
 """,
 
-'tags': """\
+'tagged': """\
 | Desc. Displays the tags (and enables deletion through 'del')
 | Signature : tags
 | Usage examples :

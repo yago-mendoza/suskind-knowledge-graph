@@ -584,7 +584,7 @@ class ScriptInterface (cmd.Cmd):
     def preloop(self):
         os.system('cls')
         self._print_markdown_title()
-        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, tab=0)
+        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, COMMON_COMMANDS, EXPANSION_COMMANDS, tab=0)
         print('-'*47)
 
     def default(self, line):
@@ -714,7 +714,7 @@ class ScriptInterface (cmd.Cmd):
         except Exception as e:
             print(f"An error occurred while adding tag: {e}")
 
-    def do_tags(self, arg):
+    def do_tagged(self, arg):
         try:
             if not self.filter_tags:
                 print("No tags set.")

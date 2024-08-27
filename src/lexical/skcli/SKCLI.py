@@ -846,7 +846,8 @@ class LexicalInterface (cmd.Cmd):
     def preloop(self):
         os.system('cls')
         self._print_markdown_title()
-        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, tab=0)
+        padded_print(HELP_DISCLAIMER, CONTEXTUAL_DISCLAIMER, COMMON_COMMANDS, EXPANSION_COMMANDS, tab=0)
+        padded_print()
         print('-'*47)
 
     def default(self, line):
