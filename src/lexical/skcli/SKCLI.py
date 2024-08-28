@@ -693,8 +693,14 @@ class LexicalInterface (cmd.Cmd):
             padded_print('No nodes met the criteria.', tab=0)
 
     def do_ls(self, arg):
-
         args = arg.split()
+
+        # Check if the first argument is a node name for implicit cd
+        if args and not args[0].startswith('-'):
+            node_name = args.pop(0)
+            self.do_cd(node_name)  # Perform implicit cd
+            if not args:
+                return  # If no more arguments, just return after cd
 
         if args and args[0] in ('y0', 'y1', 'y2', 'e0', 'e1', 'e2'):
             self.placeholder.fields = []
@@ -706,8 +712,7 @@ class LexicalInterface (cmd.Cmd):
         parser.add_argument('-a', '--abbr', type=int, default=None, help='Abbreviate all results to a maximum length.')
         parser.add_argument('-p', '--stop', type=int, default=None, help='Set a max of nodes to be displayed.')
         parser.add_argument('-c', '--ncol', type=int, default=2, help='Number of columns.')
-        parser.add_argument('-r', '--shuffle', action='store_true', help='Shuffles the results.')
-
+        parser.add_argument('-r', '--shuffle', nargs='?', const=0, type=int, help='Shuffles the results. Optional: specify number of random entries to display.')
         parser.add_argument('-l', '--lang', nargs='?', const='', default=None, help='Filter by language and sets it as default for following "ls". No argument resets to default.')
         parser.add_argument('-t', '--type', nargs='?', const='', default=None, help='Filter by type and sets it as default for following "ls". No argument resets to default.')
         
@@ -717,7 +722,6 @@ class LexicalInterface (cmd.Cmd):
             padded_print(f'Unrecognized argument(s): {" ".join(unknown)}', tab=0)
 
         if self.placeholder.fields:
-
             nodes = self.placeholder.node.get_neighbors(self.placeholder.fields)
 
             # Reset language filter if '-l' is used without an argument.
@@ -743,18 +747,15 @@ class LexicalInterface (cmd.Cmd):
             nodes = sorted(nodes, key=lambda node: node.name)
 
             if nodes:
-
-                if ls_args.shuffle:
+                if ls_args.shuffle is not None:
                     random.shuffle(nodes)
-
-                if ls_args.stop:
+                    if ls_args.shuffle > 0:
+                        nodes = nodes[:ls_args.shuffle]
+                elif ls_args.stop:
                     if ls_args.stop <= len(nodes):
                         nodes = nodes[:ls_args.stop]
 
                 if ls_args.details:
-
-                    # sin ponemos details, aplican todos los criterios menos 'abbr'
-                    # solo tienen sentido 'stop' y 'r' de 'random/suffle'
                     to_print = []
                     max_index_length = len(str(len(nodes) - 1))  # Length of the largest index
 
@@ -766,7 +767,6 @@ class LexicalInterface (cmd.Cmd):
                         print(f"{str(i+1).zfill(max_index_length)}) {_}")
                 
                 else:
-
                     names = [node.name for node in nodes]
                         
                     if ls_args.abbr:
@@ -784,7 +784,7 @@ class LexicalInterface (cmd.Cmd):
             else:
                 padded_print('The set field for the target node is empty.', tab=0)
 
-            if len(self.placeholder.fields) == 1 :
+            if len(self.placeholder.fields) == 1:
                 LS_Interface(nodes, self, ls_args)
 
         if not self.placeholder.fields:

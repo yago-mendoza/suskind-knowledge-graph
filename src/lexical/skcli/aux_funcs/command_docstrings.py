@@ -289,24 +289,26 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
 |                         [-p <lim>] [-w <width=35>] [-a <lim>] [-c <ncol=4>]
 |                         [-l <lang>] [-t <type>]
 | Arguments :
+    <name>   Can automatically switch to a given node.
     <y/e_>   Can automatically switch to a given field.
      |
     -l, --lang      Restricts the search to results of the lang (persistent across comands).
     -t, --type      Restricts the search to results of the type (persistent across comands).
      |
     -d, --details   Single-column data & field sizes.
-    -r, --shuffle   Randomize the display order (by default, alphabetical is applied).
+    -r, --shuffle   Randomize 'X' given results.
     -p, --stop      Limit the number of results.
     (*) -w, --width     Max allowed width for column (absolute).
     (*) -a, --abbr      Max allowed character length for names.
     (*) -c, --ncol      Number of columns.
     Note : the starred flags (*) only apply if '--details' isn't flagged.
 | Usage examples :
-    ls
+    ls Mano
     ls y0
-    ls -d -t 15 -r
-    ls -w 50 -a 5 -c 1
-    ls -l es\
+    ls -r 5
+    ls -t j
+    ls -c 3
+    ...\
 """,
 
 'edit': """\
