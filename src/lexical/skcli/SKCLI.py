@@ -438,6 +438,8 @@ class LexicalInterface (cmd.Cmd):
                         self._set_node(nodes[int(response)-1])
                     else:
                         padded_print('Could not identify index.')
+                else:
+                    return
 
     def do_pin(self, arg):
         self.placeholder.node.edit(favorite=True)
@@ -695,17 +697,20 @@ class LexicalInterface (cmd.Cmd):
     def do_ls(self, arg):
         args = arg.split()
 
+        if args and args[0] in ('y0', 'y1', 'y2', 'e0', 'e1', 'e2'):
+            self.placeholder.fields = []
+            self.placeholder.update_field('add', args.pop(0))  # Switch the placeholder field
+
+        # Now, handle the remaining arguments as the node_name
         node_name = []
         while args and not args[0].startswith('-'):
             node_name.append(args.pop(0))
-        
+
         if node_name:
             # Unir todas las partes del nombre del nodo
             node_name = ' '.join(node_name)
-            self.do_cd(node_name)  # Realizar el cd implícito
-
-        if not args:
-            return
+            if not self.do_cd(node_name):
+                return
 
         parser = argparse.ArgumentParser(description='List information about the current node.')
         parser.add_argument('-d', '--details', action='store_true', default=None, help='Provides a more detailed display.')
