@@ -695,16 +695,17 @@ class LexicalInterface (cmd.Cmd):
     def do_ls(self, arg):
         args = arg.split()
 
-        # Check if the first argument is a node name for implicit cd
-        if args and not args[0].startswith('-'):
-            node_name = args.pop(0)
-            self.do_cd(node_name)  # Perform implicit cd
-            if not args:
-                return  # If no more arguments, just return after cd
+        node_name = []
+        while args and not args[0].startswith('-'):
+            node_name.append(args.pop(0))
+        
+        if node_name:
+            # Unir todas las partes del nombre del nodo
+            node_name = ' '.join(node_name)
+            self.do_cd(node_name)  # Realizar el cd implícito
 
-        if args and args[0] in ('y0', 'y1', 'y2', 'e0', 'e1', 'e2'):
-            self.placeholder.fields = []
-            self.placeholder.update_field('add', args.pop(0))
+        if not args:
+            return
 
         parser = argparse.ArgumentParser(description='List information about the current node.')
         parser.add_argument('-d', '--details', action='store_true', default=None, help='Provides a more detailed display.')
