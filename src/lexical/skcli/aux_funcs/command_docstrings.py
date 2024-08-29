@@ -304,6 +304,7 @@ COMMAND_DOCSTRINGS_SK : Dict[str, str] = {
     Note : the starred flags (*) only apply if '--details' isn't flagged.
 | Usage examples :
     ls Mano
+    ls e1 Frutos silvestres
     ls y0
     ls -r 5
     ls -t j
