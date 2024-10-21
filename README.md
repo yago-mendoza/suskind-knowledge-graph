@@ -1,3 +1,5 @@
+![CLI-screenshot](https://github.com/yago-mendoza/suskind-knowledge-graph/blob/main/screenshots/screenshot.png)
+
 # Suskind Knowledge Graph
 
 This documentation presents the Graph-based Framework for NLP, a system enhancing NLP through graph techniques, inspired by GNNs and graph transformer models. It features a dynamic graph where entities as nodes are linked by contextual relevance, offering improved relationship and context understanding beyond linear text analysis. The database, built from three years of detailed data collection, ensures quality. The framework includes Command Line Interfaces (CLI) for straightforward database management and supports customizable graph search algorithms for flexible data exploration. This integration provides a powerful tool for NLP, combining graph-based analysis with dynamic algorithm customization for diverse analytical needs.
